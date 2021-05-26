@@ -121,21 +121,18 @@ namespace BluetoothScannerDemo
                 // we finish making changes and call CompleteUpdatesAsync.
                 Windows.Storage.CachedFileManager.DeferUpdates(file);
                 // write to file
-                
-                await Windows.Storage.FileIO.WriteTextAsync(file, file.Name);
+
+                String WriteLineBuffer = "";
 
                 foreach(Taginfo tag in tagList.Values)
                 {
-                    if(tag.TagName.Length >= 8)
+                    if(tag.CarrotPlugFlag)
                     {
-                        if (tag.TagName.Substring(0, 4).Equals("IMEI"))
-                        {
-                            await Windows.Storage.FileIO.WriteTextAsync(file, tag.TagName.Substring(8) + '\t' + tag.TagMenu);
-
-                        }
-
+                        String WriteLine = tag.TagName.Substring(7) + '\t'+ tag.TagMenu.Substring(7, tag.TagMenu.Length - 7) + '\n';
+                        WriteLineBuffer += WriteLine;
                     }
                 }
+                await Windows.Storage.FileIO.WriteTextAsync(file, WriteLineBuffer);
 
 
                 // Let Windows know that we're finished changing the file so
@@ -171,23 +168,60 @@ namespace BluetoothScannerDemo
                         datasection = String.Format("{0}", BitConverter.ToString(data));
                         taginfo.TagDataRaw.Add(datasection);
                         taginfo.TagRssi = args.RawSignalStrengthInDBm;
-                        if (taginfo.TagName.Length == 6)
+                        try
                         {
-                            taginfo.TagName = "IMEI : 3596271" + taginfo.TagName;
+                            if (taginfo.TagName.Length == 8)
+                            {
+                                taginfo.TagName = "IMEI : 3596271" + taginfo.TagName;
+                                taginfo.CarrotPlugFlag = true;
+                            }
+
+                            if (taginfo.TagDataRaw.Count >= 3 && taginfo.TagDataRaw[2].Length > 6)
+                            {
+                                taginfo.TagFlag = "\t|\t";
+                                uint flag = uint.Parse(taginfo.TagDataRaw[2].Replace("-", "").Substring(0, 4));
+                                uint temp = flag & 0x01;
+                                if (temp == 0x01)
+                                    taginfo.TagFlag += "GPS Fail";
+                                else
+                                    taginfo.TagFlag += "GPS OK";
+                                temp = flag & 0x02;
+                                taginfo.TagFlag += '\t';
+                                if (temp == 0x02)
+                                    taginfo.TagFlag += "BLE Fail";
+                                else
+                                    taginfo.TagFlag += "BLE OK";
+                                temp = flag & 0x04;
+                                taginfo.TagFlag += '\t';
+                                if (temp == 0x04)
+                                    taginfo.TagFlag += "CAP Low Volatage Fail";
+                                temp = flag & 0x08;
+                                taginfo.TagFlag += '\t';
+                                if (temp == 0x08)
+                                    taginfo.TagFlag += "CAP Over Volatage Fail";
+                                temp = flag & 0xF0;
+                                taginfo.TagFlag += '\t';
+                                if (temp != 0x00)
+                                    taginfo.TagFlag += "LTE Fail";
+                                else
+                                    taginfo.TagFlag += "LTE OK";
+
+                                taginfo.TagMenu = "\tCCID : " + taginfo.TagDataRaw[2].Replace("-", "").Substring(4);
+                            }
+                            else
+                            {
+                                taginfo.TagMenu = "";
+                            }
                         }
-                        if (taginfo.TagDataRaw.Count >= 3 && taginfo.TagDataRaw[2].Length > 6)
+                        catch
                         {
-                            taginfo.TagMenu = taginfo.TagDataRaw[2].Replace("-", "").Substring(4);
-                        }
-                        else
-                        {
-                            taginfo.TagMenu = "";
+
                         }
                     }
                 }
                 taginfo.getData();
                 
-                if (taginfo.TagName.Equals(String.Empty) == false)
+                if (taginfo.CarrotPlugFlag)
                 {
                     //add new tag
                     if (this.tagList.ContainsKey(taginfo.TagMac) == false)

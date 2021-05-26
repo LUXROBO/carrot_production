@@ -28,6 +28,10 @@ public class Taginfo : INotifyPropertyChanged
     /** formated data*/
     private string data = "";
 
+    private string menu = "";
+
+    private string flag = "";
+
     /** existence of data used to hide/show data on display */
     private bool dataExist = false;
 
@@ -49,10 +53,12 @@ public class Taginfo : INotifyPropertyChanged
     public Int16 TagRssi { get { return rssi; } set { rssi = value; OnPropertyChanged("TagRssi"); } }
     public List<string> TagDataRaw = new List<string>();
     public string TagData { get { return data; } set { data = value; OnPropertyChanged("TagData"); } }
-    public string TagMenu { get { return data; } set { data = value; OnPropertyChanged("TagMenu"); } }
+    public string TagMenu { get { return menu; } set { menu = value; OnPropertyChanged("TagMenu"); } }
+    public string TagFlag { get { return flag; } set { flag = value; OnPropertyChanged("TagFlag"); } }
     private string TagCaptorType { get; set; }
     public object TagDataVisibility { get { if (dataExist) { return Visibility.Visible; } else { return Visibility.Collapsed; } } }
     #endregion
+    public Boolean CarrotPlugFlag { get; set;}
 
     /** @brief : store captor type in TagCaptorType
       */
@@ -137,5 +143,7 @@ public class Taginfo : INotifyPropertyChanged
         this.TagName = taginfo.TagName;
         this.TagRssi = taginfo.TagRssi;
         this.TagData = taginfo.TagData;
+        this.TagMenu = taginfo.TagMenu;
+        this.TagFlag = taginfo.TagFlag;
     }
 }

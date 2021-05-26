@@ -24,12 +24,15 @@
         <ListView x:Name="listTag" ItemsSource="{x:Bind tagColl}" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel Margin="5,5,5,10">
-                        <TextBlock Text="{Binding TagName}" FontFamily="Roboto Light" FontWeight="Bold" Foreground="#336699" FontSize="16" />
-                        <TextBlock Text="{Binding TagMenu}" FontFamily="Roboto Bold"  Foreground="#336699" FontSize="16" />
+                    <StackPanel Margin="2,5,5,2">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding TagName}" FontFamily="Roboto Light" FontWeight="Bold" Foreground="#336699" FontSize="16" />
+                            <TextBlock Text="{Binding TagMenu}" FontFamily="Roboto Bold"  Foreground="#336699" FontSize="16" />
+                        </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Signal Strength (dBm) : " FontFamily="Roboto Light" Foreground="#336699" />
                             <TextBlock Text="{Binding TagRssi}"  FontFamily="Roboto Light" Foreground="#336699" Margin="5,0,0,0"/>
+                            <TextBlock Text="{Binding TagFlag}"  FontFamily="Roboto Light" Foreground="#336699" Margin="5,0,0,0"/>
                         </StackPanel>
                     </StackPanel>
                 </DataTemplate>
