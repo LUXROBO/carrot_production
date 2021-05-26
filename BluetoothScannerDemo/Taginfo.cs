@@ -30,7 +30,10 @@ public class Taginfo : INotifyPropertyChanged
 
     private string menu = "";
 
-    private string flag = "";
+    private string flagString = "";
+
+    private uint flag = 0;
+    public uint passFlag = 0;
 
     /** existence of data used to hide/show data on display */
     private bool dataExist = false;
@@ -54,7 +57,8 @@ public class Taginfo : INotifyPropertyChanged
     public List<string> TagDataRaw = new List<string>();
     public string TagData { get { return data; } set { data = value; OnPropertyChanged("TagData"); } }
     public string TagMenu { get { return menu; } set { menu = value; OnPropertyChanged("TagMenu"); } }
-    public string TagFlag { get { return flag; } set { flag = value; OnPropertyChanged("TagFlag"); } }
+    public string TagFlagString { get { return flagString; } set { flagString = value; OnPropertyChanged("TagFlagString"); } }
+    public uint TagFlag { get { return flag; } set { flag = value; OnPropertyChanged("TagFlag"); } }
     private string TagCaptorType { get; set; }
     public object TagDataVisibility { get { if (dataExist) { return Visibility.Visible; } else { return Visibility.Collapsed; } } }
     #endregion
@@ -144,6 +148,7 @@ public class Taginfo : INotifyPropertyChanged
         this.TagRssi = taginfo.TagRssi;
         this.TagData = taginfo.TagData;
         this.TagMenu = taginfo.TagMenu;
-        this.TagFlag = taginfo.TagFlag;
+        this.TagFlagString = taginfo.TagFlagString;
+        this.flag = taginfo.flag;
     }
 }

@@ -17,6 +17,8 @@ using Windows.Devices.Bluetooth.Advertisement;
 using Windows.Storage.Streams;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel;
+using Windows.UI;
 
 
 // Pour plus d'informations sur le modèle d'élément Page vierge, consultez la page https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
@@ -26,21 +28,71 @@ namespace BluetoothScannerDemo
     /// <summary>
     /// Une page vide peut être utilisée seule ou constituer une page de destination au sein d'un frame.
     /// </summary>
-    public sealed partial class MainPage : Page
+    public partial class MainPage : Page, INotifyPropertyChanged
     {
         /** BLE watcher */
         private BluetoothLEAdvertisementWatcher watcher = new BluetoothLEAdvertisementWatcher();
-
+        
         /** scanning state */
         private bool watchStarted = false;
 
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string name)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+            {
+                handler(this, new PropertyChangedEventArgs(name));
+            }
+        }
         /** search filter */
         private string filter = String.Empty;
+        private int _setCount = 39;
+        private String _count = "0";
+        public String Count
+        {
+            private set
+            {
+                _count = value;
+                txtCount.Text = _count;
+                OnPropertyChanged("TagCount");
+            }
+            get
+            {
+                return _count;
+            }
+        }
+        private string __passCount = "0";
+        private int _passCount = 0;
+
+        public String PassCount
+        {
+            private set
+            {
+                __passCount = value;
+                txtPassCount.Text = Convert.ToString(__passCount);
+                if (_passCount == _setCount)
+                    txtPassCount.Foreground = new SolidColorBrush(Colors.LimeGreen);
+                else if(_passCount == int.Parse(_count))
+                    txtPassCount.Foreground = new SolidColorBrush(Colors.Yellow);
+                else
+                    txtPassCount.Foreground = new SolidColorBrush(Colors.RoyalBlue);
+                OnPropertyChanged("PassCount");
+            }
+            get
+            {
+                return Convert.ToString(__passCount);
+            }
+        }
+
 
         public MainPage()
         {
             this.InitializeComponent();
+            this.DataContext = this;
         }
+
+
 
         /** list of showned tag linked to display */
         public ObservableCollection<Taginfo> tagColl = new ObservableCollection<Taginfo>();
@@ -80,8 +132,14 @@ namespace BluetoothScannerDemo
          */
         private void BtnClearBle_Click(object sender, RoutedEventArgs e)
         {
+            if(this.watchStarted)
+                this.watcher.Stop();
             this.tagList.Clear();
             this.tagColl.Clear();
+            Count = "0";
+            PassCount = "0";
+            if(this.watchStarted)
+                this.watcher.Start();
         }
 
         /** @brief : update filter for the search
@@ -103,10 +161,12 @@ namespace BluetoothScannerDemo
                 }
             }
         }
+        private void TxtSetCount_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _setCount = int.Parse(txtSetCount.Text);
+        }
         private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
-            filter = txtSearch.Text;
-            this.tagColl.Clear();
             var savePicker = new Windows.Storage.Pickers.FileSavePicker();
             savePicker.SuggestedStartLocation =
                 Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
@@ -149,6 +209,7 @@ namespace BluetoothScannerDemo
          */
         private async void Tag_Received(BluetoothLEAdvertisementWatcher received, BluetoothLEAdvertisementReceivedEventArgs args)
         {
+            
             //show only connectable tags
             if (args.AdvertisementType == BluetoothLEAdvertisementType.NonConnectableUndirected || args.AdvertisementType == BluetoothLEAdvertisementType.ConnectableUndirected)
             {
@@ -178,33 +239,30 @@ namespace BluetoothScannerDemo
 
                             if (taginfo.TagDataRaw.Count >= 3 && taginfo.TagDataRaw[2].Length > 6)
                             {
-                                taginfo.TagFlag = "\t|\t";
-                                uint flag = uint.Parse(taginfo.TagDataRaw[2].Replace("-", "").Substring(0, 4));
-                                uint temp = flag & 0x01;
-                                if (temp == 0x01)
-                                    taginfo.TagFlag += "GPS Fail";
+                                taginfo.TagFlagString = "\t|\t";
+                                string flag_string = taginfo.TagDataRaw[2].Replace("-", "").Substring(0, 2);
+                                taginfo.TagFlag = uint.Parse(flag_string);
+                                if ((taginfo.TagFlag & 0x01) == 0x01)
+                                    taginfo.TagFlagString += "GPS Fail";
                                 else
-                                    taginfo.TagFlag += "GPS OK";
-                                temp = flag & 0x02;
-                                taginfo.TagFlag += '\t';
-                                if (temp == 0x02)
-                                    taginfo.TagFlag += "BLE Fail";
+                                    taginfo.TagFlagString += "GPS OK";
+                                taginfo.TagFlagString += "\t\t|\t";
+                                if ((taginfo.TagFlag & 0x02) == 0x02)
+                                    taginfo.TagFlagString += "BLE Fail";
                                 else
-                                    taginfo.TagFlag += "BLE OK";
-                                temp = flag & 0x04;
-                                taginfo.TagFlag += '\t';
-                                if (temp == 0x04)
-                                    taginfo.TagFlag += "CAP Low Volatage Fail";
-                                temp = flag & 0x08;
-                                taginfo.TagFlag += '\t';
-                                if (temp == 0x08)
-                                    taginfo.TagFlag += "CAP Over Volatage Fail";
-                                temp = flag & 0xF0;
-                                taginfo.TagFlag += '\t';
-                                if (temp != 0x00)
-                                    taginfo.TagFlag += "LTE Fail";
+                                    taginfo.TagFlagString += "BLE OK";
+                                taginfo.TagFlagString += "\t\t|\t";
+                                if ((taginfo.TagFlag & 0x0C) == 0x08)
+                                    taginfo.TagFlagString += "CAP Low";
+                                else if ((taginfo.TagFlag & 0x0C) == 0x04)
+                                    taginfo.TagFlagString += "CAP Over";
                                 else
-                                    taginfo.TagFlag += "LTE OK";
+                                    taginfo.TagFlagString += "CAP OK";
+                                taginfo.TagFlagString += "\t\t|\t";
+                                if ((taginfo.TagFlag & 0xF0) != 0x00)
+                                    taginfo.TagFlagString += "LTE Fail";
+                                else
+                                    taginfo.TagFlagString += "LTE OK";
 
                                 taginfo.TagMenu = "\tCCID : " + taginfo.TagDataRaw[2].Replace("-", "").Substring(4);
                             }
@@ -220,36 +278,53 @@ namespace BluetoothScannerDemo
                     }
                 }
                 taginfo.getData();
-                
+
                 if (taginfo.CarrotPlugFlag)
                 {
-                    //add new tag
-                    if (this.tagList.ContainsKey(taginfo.TagMac) == false)
+                    if (taginfo.TagName.Contains(filter))
                     {
-                        this.tagList.Add(taginfo.TagMac, taginfo);
-                        if (Filter(taginfo))
+                        //add new tag
+                        if (this.tagList.ContainsKey(taginfo.TagMac) == false)
+                        {
+                            this.tagList.Add(taginfo.TagMac, taginfo);
+                            if (Filter(taginfo))
+                            {
+                                await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                                {
+                                    tagColl.Add(taginfo);
+                                });
+                            }
+                        }
+                        //update existing tag infos
+                        else if (tagList.ContainsValue(taginfo) == false)
                         {
                             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                             {
-                                tagColl.Add(taginfo);
+                                IEnumerable<Taginfo> existing = tagColl.Where(x => x.TagMac == taginfo.TagMac);
+                                int a = tagColl.IndexOf(existing.FirstOrDefault());
+                                if (Filter(taginfo))
+                                {
+                                    if (a >= 0 && a < tagColl.Count())
+                                    {
+                                        tagColl[a].update(taginfo);
+                                    }
+                                }
+                                this.tagList[taginfo.TagMac].update(taginfo);
                             });
                         }
-                    }
-                    //update existing tag infos
-                    else if (tagList.ContainsValue(taginfo) == false)
-                    {
                         await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                         {
-                            IEnumerable<Taginfo> existing = tagColl.Where(x => x.TagMac == taginfo.TagMac);
-                            int a = tagColl.IndexOf(existing.FirstOrDefault());
-                            if (Filter(taginfo))
+                            _passCount = 0;
+                            foreach (Taginfo tag in tagColl)
                             {
-                                if (a >= 0 && a < tagColl.Count())
+                                if ((tag.TagFlag & 0xFF ) == 0 || (tag.passFlag == 1))
                                 {
-                                    tagColl[a].update(taginfo);
+                                    _passCount++;
+                                    tag.passFlag = 1;
                                 }
                             }
-                            this.tagList[taginfo.TagMac].update(taginfo);
+                            Count = Convert.ToString(tagColl.Count);
+                            PassCount = Convert.ToString(_passCount);
                         });
                     }
                 }

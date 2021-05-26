@@ -15,10 +15,16 @@
             <RowDefinition Height="60" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBox x:Name="txtSearch" Grid.Row="0" PlaceholderText="Search by mac adress or name" FontFamily="Roboto" Foreground="#336699" BorderBrush="#336699" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10" Padding="5" FontSize="30" TextChanged="TxtSearch_TextChanged"/>
-        <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Right" >
+        <TextBox x:Name="txtSearch" Grid.Row="0" PlaceholderText="Search by IMEI" FontFamily="Roboto" Foreground="#336699" BorderBrush="#336699" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10" Padding="5" FontSize="30" TextChanged="TxtSearch_TextChanged"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Right" DataContext="MainPage">
+            <TextBlock Text="Check : " FontFamily="Roboto Light" FontWeight="Bold" Foreground="#336699" TextAlignment="Center" HorizontalAlignment="Center" Margin="10" VerticalAlignment="Center" FontSize="26" />
+            <TextBox x:Name="txtSetCount"  Text="39" FontFamily="Roboto" FontWeight="Bold" TextAlignment="Center" Foreground="#336699" Width="100" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="26" TextChanged="TxtSetCount_TextChanged" />
+            <TextBlock Text="Number of Tag : " FontFamily="Roboto Light" FontWeight="Bold" Foreground="#336699" TextAlignment="Center" HorizontalAlignment="Center" Margin="10" VerticalAlignment="Center" FontSize="26" />
+            <TextBlock x:Name="txtCount" Text="0" FontFamily="Roboto Light" FontWeight="Bold" Foreground="#336699" TextAlignment="Center" HorizontalAlignment="Center" Width="50" Margin="10" VerticalAlignment="Center" FontSize="26" />
+            <TextBlock Text="Pass : " FontFamily="Roboto Light" FontWeight="Bold" Foreground="#336699" TextAlignment="Center" HorizontalAlignment="Center" Margin="10" VerticalAlignment="Center" FontSize="40" />
+            <TextBlock x:Name="txtPassCount" Text="0" FontFamily="Arial Black" FontWeight="Bold" Foreground="#336699" TextAlignment="Center" HorizontalAlignment="Center" Width="50" Margin="10" VerticalAlignment="Center" FontSize="40" SelectionHighlightColor="#FF008EFF" />
             <Button x:Name="btnStartBle" Grid.Row="1" FontFamily="Segoe MDL2 Assets" Content="&#xE768;" Foreground="#336699" Background="#ffffff" BorderBrush="#336699" Width="50" VerticalAlignment="Stretch" Margin="5" FontSize="30" Click="BtnStartBle_Click"/>
-            <Button x:Name="btnClearBle" Grid.Row="1" FontFamily="Segoe MDL2 Assets" Content="&#xE894;" Foreground="#336699" Background="#ffffff" BorderBrush="#336699" Width="50" VerticalAlignment="Stretch" Margin="5" FontSize="30" Click="BtnClearBle_Click"/>
+            <Button x:Name="btnClearBle" Grid.Row="1" FontFamily="Segoe MDL2 Assets" Content="&#xE895;" Foreground="#336699" Background="#ffffff" BorderBrush="#336699" Width="50" VerticalAlignment="Stretch" Margin="5" FontSize="30" Click="BtnClearBle_Click"/>
             <Button x:Name="btnSaveBle" Grid.Row="1" FontFamily="Segoe MDL2 Assets" Content="&#xE896;" Foreground="#336699" Background="#ffffff" BorderBrush="#336699" Width="50" VerticalAlignment="Stretch" Margin="5" FontSize="30" Click="BtnSave_Click"/>
         </StackPanel>
         <ListView x:Name="listTag" ItemsSource="{x:Bind tagColl}" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10">
@@ -32,7 +38,7 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Signal Strength (dBm) : " FontFamily="Roboto Light" Foreground="#336699" />
                             <TextBlock Text="{Binding TagRssi}"  FontFamily="Roboto Light" Foreground="#336699" Margin="5,0,0,0"/>
-                            <TextBlock Text="{Binding TagFlag}"  FontFamily="Roboto Light" Foreground="#336699" Margin="5,0,0,0"/>
+                            <TextBlock Text="{Binding TagFlagString}"  FontFamily="Roboto Light" Foreground="#336699" Margin="5,0,0,0"/>
                         </StackPanel>
                     </StackPanel>
                 </DataTemplate>
