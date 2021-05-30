@@ -32,7 +32,6 @@ namespace BluetoothScannerDemo
     {
         /** BLE watcher */
         private BluetoothLEAdvertisementWatcher watcher = new BluetoothLEAdvertisementWatcher();
-        
         /** scanning state */
         private bool watchStarted = false;
 
@@ -239,26 +238,26 @@ namespace BluetoothScannerDemo
 
                             if (taginfo.TagDataRaw.Count >= 3 && taginfo.TagDataRaw[2].Length > 6)
                             {
-                                taginfo.TagFlagString = "\t|\t";
+                                taginfo.TagFlagString = "";
                                 string flag_string = taginfo.TagDataRaw[2].Replace("-", "").Substring(0, 2);
                                 taginfo.TagFlag = uint.Parse(flag_string);
                                 if ((taginfo.TagFlag & 0x01) == 0x01)
                                     taginfo.TagFlagString += "GPS Fail";
                                 else
                                     taginfo.TagFlagString += "GPS OK";
-                                taginfo.TagFlagString += "\t\t|\t";
+                                taginfo.TagFlagString += ", ";
                                 if ((taginfo.TagFlag & 0x02) == 0x02)
                                     taginfo.TagFlagString += "BLE Fail";
                                 else
                                     taginfo.TagFlagString += "BLE OK";
-                                taginfo.TagFlagString += "\t\t|\t";
+                                taginfo.TagFlagString += ", ";
                                 if ((taginfo.TagFlag & 0x0C) == 0x08)
                                     taginfo.TagFlagString += "CAP Low";
                                 else if ((taginfo.TagFlag & 0x0C) == 0x04)
                                     taginfo.TagFlagString += "CAP Over";
                                 else
                                     taginfo.TagFlagString += "CAP OK";
-                                taginfo.TagFlagString += "\t\t|\t";
+                                taginfo.TagFlagString += ", ";
                                 if ((taginfo.TagFlag & 0xF0) != 0x00)
                                     taginfo.TagFlagString += "LTE Fail";
                                 else
@@ -344,5 +343,22 @@ namespace BluetoothScannerDemo
             return false;
         }
 
+        private void btnUpdateDB_Click(object sender, RoutedEventArgs e)
+        {
+
+            Mydb mydb = new Mydb();
+            foreach (Taginfo tag in tagList.Values)
+            {
+                if (tag.CarrotPlugFlag)
+                {
+                    string icc_id = tag.TagMenu.Substring(7, tag.TagMenu.Length - 7);
+                    string imei = tag.TagName.Substring(7);
+                    string qa1 = tag.passFlag.ToString();
+                    string ng1_type = tag.TagFlagString;
+                    mydb.UpdateQuery(imei, icc_id, qa1, ng1_type);
+
+                }
+            }
+        }
     }
 }

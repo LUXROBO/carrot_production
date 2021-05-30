@@ -25,7 +25,9 @@
             <TextBlock x:Name="txtPassCount" Text="0" FontFamily="Arial Black" FontWeight="Bold" Foreground="#336699" TextAlignment="Center" HorizontalAlignment="Center" Width="50" Margin="10" VerticalAlignment="Center" FontSize="40" SelectionHighlightColor="#FF008EFF" />
             <Button x:Name="btnStartBle" Grid.Row="1" FontFamily="Segoe MDL2 Assets" Content="&#xE768;" Foreground="#336699" Background="#ffffff" BorderBrush="#336699" Width="50" VerticalAlignment="Stretch" Margin="5" FontSize="30" Click="BtnStartBle_Click"/>
             <Button x:Name="btnClearBle" Grid.Row="1" FontFamily="Segoe MDL2 Assets" Content="&#xE895;" Foreground="#336699" Background="#ffffff" BorderBrush="#336699" Width="50" VerticalAlignment="Stretch" Margin="5" FontSize="30" Click="BtnClearBle_Click"/>
-            <Button x:Name="btnSaveBle" Grid.Row="1" FontFamily="Segoe MDL2 Assets" Content="&#xE896;" Foreground="#336699" Background="#ffffff" BorderBrush="#336699" Width="50" VerticalAlignment="Stretch" Margin="5" FontSize="30" Click="BtnSave_Click"/>
+            <Button x:Name="btnUpdateDB" Grid.Row="1" FontFamily="Segoe MDL2 Assets" Content="&#xE898;" Foreground="#336699" Background="#ffffff" BorderBrush="#336699" Width="50" VerticalAlignment="Stretch" Margin="5" FontSize="30" Click="btnUpdateDB_Click"/>
+            <Button x:Name="btnSave" Grid.Row="1" FontFamily="Segoe MDL2 Assets" Content="&#xE896;" Foreground="#336699" Background="#ffffff" BorderBrush="#336699" Width="50" VerticalAlignment="Stretch" Margin="5" FontSize="30" Click="BtnSave_Click"/>
+
         </StackPanel>
         <ListView x:Name="listTag" ItemsSource="{x:Bind tagColl}" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10">
             <ListView.ItemTemplate>

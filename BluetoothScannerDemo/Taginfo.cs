@@ -1,7 +1,87 @@
 using System;
+using System.Data;
+using MySql.Data.MySqlClient;
 using System.Collections.Generic;
 using System.ComponentModel;
 using Windows.UI.Xaml;
+
+
+public class Mydb
+{
+    private MySqlConnection conn;
+    private readonly string ConnUrl = "Server=release-carrot-cluster.cluster-ro-cb10can9foe2.ap-northeast-2.rds.amazonaws.com;Database=carrotPlugList;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
+    public MySqlDataReader rdr;
+    private Dictionary<string, string> pluglist = new Dictionary<string, string>();
+
+    public Mydb()
+    {
+        conn = new MySqlConnection(ConnUrl);
+        if (conn.State == ConnectionState.Closed)
+        {
+            conn.Open();
+            Console.WriteLine("connReader ON");
+        }
+    }
+
+    public Mydb(string url)
+    {
+
+        conn = new MySqlConnection(url);
+        if (conn.State == ConnectionState.Closed)
+        {
+            conn.Open();
+            Console.WriteLine("connReader ON");
+        }
+    }
+    ~Mydb()
+    {
+        conn.Close();
+    }
+
+    public void UpdateQuery(string imei, string icc_id)
+    {
+        if (icc_id == null)
+            icc_id = "NULL";
+        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei =" + imei + ';';
+        new MySqlCommand(str_update, conn).ExecuteNonQuery();
+    }
+    public void UpdateQuery(string imei, string icc_id, string qa1, string ng1_type)
+    {
+        if (icc_id == null)
+            icc_id = "NULL";
+        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id +", qa1=\"" + qa1 + "\", ng1_type=\"" + ng1_type + "\" where imei =" + imei + ';';
+        new MySqlCommand(str_update, conn).ExecuteNonQuery();
+    }
+    public void UpdateQuery(KeyValuePair<string, string> plug)
+    {
+        string icc_id = plug.Value;
+        if (icc_id == null)
+            icc_id = "NULL";
+        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei =" + plug.Key + ';';
+        new MySqlCommand(str_update, conn).ExecuteNonQuery();
+    }
+    public Dictionary<string, string> getList()
+    {
+        if (pluglist.Count == 0) ReflashList();
+        return pluglist;
+    }
+    public Dictionary<string, string> ReflashList()
+    {
+
+        MySqlCommand cmd_select = new MySqlCommand("SELECT sn, imei, icc_id FROM carrotPlugList.tb_product LIMIT 0,1000; ", conn);
+        pluglist.Clear();
+        rdr = cmd_select.ExecuteReader();
+        while (rdr.Read())
+        {
+
+            //Console.WriteLine("{0}\t{1}\t{2}", rdr["sn"], rdr["imei"], rdr["icc_id"]);
+            pluglist.Add(rdr["imei"].ToString(), rdr["icc_id"].ToString());
+        }
+        rdr.Dispose();
+        return pluglist;
+    }
+}
+
 
 public class Taginfo : INotifyPropertyChanged
 {
