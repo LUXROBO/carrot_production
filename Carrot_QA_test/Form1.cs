@@ -74,19 +74,19 @@ namespace Carrot_QA_test
             // txtSearch
             // 
             this.txtSearch.Font = new System.Drawing.Font("굴림", 12F);
-            this.txtSearch.Location = new System.Drawing.Point(667, 8);
-            this.txtSearch.Margin = new System.Windows.Forms.Padding(2);
+            this.txtSearch.Location = new System.Drawing.Point(1239, 16);
+            this.txtSearch.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.txtSearch.Name = "txtSearch";
-            this.txtSearch.Size = new System.Drawing.Size(306, 26);
+            this.txtSearch.Size = new System.Drawing.Size(565, 44);
             this.txtSearch.TabIndex = 0;
             // 
             // btnStartBle
             // 
             this.btnStartBle.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.btnStartBle.Location = new System.Drawing.Point(668, 40);
-            this.btnStartBle.Margin = new System.Windows.Forms.Padding(2);
+            this.btnStartBle.Location = new System.Drawing.Point(1241, 80);
+            this.btnStartBle.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnStartBle.Name = "btnStartBle";
-            this.btnStartBle.Size = new System.Drawing.Size(77, 28);
+            this.btnStartBle.Size = new System.Drawing.Size(143, 56);
             this.btnStartBle.TabIndex = 1;
             this.btnStartBle.Text = "Start";
             this.btnStartBle.UseVisualStyleBackColor = true;
@@ -95,10 +95,10 @@ namespace Carrot_QA_test
             // btnClearBle
             // 
             this.btnClearBle.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.btnClearBle.Location = new System.Drawing.Point(749, 40);
-            this.btnClearBle.Margin = new System.Windows.Forms.Padding(2);
+            this.btnClearBle.Location = new System.Drawing.Point(1391, 80);
+            this.btnClearBle.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnClearBle.Name = "btnClearBle";
-            this.btnClearBle.Size = new System.Drawing.Size(70, 28);
+            this.btnClearBle.Size = new System.Drawing.Size(130, 56);
             this.btnClearBle.TabIndex = 2;
             this.btnClearBle.Text = "Clear";
             this.btnClearBle.UseVisualStyleBackColor = true;
@@ -107,10 +107,10 @@ namespace Carrot_QA_test
             // BtnUpload
             // 
             this.BtnUpload.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.BtnUpload.Location = new System.Drawing.Point(823, 40);
-            this.BtnUpload.Margin = new System.Windows.Forms.Padding(2);
+            this.BtnUpload.Location = new System.Drawing.Point(1528, 80);
+            this.BtnUpload.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.BtnUpload.Name = "BtnUpload";
-            this.BtnUpload.Size = new System.Drawing.Size(73, 28);
+            this.BtnUpload.Size = new System.Drawing.Size(136, 56);
             this.BtnUpload.TabIndex = 3;
             this.BtnUpload.Text = "Upload";
             this.BtnUpload.UseVisualStyleBackColor = true;
@@ -119,10 +119,10 @@ namespace Carrot_QA_test
             // btnSave
             // 
             this.btnSave.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.btnSave.Location = new System.Drawing.Point(900, 40);
-            this.btnSave.Margin = new System.Windows.Forms.Padding(2);
+            this.btnSave.Location = new System.Drawing.Point(1671, 80);
+            this.btnSave.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(73, 28);
+            this.btnSave.Size = new System.Drawing.Size(136, 56);
             this.btnSave.TabIndex = 4;
             this.btnSave.Text = "Save";
             this.btnSave.UseVisualStyleBackColor = true;
@@ -140,11 +140,11 @@ namespace Carrot_QA_test
             this.listView1.FullRowSelect = true;
             this.listView1.GridLines = true;
             this.listView1.HideSelection = false;
-            this.listView1.Location = new System.Drawing.Point(9, 74);
-            this.listView1.Margin = new System.Windows.Forms.Padding(2);
+            this.listView1.Location = new System.Drawing.Point(17, 148);
+            this.listView1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.listView1.MultiSelect = false;
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(964, 676);
+            this.listView1.Size = new System.Drawing.Size(1787, 1348);
             this.listView1.TabIndex = 5;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
@@ -176,20 +176,20 @@ namespace Carrot_QA_test
             // txtCheck
             // 
             this.txtCheck.Font = new System.Drawing.Font("굴림", 12F);
-            this.txtCheck.Location = new System.Drawing.Point(65, 40);
-            this.txtCheck.Margin = new System.Windows.Forms.Padding(2);
+            this.txtCheck.Location = new System.Drawing.Point(121, 80);
+            this.txtCheck.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.txtCheck.Name = "txtCheck";
-            this.txtCheck.Size = new System.Drawing.Size(43, 26);
+            this.txtCheck.Size = new System.Drawing.Size(76, 44);
             this.txtCheck.TabIndex = 6;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("굴림", 12F);
-            this.label1.Location = new System.Drawing.Point(9, 44);
-            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label1.Location = new System.Drawing.Point(17, 88);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(54, 16);
+            this.label1.Size = new System.Drawing.Size(108, 32);
             this.label1.TabIndex = 7;
             this.label1.Text = "Check";
             // 
@@ -197,10 +197,10 @@ namespace Carrot_QA_test
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("굴림", 12F);
-            this.label2.Location = new System.Drawing.Point(110, 44);
-            this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label2.Location = new System.Drawing.Point(204, 88);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(131, 16);
+            this.label2.Size = new System.Drawing.Size(272, 32);
             this.label2.TabIndex = 8;
             this.label2.Text = "Number of Tag : ";
             // 
@@ -208,10 +208,10 @@ namespace Carrot_QA_test
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("굴림", 12F);
-            this.label3.Location = new System.Drawing.Point(280, 44);
-            this.label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label3.Location = new System.Drawing.Point(520, 88);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(55, 16);
+            this.label3.Size = new System.Drawing.Size(109, 32);
             this.label3.TabIndex = 9;
             this.label3.Text = "Pass :";
             // 
@@ -219,10 +219,10 @@ namespace Carrot_QA_test
             // 
             this.Count.AutoSize = true;
             this.Count.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.Count.Location = new System.Drawing.Point(252, 44);
-            this.Count.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.Count.Location = new System.Drawing.Point(468, 88);
+            this.Count.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.Count.Name = "Count";
-            this.Count.Size = new System.Drawing.Size(17, 16);
+            this.Count.Size = new System.Drawing.Size(36, 32);
             this.Count.TabIndex = 10;
             this.Count.Text = "-";
             // 
@@ -230,10 +230,10 @@ namespace Carrot_QA_test
             // 
             this.PassCount.AutoSize = true;
             this.PassCount.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.PassCount.Location = new System.Drawing.Point(346, 44);
-            this.PassCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.PassCount.Location = new System.Drawing.Point(643, 88);
+            this.PassCount.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.PassCount.Name = "PassCount";
-            this.PassCount.Size = new System.Drawing.Size(17, 16);
+            this.PassCount.Size = new System.Drawing.Size(36, 32);
             this.PassCount.TabIndex = 11;
             this.PassCount.Text = "-";
             // 
@@ -248,9 +248,10 @@ namespace Carrot_QA_test
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("굴림", 12F);
-            this.label4.Location = new System.Drawing.Point(603, 12);
+            this.label4.Location = new System.Drawing.Point(1120, 24);
+            this.label4.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(59, 16);
+            this.label4.Size = new System.Drawing.Size(118, 32);
             this.label4.TabIndex = 12;
             this.label4.Text = "Search";
             // 
@@ -258,18 +259,20 @@ namespace Carrot_QA_test
             // 
             this.modeLabel.AutoSize = true;
             this.modeLabel.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.modeLabel.Location = new System.Drawing.Point(8, 12);
+            this.modeLabel.Location = new System.Drawing.Point(15, 24);
+            this.modeLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.modeLabel.Name = "modeLabel";
-            this.modeLabel.Size = new System.Drawing.Size(223, 16);
+            this.modeLabel.Size = new System.Drawing.Size(431, 32);
             this.modeLabel.TabIndex = 13;
             this.modeLabel.Text = "Carrot Plug QA Test Mode";
             // 
             // BtnMode
             // 
             this.BtnMode.Font = new System.Drawing.Font("굴림", 12F);
-            this.BtnMode.Location = new System.Drawing.Point(255, 10);
+            this.BtnMode.Location = new System.Drawing.Point(474, 20);
+            this.BtnMode.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
             this.BtnMode.Name = "BtnMode";
-            this.BtnMode.Size = new System.Drawing.Size(126, 23);
+            this.BtnMode.Size = new System.Drawing.Size(234, 46);
             this.BtnMode.TabIndex = 14;
             this.BtnMode.Text = "Mode Change";
             this.BtnMode.UseVisualStyleBackColor = true;
@@ -277,9 +280,9 @@ namespace Carrot_QA_test
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(13F, 24F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(984, 761);
+            this.ClientSize = new System.Drawing.Size(1894, 929);
             this.Controls.Add(this.BtnMode);
             this.Controls.Add(this.modeLabel);
             this.Controls.Add(this.label4);
@@ -295,7 +298,7 @@ namespace Carrot_QA_test
             this.Controls.Add(this.btnClearBle);
             this.Controls.Add(this.btnStartBle);
             this.Controls.Add(this.txtSearch);
-            this.Margin = new System.Windows.Forms.Padding(2);
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "Form1";
             this.Text = "Carrot QA Program";
             ((System.ComponentModel.ISupportInitialize)(this.myTimer)).EndInit();
