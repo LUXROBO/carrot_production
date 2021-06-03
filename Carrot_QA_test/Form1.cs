@@ -447,18 +447,17 @@ namespace Carrot_QA_test
                             {
                                 if (modeFlag == 0)
                                 {
-
                                     taginfo.TagFlagString = "";
                                     string flag_string = taginfo.TagDataRaw[2].Replace("-", "").Substring(0, 2);
                                     taginfo.TagFlag = uint.Parse(flag_string);
                                     if ((taginfo.TagFlag & 0x01) == 0x01)
-                                        taginfo.TagFlagString += "GPS Fail";
+                                        taginfo.TagFlagString += "GPS NG";
                                     else
                                         taginfo.TagFlagString += "GPS OK";
                                     taginfo.TagFlagString += ", ";
                                     if ((taginfo.TagFlag & 0x02) == 0x02)
-                                        taginfo.TagFlagString += "BLE Fail";
-                                    else
+                                        taginfo.TagFlagString += "BLE NG";
+                                    else 
                                         taginfo.TagFlagString += "BLE OK";
                                     taginfo.TagFlagString += ", ";
                                     if ((taginfo.TagFlag & 0x0C) == 0x08)
@@ -469,7 +468,7 @@ namespace Carrot_QA_test
                                         taginfo.TagFlagString += "CAP OK";
                                     taginfo.TagFlagString += ", ";
                                     if ((taginfo.TagFlag & 0xF0) != 0x00)
-                                        taginfo.TagFlagString += "LTE Fail";
+                                        taginfo.TagFlagString += "LTE NG";
                                     else
                                         taginfo.TagFlagString += "LTE OK";
 
@@ -480,34 +479,28 @@ namespace Carrot_QA_test
                                 {
                                     taginfo.TagFlagString = "";
                                     taginfo.TagMenu = taginfo.TagDataRaw[2].Replace("-", "");
-                                    taginfo.TagFlag = uint.Parse(taginfo.TagMenu.Substring(taginfo.TagMenu.Length, 1));
+                                    taginfo.TagFlag = (uint)Convert.ToInt32(taginfo.TagMenu.Substring(taginfo.TagMenu.Length-1, 1),16);
                                     taginfo.TagMenu = taginfo.TagMenu.Substring(4, taginfo.TagMenu.Length - 5);
                                     string verionString = taginfo.TagDataRaw[2].Replace("-", "").Substring(0, 2);
                                     string progressString ="none";
-                                    taginfo.passFlag = "Fail";
-                                    taginfo.TagFlagString += "V " + verionString;
+                                    taginfo.passFlag = "NG";
+                                    taginfo.TagFlagString += "V " + Convert.ToString(((uint)Convert.ToInt32(verionString)));
                                     switch (taginfo.TagFlag)
                                     {
                                         case 0x0:
                                             progressString = "Booting";
                                             break;
                                         case 0x1:
-                                            progressString = "Booting";
+                                            progressString = "Get IMEI";
                                             break;
                                         case 0x2:
-                                            progressString = "Booting";
+                                            progressString = "Get Phone number";
                                             break;
                                         case 0x3:
-                                            progressString = "Booting";
+                                            progressString = "Provisioning";
                                             break;
                                         case 0x4:
-                                            progressString = "Booting";
-                                            break;
-                                        case 0x5:
-                                            progressString = "Booting";
-                                            break;
-                                        case 0x6:
-                                            progressString = "Booting";
+                                            progressString = "MQTT Connect";
                                             break;
                                         case 0xF:
                                             progressString = "Open Success";
@@ -522,7 +515,7 @@ namespace Carrot_QA_test
                                 taginfo.TagMenu = "";
                             }
                         }
-                        catch
+                        catch 
                         {
 
                         }
@@ -593,17 +586,34 @@ namespace Carrot_QA_test
             {
                 if (tag.CarrotPlugFlag)
                 {
-                    string icc_id = tag.TagMenu;
-                    string imei = tag.TagName;
-                    string qa1 = tag.passFlag;
-                    string ng1_type = tag.TagFlagString;
-                    int result = mydb.UpdateQuery(imei, icc_id, qa1, ng1_type);
-                    string result_string = "";
-                    if (result == 1)
-                        result_string = "OK";
+                    if (modeFlag == 0)
+                    {
+                        string icc_id = tag.TagMenu;
+                        string imei = tag.TagName;
+                        string qa1 = tag.passFlag;
+                        string ng1_type = tag.TagFlagString;
+                        int result = mydb.UpdateQueryQA(imei, icc_id, qa1, ng1_type);
+                        string result_string = "";
+                        if (result == 1)
+                            result_string = "OK";
+                        else
+                            result_string = "NG";
+                        msg += imei + " Upload Result :" + result_string + "\n";
+                    }
                     else
-                        result_string = "Fail";
-                    msg += imei + " Upload Result :" + result_string + "\n";
+                    {
+                        string icc_id = tag.TagMenu;
+                        string imei = tag.TagName;
+                        string qa2 = tag.passFlag;
+                        string ng2_type = tag.TagFlagString;
+                        int result = mydb.UpdateQueryOpen(imei, icc_id, qa2, ng2_type);
+                        string result_string = "";
+                        if (result == 1)
+                            result_string = "OK";
+                        else
+                            result_string = "NG";
+                        msg += imei + " Upload Result :" + result_string + "\n";
+                    }
                 }
             }
             MessageBox.Show(msg);

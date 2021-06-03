@@ -45,11 +45,18 @@ public class Mydb
         string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei =" + imei + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
-    public int UpdateQuery(string imei, string icc_id, string qa1, string ng1_type)
+    public int UpdateQueryQA(string imei, string icc_id, string qa1, string ng1_type)
     {
         if (icc_id == null)
             icc_id = "NULL";
         string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa1=\"" + qa1 + "\", ng1_type=\"" + ng1_type + "\" where imei =" + imei + ';';
+        return new MySqlCommand(str_update, conn).ExecuteNonQuery();
+    }
+    public int UpdateQueryOpen(string imei, string icc_id, string qa2, string ng2_type)
+    {
+        if (icc_id == null)
+            icc_id = "NULL";
+        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa2=\"" + qa2 + "\", ng2_type=\"" + ng2_type + "\" where imei =" + imei + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
     public int UpdateQuery(KeyValuePair<string, string> plug)
