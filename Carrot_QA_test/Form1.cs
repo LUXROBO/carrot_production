@@ -355,6 +355,8 @@ namespace Carrot_QA_test
             this.tagColl.Clear();
             Count.Text = "0";
             PassCount.Text = "0";
+            _count = "0";
+            _passCount = 0;
 
 
         }
@@ -440,7 +442,7 @@ namespace Carrot_QA_test
                             if (taginfo.TagName.Length == 8)
                             {
                                 taginfo.TagName = "3596271" + taginfo.TagName;
-                                taginfo.CarrotPlugFlag = true;
+                                
                             }
 
                             if (taginfo.TagDataRaw.Count >= 3 && taginfo.TagDataRaw[2].Length > 6)
@@ -449,6 +451,7 @@ namespace Carrot_QA_test
                                 {
                                     taginfo.TagFlagString = "";
                                     string flag_string = taginfo.TagDataRaw[2].Replace("-", "").Substring(0, 2);
+                                    string modeFlag = taginfo.TagDataRaw[2].Replace("-", "").Substring(2, 1);
                                     taginfo.TagFlag = uint.Parse(flag_string);
                                     if ((taginfo.TagFlag & 0x01) == 0x01)
                                         taginfo.TagFlagString += "GPS NG";
@@ -474,6 +477,11 @@ namespace Carrot_QA_test
 
                                     taginfo.TagMenu = taginfo.TagDataRaw[2].Replace("-", "");
                                     taginfo.TagMenu = taginfo.TagMenu.Substring(4, taginfo.TagMenu.Length - 5);
+
+                                    if (taginfo.TagName.Length == 15 && modeFlag.Equals("0"))
+                                    {
+                                        taginfo.CarrotPlugFlag = true;
+                                    }
                                 }
                                 else
                                 {
@@ -482,9 +490,10 @@ namespace Carrot_QA_test
                                     taginfo.TagFlag = (uint)Convert.ToInt32(taginfo.TagMenu.Substring(taginfo.TagMenu.Length-1, 1),16);
                                     taginfo.TagMenu = taginfo.TagMenu.Substring(4, taginfo.TagMenu.Length - 5);
                                     string verionString = taginfo.TagDataRaw[2].Replace("-", "").Substring(0, 2);
+                                    string modeFlag = taginfo.TagDataRaw[2].Replace("-", "").Substring(2, 1);
                                     string progressString ="none";
                                     taginfo.passFlag = "NG";
-                                    taginfo.TagFlagString += "V " + Convert.ToString(((uint)Convert.ToInt32(verionString)));
+                                    taginfo.TagFlagString += "V0.1." + Convert.ToString(((uint)Convert.ToInt32(verionString,16)));
                                     switch (taginfo.TagFlag)
                                     {
                                         case 0x0:
@@ -508,6 +517,12 @@ namespace Carrot_QA_test
                                             break;
                                     }
                                     taginfo.TagFlagString += " "+progressString;
+
+                                    if (taginfo.TagName.Length == 15 && modeFlag.Equals("1"))
+                                    {
+                                        taginfo.CarrotPlugFlag = true;
+                                    }
+
                                 }
                             }
                             else
@@ -629,6 +644,8 @@ namespace Carrot_QA_test
                 this.tagColl.Clear();
                 Count.Text = "0";
                 PassCount.Text = "0";
+                _count = "0";
+                _passCount = 0;
             }
             else
             {
@@ -638,6 +655,8 @@ namespace Carrot_QA_test
                 this.tagColl.Clear();
                 Count.Text = "0";
                 PassCount.Text = "0";
+                _count = "0";
+                _passCount = 0;
             }
             Application.DoEvents();
         }
