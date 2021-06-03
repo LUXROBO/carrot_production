@@ -38,27 +38,27 @@ public class Mydb
         conn.Close();
     }
 
-    public void UpdateQuery(string imei, string icc_id)
+    public int UpdateQuery(string imei, string icc_id)
     {
         if (icc_id == null)
             icc_id = "NULL";
         string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei =" + imei + ';';
-        new MySqlCommand(str_update, conn).ExecuteNonQuery();
+        return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
-    public void UpdateQuery(string imei, string icc_id, string qa1, string ng1_type)
+    public int UpdateQuery(string imei, string icc_id, string qa1, string ng1_type)
     {
         if (icc_id == null)
             icc_id = "NULL";
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id +", qa1=\"" + qa1 + "\", ng1_type=\"" + ng1_type + "\" where imei =" + imei + ';';
-        new MySqlCommand(str_update, conn).ExecuteNonQuery();
+        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa1=\"" + qa1 + "\", ng1_type=\"" + ng1_type + "\" where imei =" + imei + ';';
+        return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
-    public void UpdateQuery(KeyValuePair<string, string> plug)
+    public int UpdateQuery(KeyValuePair<string, string> plug)
     {
         string icc_id = plug.Value;
         if (icc_id == null)
             icc_id = "NULL";
         string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei =" + plug.Key + ';';
-        new MySqlCommand(str_update, conn).ExecuteNonQuery();
+        return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
     public Dictionary<string, string> getList()
     {
@@ -113,7 +113,8 @@ public class Taginfo : INotifyPropertyChanged
     private string flagString = "";
 
     private uint flag = 0;
-    public uint passFlag = 0;
+    public string passFlag = "Fail";
+    public string TagVersion = "";
 
     /** existence of data used to hide/show data on display */
     private bool dataExist = false;
@@ -142,7 +143,7 @@ public class Taginfo : INotifyPropertyChanged
     private string TagCaptorType { get; set; }
     public object TagDataVisibility { get { if (dataExist) { return Visibility.Visible; } else { return Visibility.Collapsed; } } }
     #endregion
-    public Boolean CarrotPlugFlag { get; set;}
+    public Boolean CarrotPlugFlag { get; set; }
 
     /** @brief : store captor type in TagCaptorType
       */
@@ -228,6 +229,7 @@ public class Taginfo : INotifyPropertyChanged
         this.TagRssi = taginfo.TagRssi;
         this.TagData = taginfo.TagData;
         this.TagMenu = taginfo.TagMenu;
+        this.TagVersion = taginfo.TagVersion;
         this.TagFlagString = taginfo.TagFlagString;
         this.flag = taginfo.flag;
     }
