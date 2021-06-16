@@ -7,8 +7,6 @@ using Windows.UI.Xaml;
 using Newtonsoft.Json.Linq;
 using System.Net;
 using System.IO;
-using System.Windows.Forms;
-
 public class Plug {
     public string qa1;
     public string ng1_type;
@@ -73,6 +71,7 @@ public class Mydb
         conn.Close();
     }
 
+
     public int UpdateQuery(string imei, string icc_id)
     {
         if (icc_id == null)
@@ -81,19 +80,19 @@ public class Mydb
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
-    public int UpdateQuery_qa1(string imei, string icc_id, string qa1, string ng1_type)
-    {
-        if (icc_id == null)
-            icc_id = "NULL";
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa1=\"" + qa1 + "\", ng1_type=\"" + ng1_type + "\" where imei =" + imei + ';';
-        return new MySqlCommand(str_update, conn).ExecuteNonQuery();
-    }
-
     public int UpdateQuery_qa2(string imei, string icc_id, string qa2, string ng2_type)
     {
         if (icc_id == null)
             icc_id = "NULL";
         string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa2=\"" + qa2 + "\", ng2_type=\"" + ng2_type + "\" where imei =" + imei + ';';
+        return new MySqlCommand(str_update, conn).ExecuteNonQuery();
+    }
+
+    public int UpdateQuery_qa3(string imei, string icc_id, string qa3, string ng3_type)
+    {
+        if (icc_id == null)
+            icc_id = "NULL";
+        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\" where imei =" + imei + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
@@ -327,12 +326,29 @@ public class Taginfo : INotifyPropertyChanged
     private string flagString = "";
 
     private uint flag = 0;
-    public string passFlag = "Fail";
+    private string _passFlag = "Fail";
+    public string passFlag
+    {
+        get
+        {
+            return _passFlag;
+        }
+        set
+        {
+            if (!_passFlag.Equals(value))
+            {
+                _passFlag = value;
+                passFlagUpdate = true;
+            }
+        }
+    }
+    public bool passFlagUpdate = true;
     public string TagVersion = "";
     public string dbString = "NG";
     public bool dbFlag = false;
     public string serverString = "NG";
     public bool serverFlag = false;
+    public DateTime updateTime;
 
     /** existence of data used to hide/show data on display */
     private bool dataExist = false;
@@ -394,49 +410,6 @@ public class Taginfo : INotifyPropertyChanged
         }
     }
 
-    /** @brief : format TagRawData and store it in TagData
-     * set visibility of data value depending on data existance
-     * call getCaptorType
-     */
-    public void getData()
-    {
-        getCaptorType();
-        dataExist = !TagCaptorType.Equals(String.Empty);
-        if (TagCaptorType.Contains(captor_T))
-        {
-            int lsb = Convert.ToInt32(TagDataRaw[1].Substring(6, 2), 16);
-            int msb = Convert.ToInt32(TagDataRaw[1].Substring(9, 2), 16);
-            int data_int = lsb + (msb << 8);
-            string data_str = data_int.ToString().Substring(0, 2) + "." + data_int.ToString().Substring(2, 2);
-            TagData += String.Format("T° : {0}°C", data_str);
-        }
-        if (TagCaptorType.Contains(captor_MAG_MOV))
-        {
-            int lsb = Convert.ToInt32(TagDataRaw[1].Substring(6, 2), 16);
-            int msb = Convert.ToInt32(TagDataRaw[1].Substring(9, 2), 16);
-            int data_int = lsb + (msb << 8);
-
-            TagData += String.Format("MAG/MOV : {0}", data_int);
-        }
-        if (TagCaptorType.Contains(captor_RH))
-        {
-            int data_int = Convert.ToInt32(TagDataRaw[2].Substring(6, 2), 16);
-            TagData += String.Format("  RH : {0}%", data_int);
-        }
-        if (TagCaptorType.Contains(captor_ANG))
-        {
-            int lsb = Convert.ToInt32(TagDataRaw[1].Substring(6, 2), 16);
-            int msb = Convert.ToInt32(TagDataRaw[1].Substring(9, 2), 16);
-            int data_int_x = lsb + (msb << 8);
-            lsb = Convert.ToInt32(TagDataRaw[1].Substring(12, 2), 16);
-            msb = Convert.ToInt32(TagDataRaw[1].Substring(15, 2), 16);
-            int data_int_y = lsb + (msb << 8);
-            lsb = Convert.ToInt32(TagDataRaw[1].Substring(18, 2), 16);
-            msb = Convert.ToInt32(TagDataRaw[1].Substring(21, 2), 16);
-            int data_int_z = lsb + (msb << 8);
-            TagData = String.Format("X:{0} Y:{1} Z:{2}", data_int_x.ToString(), data_int_y.ToString(), data_int_z.ToString());
-        }
-    }
 
     /** @brief : update showned values
      * @param [in] taginfo : Taginfo with updated values
@@ -449,6 +422,9 @@ public class Taginfo : INotifyPropertyChanged
         this.TagMenu = taginfo.TagMenu;
         this.TagVersion = taginfo.TagVersion;
         this.TagFlagString = taginfo.TagFlagString;
+        this.passFlag = taginfo.passFlag;
+
         this.flag = taginfo.flag;
-    }
+        this.updateTime = taginfo.updateTime;
+}
 }

@@ -27,12 +27,6 @@ namespace Carrot_QA_test
         private System.Windows.Forms.Button BtnUpload;
         private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.ListView listView1;
-        private System.Windows.Forms.TextBox txtCheck;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label Count;
-        private System.Windows.Forms.Label PassCount;
         private System.ComponentModel.IContainer components = null;
         /// <summary>
         /// 사용 중인 모든 리소스를 정리합니다.
@@ -66,6 +60,10 @@ namespace Carrot_QA_test
         private Button BtnMode;
         private ColumnHeader DB;
         private ColumnHeader Reg;
+        private Label PassCount;
+        private Label Count;
+        private Label label3;
+        private Label label2;
     }
 }
 
