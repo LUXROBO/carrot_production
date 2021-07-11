@@ -305,90 +305,34 @@ namespace Carrot_QA_test
         }
         private void DbTimeUp(object source, ElapsedEventArgs e)
         {
-            try
-            {
-                foreach (Taginfo tag in tagColl)
-                {
-                    TimeSpan timeDiff = DateTime.Now - tag.updateTime;
-                    if(timeDiff.Seconds > 10)
-                    {
-                        tagList.Remove(tag.TagMac);
-                        tagColl.Remove(tag);
-                        continue;
-                    }
-                    if (tag.passFlagUpdate)
-                    {
-                        if (modeFlag == 0)
-                        {
-                            if (mydb.UpdateQuery_qa2(tag.TagName, tag.TagMenu, tag.passFlag, tag.TagFlagString) == 1)
-                            {
-                                tag.dbFlag = true;
-                                tag.dbString = "OK";
-                            }
-                            else
-                            {
-                                tag.dbString = "ERROR";
-                            }
-                        }
-                        else
-                        {
-                            if (mydb.UpdateQuery_qa3(tag.TagName, tag.TagMenu, tag.passFlag, tag.TagFlagString) == 1)
-                            {
-                                tag.dbFlag = true;
-                                tag.dbString = "OK";
-                            }
-                            else
-                            {
-                                tag.dbString = "ERROR";
-                            }
-                        }
-                        if (!tag.serverFlag && tag.passFlag == "OK")
-                        {
-                            int ret = mydb.regist_server(tag.TagName);
-                            if (ret == 1)
-                            {
-                                tag.serverFlag = true;
-                                tag.serverString = "OK";
-                            }
-                            else
-                            {
-                                tag.serverString = ret.ToString();
-                            }
-
-                        }
-                    }
-                }
-            }
-            catch
-            {
-
-            }
         }
         private void ListTimeUp(object source, ElapsedEventArgs e)
         {
-
-            this.listView1.Items.Clear();
             try
             {
+                listView1.BeginUpdate();
+                listView1.Items.Clear();
                 foreach (Taginfo tag in tagColl)
                 {
+
                     ListViewItem LVI = new ListViewItem(tag.TagName);
+
                     LVI.SubItems.Add(tag.TagMenu);
                     LVI.SubItems.Add(Convert.ToString(tag.TagRssi));
                     LVI.SubItems.Add(tag.passFlag);
                     LVI.SubItems.Add(tag.dbString);
                     LVI.SubItems.Add(tag.serverString);
                     LVI.SubItems.Add(Convert.ToString(tag.TagFlagString));
-                    
-                    this.listView1.Items.Add(LVI);
+
+                    listView1.Items.Add(LVI);
                 }
                 Count.Text = _count;
                 PassCount.Text = Convert.ToString(_passCount);
                 Application.DoEvents();
             }
-            catch
+            finally
             {
-
+                listView1.EndUpdate();
             }
 
         }
@@ -473,8 +417,6 @@ namespace Carrot_QA_test
                 }
                 sw.Close();
                 sw.Dispose();
-
-
             }
 
         }
