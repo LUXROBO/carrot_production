@@ -618,7 +618,25 @@ namespace Carrot_QA_test
                         result_string = "OK";
                     else
                         result_string = "Fail";
-                    string reg_result = mydb.regist_server(imei).ToString();
+                    string reg_result = "Fail";
+                    int let = mydb.regist_server(imei);
+                    if (let == 1)
+                    {
+                        reg_result = "Test, Main Server Register!";
+                    }
+                    else if (let == -1)
+                    {
+                        reg_result = "Not find DB data";
+                    }
+                    else if (let == -2)
+                    {
+                        reg_result = "Not Connect Test Server, check your IP(use VPN)";
+                    }
+                    else if (let == -2)
+                    {
+                        reg_result = "Not Connect Main Server, check your IP(use VPN)";
+                    }
+
                     msg += imei + " Upload Result :" + result_string +", "+ reg_result + "\n";
                 }
             }

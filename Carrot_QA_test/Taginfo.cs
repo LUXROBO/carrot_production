@@ -103,15 +103,16 @@ public class Mydb
         httpWebRequest.Host = host;
         httpWebRequest.ContentType = "application/json";
         httpWebRequest.Headers.Add("Authorization", bearer);
-        using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
-        {
-            string json = regPayload.ToString();
-            streamWriter.Write(json);
-            streamWriter.Flush();
-            streamWriter.Close();
-        }
+
         try
         {
+            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            {
+                string json = regPayload.ToString();
+                streamWriter.Write(json);
+                streamWriter.Flush();
+                streamWriter.Close();
+            }
             var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
             using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
             {
@@ -127,13 +128,16 @@ public class Mydb
             Console.WriteLine(webExcp.ToString());
             // Get HttpWebResponse so that you can check the HTTP status code.  
             HttpWebResponse httpResponse = (HttpWebResponse)webExcp.Response;
+            if(httpResponse == null)
+            {
+                return -1;
+            }
             return (int)httpResponse.StatusCode;
         }
     }
 
     public int regist_server(string imei)
     {
-        string retrun_text = "";
         int ret;
         GetProduct(imei);
         try
@@ -151,7 +155,7 @@ public class Mydb
         {
             ret = registries_server(testServerUrl, "t-dtag.carrotins.com", "Bearer 8PKLPS2623330268GXRAQK");
 
-            if (ret == 200 || ret == 409)
+            if (ret == 200 || ret == 409 || ret == -1)
             {
                 pluglist[imei].testServerFlag = true;
                 return 1;
@@ -165,7 +169,7 @@ public class Mydb
         if(!pluglist[imei].mainServerFlag)
         {
             ret = registries_server(mainServerUrl, "dtag.carrotins.com", "Bearer EJH6NE0851819521SSSA7M");
-            if (ret == 200 || ret == 409)
+            if (ret == 200 || ret == 409 || ret == -1)
             {
                 pluglist[imei].mainServerFlag = true;
                 return 1;
