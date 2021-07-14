@@ -328,11 +328,11 @@ namespace Carrot_QA_test
                 }
                 Count.Text = _count;
                 PassCount.Text = Convert.ToString(_passCount);
-                Application.DoEvents();
             }
             finally
             {
                 listView1.EndUpdate();
+                Application.DoEvents();
             }
 
         }
