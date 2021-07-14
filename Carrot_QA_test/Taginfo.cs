@@ -20,7 +20,7 @@ public class Plug {
     public string lot_no;
     public string sn;
     public bool testServerFlag { get; set; } = false;
-    public bool mainServerFlag { get; set; } = true;
+    public bool mainServerFlag { get; set; } = false;
 };
 
 public class Mydb
@@ -38,7 +38,7 @@ public class Mydb
             { "deviceId", "LUX1_359627100041471"},
             { "cmBzpsRgtDscno", "3007022" },
             { "divcSrlNo", "CPA3007022" },
-            { "divcNm", "Carrot Plug" },
+            { "divcNm", "Carrot Plug 1" },
             { "mdnm", "IV-GT1LM1BT" },
             { "mnftrNm","LUXROBO" },
             { "prddt", "2021-01-19" }
@@ -145,7 +145,18 @@ public class Mydb
             regPayload["deviceId"] = pluglist[imei].device_id;
             regPayload["cmBzpsRgtDscno"] = pluglist[imei].sn;
             regPayload["divcSrlNo"] = pluglist[imei].lot_no;
-            regPayload["prddt"] = pluglist[imei].prod_data;
+            if(pluglist[imei].prod_data == "NULL")
+            {
+                regPayload["prddt"] = DateTime.Now.ToString("yyyy-MM-dd");
+            }
+            else
+            {
+                regPayload["prddt"] = pluglist[imei].prod_data;
+            }
+            regPayload["divcNm"] = "Carrot Plug 1";
+            regPayload["mdnm"] = "IV-GT1LM1BT";
+            regPayload["mnftrNm"] = "LUXROBO";
+
         }
         catch(KeyNotFoundException keyExcp)
         {
@@ -155,10 +166,9 @@ public class Mydb
         {
             ret = registries_server(testServerUrl, "t-dtag.carrotins.com", "Bearer 8PKLPS2623330268GXRAQK");
 
-            if (ret == 200 || ret == 409 || ret == -1)
+            if (ret == 201 || ret == 409 || ret == -1)
             {
                 pluglist[imei].testServerFlag = true;
-                return 1;
             }
             else
             {
@@ -169,7 +179,7 @@ public class Mydb
         if(!pluglist[imei].mainServerFlag)
         {
             ret = registries_server(mainServerUrl, "dtag.carrotins.com", "Bearer EJH6NE0851819521SSSA7M");
-            if (ret == 200 || ret == 409 || ret == -1)
+            if (ret == 201 || ret == 409 || ret == -1)
             {
                 pluglist[imei].mainServerFlag = true;
                 return 1;

@@ -632,7 +632,7 @@ namespace Carrot_QA_test
                     {
                         reg_result = "Not Connect Test Server, check your IP(use VPN)";
                     }
-                    else if (let == -2)
+                    else if (let == -3)
                     {
                         reg_result = "Not Connect Main Server, check your IP(use VPN)";
                     }
