@@ -19,6 +19,8 @@ public class Plug {
     public string prod_data;
     public string lot_no;
     public string sn;
+    public string tdtag;
+    public string dtag;
     public bool testServerFlag { get; set; } = false;
     public bool mainServerFlag { get; set; } = false;
 };
@@ -96,6 +98,12 @@ public class Mydb
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
+    private int UpdateQuery_dtag(string imei, string dtag, string tdtag)
+    {
+        string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\" where imei =" + imei + ';';
+        return new MySqlCommand(str_update, conn).ExecuteNonQuery();
+    }
+
     private int registries_server(string url, string host, string bearer)
     {
         var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
@@ -138,7 +146,8 @@ public class Mydb
 
     public int regist_server(string imei)
     {
-        int ret;
+        int ret, return_ret;
+        string dtag_string, tdtag_string;
         GetProduct(imei);
         try
         {
@@ -156,41 +165,68 @@ public class Mydb
             regPayload["divcNm"] = "Carrot Plug 1";
             regPayload["mdnm"] = "IV-GT1LM1BT";
             regPayload["mnftrNm"] = "LUXROBO";
+            dtag_string = pluglist[imei].dtag;
+            tdtag_string = pluglist[imei].tdtag;
+            if (tdtag_string == "OK")
+            {
+                pluglist[imei].testServerFlag = true;
+            }
+            if (dtag_string == "OK")
+            {
+                pluglist[imei].mainServerFlag = true;
+            }
 
         }
         catch(KeyNotFoundException keyExcp)
         {
             return -1;
         }
+        return_ret = -1;
+
         if (!pluglist[imei].testServerFlag)
         {
             ret = registries_server(testServerUrl, "t-dtag.carrotins.com", "Bearer 8PKLPS2623330268GXRAQK");
 
-            if (ret == 201 || ret == 409 || ret == -1)
+            if (ret == 201 || ret == 409)
             {
                 pluglist[imei].testServerFlag = true;
+                tdtag_string = "OK";
+                return_ret = 2;
             }
             else
             {
-                return -2;
+                return_ret = -2;
             }
+        }
+        else if(tdtag_string == "OK")
+        {
+            return_ret = 2;
         }
 
         if(!pluglist[imei].mainServerFlag)
         {
             ret = registries_server(mainServerUrl, "dtag.carrotins.com", "Bearer EJH6NE0851819521SSSA7M");
-            if (ret == 201 || ret == 409 || ret == -1)
+            if (ret == 201 || ret == 409)
             {
                 pluglist[imei].mainServerFlag = true;
-                return 1;
+                dtag_string = "OK";
+                return_ret = 1;
             }
+            else
+            {
+                return_ret = -3;
+            }
+        }else if(dtag_string == "OK")
+        {
+            return_ret = 1;
         }
-        return -3;
+        UpdateQuery_dtag(imei, dtag_string, tdtag_string);
+        return return_ret;
     }
 
     public Dictionary<string, Plug> GetProduct(string imei)
     {
-        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id FROM carrotPlugList.tb_product where imei=" + imei+";", conn);
+        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, dtag, tdtag FROM carrotPlugList.tb_product where imei=" + imei+";", conn);
         if(pluglist.ContainsKey(imei))
             pluglist.Remove(imei);
         rdr = cmd_select.ExecuteReader();
@@ -239,6 +275,22 @@ public class Mydb
             {
                 data.lot_no = "NULL";
             }
+            try
+            {
+                data.dtag = rdr["dtag"].ToString();
+            }
+            catch
+            {
+                data.dtag = "NULL";
+            }
+            try
+            {
+                data.tdtag = rdr["tdtag"].ToString();
+            }
+            catch
+            {
+                data.tdtag = "NULL";
+            }
 
             pluglist.Add(rdr["imei"].ToString(), data);
         }
@@ -253,7 +305,7 @@ public class Mydb
     public Dictionary<string, Plug> ReflashList()
     {
 
-        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id FROM carrotPlugList.tb_product LIMIT 0,1000; ", conn);
+        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, dtag, tdtag FROM carrotPlugList.tb_product LIMIT 0,1000; ", conn);
         pluglist.Clear();
         rdr = cmd_select.ExecuteReader();
         while (rdr.Read())
@@ -299,6 +351,23 @@ public class Mydb
             {
                 data.lot_no = "NULL";
             }
+            try
+            {
+                data.lot_no = rdr["dtag"].ToString();
+            }
+            catch
+            {
+                data.lot_no = "NULL";
+            }
+            try
+            {
+                data.lot_no = rdr["tdtag"].ToString();
+            }
+            catch
+            {
+                data.lot_no = "NULL";
+            }
+
 
 
             //Console.WriteLine("{0}\t{1}\t{2}", rdr["sn"], rdr["imei"], rdr["icc_id"]);

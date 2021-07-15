@@ -38,6 +38,7 @@ namespace Carrot_QA_test
         Timer listTimer;
         Timer dbTimer;
         Mydb mydb = new Mydb();
+        private bool db_timer_flag = false, listup_flag = false;
 
         public Form1()
         {
@@ -305,70 +306,80 @@ namespace Carrot_QA_test
         }
         private void DbTimeUp(object source, ElapsedEventArgs e)
         {
-            foreach (Taginfo tag in tagColl)
+            if (!listup_flag)
             {
-                if(tag.passFlagUpdate)
+                db_timer_flag = true;
+                foreach (Taginfo tag in tagColl)
                 {
-                    string icc_id = tag.TagMenu;
-                    string imei = tag.TagName;
-                    int result;
-                    if (modeFlag == 0)
-                        result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString);
-                    else
-                        result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString);
+                    if (tag.passFlagUpdate)
+                    {
+                        string icc_id = tag.TagMenu;
+                        string imei = tag.TagName;
+                        int result;
+                        if (modeFlag == 0)
+                            result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString);
+                        else
+                            result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString);
 
-                    if (result == 1)
-                        tag.dbString = "OK";
-                    else
-                        tag.dbString = "Fail";
-                    int let = mydb.regist_server(imei);
-                    if (let == 1)
-                    {
-                        tag.serverString = "OK";
+                        if (result == 1)
+                            tag.dbString = "OK";
+                        else
+                            tag.dbString = "Fail";
+                        int let = mydb.regist_server(imei);
+                        if (let == 1)
+                        {
+                            tag.serverString = "OK";
+                        }
+                        else if (let == -1)
+                        {
+                            tag.serverString = "DB Fail";
+                        }
+                        else if (let == -2)
+                        {
+                            tag.serverString = "TS Fail";
+                        }
+                        else if (let == -3)
+                        {
+                            tag.serverString = "MS Fail";
+                        }
+                        tag.passFlagUpdate = false;
                     }
-                    else if (let == -1)
-                    {
-                        tag.serverString = "DB Fail";
-                    }
-                    else if (let == -2)
-                    {
-                        tag.serverString = "TS Fail";
-                    }
-                    else if (let == -3)
-                    {
-                        tag.serverString = "MS Fail";
-                    }
-                    tag.passFlagUpdate = false;
                 }
+                db_timer_flag = false;
             }
         }
         private void ListTimeUp(object source, ElapsedEventArgs e)
         {
-            try
+            listup_flag = true;
+            if (!db_timer_flag)
             {
-                listView1.BeginUpdate();
-                listView1.Items.Clear();
-                foreach (Taginfo tag in tagColl)
+                try
                 {
+                    listView1.BeginUpdate();
+                    listView1.Items.Clear();
+                    foreach (Taginfo tag in tagColl)
+                    {
 
-                    ListViewItem LVI = new ListViewItem(tag.TagName);
+                        ListViewItem LVI = new ListViewItem(tag.TagName);
 
-                    LVI.SubItems.Add(tag.TagMenu);
-                    LVI.SubItems.Add(Convert.ToString(tag.TagRssi));
-                    LVI.SubItems.Add(tag.passFlag);
-                    LVI.SubItems.Add(tag.dbString);
-                    LVI.SubItems.Add(tag.serverString);
-                    LVI.SubItems.Add(Convert.ToString(tag.TagFlagString));
+                        LVI.SubItems.Add(tag.TagMenu);
+                        LVI.SubItems.Add(Convert.ToString(tag.TagRssi));
+                        LVI.SubItems.Add(tag.passFlag);
+                        LVI.SubItems.Add(tag.dbString);
+                        LVI.SubItems.Add(tag.serverString);
+                        LVI.SubItems.Add(Convert.ToString(tag.TagFlagString));
 
-                    listView1.Items.Add(LVI);
+                        listView1.Items.Add(LVI);
+                    }
+                    Count.Text = _count;
+                    PassCount.Text = Convert.ToString(_passCount);
                 }
-                Count.Text = _count;
-                PassCount.Text = Convert.ToString(_passCount);
-            }
-            finally
-            {
-                listView1.EndUpdate();
-                Application.DoEvents();
+                finally
+                {
+                    listView1.EndUpdate();
+                    Application.DoEvents();
+                }
+                listup_flag = false;
             }
 
         }
