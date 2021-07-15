@@ -305,6 +305,42 @@ namespace Carrot_QA_test
         }
         private void DbTimeUp(object source, ElapsedEventArgs e)
         {
+            foreach (Taginfo tag in tagColl)
+            {
+                if(tag.passFlagUpdate)
+                {
+                    string icc_id = tag.TagMenu;
+                    string imei = tag.TagName;
+                    int result;
+                    if (modeFlag == 0)
+                        result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString);
+                    else
+                        result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString);
+
+                    if (result == 1)
+                        tag.dbString = "OK";
+                    else
+                        tag.dbString = "Fail";
+                    int let = mydb.regist_server(imei);
+                    if (let == 1)
+                    {
+                        tag.serverString = "DB Fail";
+                    }
+                    else if (let == -1)
+                    {
+                        tag.serverString = "Fail";
+                    }
+                    else if (let == -2)
+                    {
+                        tag.serverString = "TS Fail";
+                    }
+                    else if (let == -3)
+                    {
+                        tag.serverString = "MS Fail";
+                    }
+                    tag.passFlagUpdate = false;
+                }
+            }
         }
         private void ListTimeUp(object source, ElapsedEventArgs e)
         {
@@ -623,21 +659,30 @@ namespace Carrot_QA_test
                     if (let == 1)
                     {
                         reg_result = "Test, Main Server Register!";
+                        tag.dbString = "OK";
+                        tag.serverString = "OK";
                     }
                     else if (let == -1)
                     {
                         reg_result = "Not find DB data";
+                        tag.dbString = "Fail";
+                        tag.serverString = "Fail";
+
                     }
                     else if (let == -2)
                     {
                         reg_result = "Not Connect Test Server, check your IP(use VPN)";
+                        tag.dbString = "OK";
+                        tag.serverString = "Fail";
                     }
                     else if (let == -3)
                     {
                         reg_result = "Not Connect Main Server, check your IP(use VPN)";
+                        tag.dbString = "OK";
+                        tag.serverString = "Fail";
                     }
-
                     msg += imei + " Upload Result :" + result_string +", "+ reg_result + "\n";
+                    tag.passFlagUpdate = false;
                 }
             }
             MessageBox.Show(msg);
