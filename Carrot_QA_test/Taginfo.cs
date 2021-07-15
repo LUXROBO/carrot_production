@@ -409,7 +409,7 @@ public class Taginfo : INotifyPropertyChanged
     private string flagString = "";
 
     private uint flag = 0;
-    private string _passFlag = "Fail";
+    private string _passFlag = "NG";
     public string passFlag
     {
         get

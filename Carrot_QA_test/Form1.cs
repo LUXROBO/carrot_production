@@ -573,19 +573,19 @@ namespace Carrot_QA_test
                                         {
                                             case 0x0:
                                                 progressString = "Booting -> CCID/IMEI check";
-                                                taginfo.passFlag = "Fail";
+                                                taginfo.passFlag = "NG";
                                                 break;
                                             case 0x1:
                                                 progressString = "CCID/IMEI OK -> Phone number";
-                                                taginfo.passFlag = "Fail";
+                                                taginfo.passFlag = "NG";
                                                 break;
                                             case 0x2:
                                                 progressString = "Phone number OK -> FOTA";
-                                                taginfo.passFlag = "Fail";
+                                                taginfo.passFlag = "NG";
                                                 break;
                                             case 0x3:
                                                 progressString = "FOTA OK -> Provisioning";
-                                                taginfo.passFlag = "Fail";
+                                                taginfo.passFlag = "NG";
                                                 break;
                                             case 0x4:
                                                 progressString = "Provisioning OK -> MQTT Connect";
