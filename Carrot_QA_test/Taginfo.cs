@@ -420,8 +420,11 @@ public class Taginfo : INotifyPropertyChanged
         {
             if (!_passFlag.Equals(value))
             {
-                _passFlag = value;
-                passFlagUpdate = true;
+                if(_passFlag != "OK")
+                {
+                    _passFlag = value;
+                    passFlagUpdate = true;
+                }
             }
         }
     }
