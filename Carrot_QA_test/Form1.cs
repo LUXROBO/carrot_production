@@ -195,7 +195,7 @@ namespace Carrot_QA_test
             // dbTimer
             // 
             this.dbTimer.Enabled = true;
-            this.dbTimer.Interval = 1000D;
+            this.dbTimer.Interval = 3000D;
             this.dbTimer.SynchronizingObject = this;
             this.dbTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.DbTimeUp);
             // 
@@ -347,6 +347,11 @@ namespace Carrot_QA_test
                         }
                         tag.passFlagUpdate = false;
                     }
+                    TimeSpan timeDiff = DateTime.Now - tag.updateTime;
+                    if (timeDiff.Seconds > 10)
+                    {
+                        tag.CarrotPlugFlag = false;
+                    }
                 }
             }
             catch
@@ -364,7 +369,6 @@ namespace Carrot_QA_test
                 {
 
                     ListViewItem LVI = new ListViewItem(tag.TagName);
-
                     LVI.SubItems.Add(tag.TagMenu);
                     LVI.SubItems.Add(Convert.ToString(tag.TagRssi));
                     LVI.SubItems.Add(tag.passFlag);
