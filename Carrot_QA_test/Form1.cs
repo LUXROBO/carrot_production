@@ -308,6 +308,7 @@ namespace Carrot_QA_test
         {
             try
             {
+                Taginfo tagTimeout = null;
                 foreach (Taginfo tag in tagColl)
                 {
 
@@ -347,11 +348,18 @@ namespace Carrot_QA_test
                         }
                         tag.passFlagUpdate = false;
                     }
+
                     TimeSpan timeDiff = DateTime.Now - tag.updateTime;
                     if (timeDiff.Seconds > 10)
                     {
-                        tag.CarrotPlugFlag = false;
+                        tagTimeout = tag;
+                        continue;
                     }
+                }
+
+                if (tagTimeout != null)
+                {
+                    tagColl.Remove(tagTimeout);
                 }
             }
             catch
@@ -369,7 +377,6 @@ namespace Carrot_QA_test
                 {
                     foreach (Taginfo tag in tagColl)
                     {
-
                         ListViewItem LVI = new ListViewItem(tag.TagName);
                         LVI.SubItems.Add(tag.TagMenu);
                         LVI.SubItems.Add(Convert.ToString(tag.TagRssi));
