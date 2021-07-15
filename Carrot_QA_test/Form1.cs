@@ -324,11 +324,11 @@ namespace Carrot_QA_test
                     int let = mydb.regist_server(imei);
                     if (let == 1)
                     {
-                        tag.serverString = "DB Fail";
+                        tag.serverString = "OK";
                     }
                     else if (let == -1)
                     {
-                        tag.serverString = "Fail";
+                        tag.serverString = "DB Fail";
                     }
                     else if (let == -2)
                     {
