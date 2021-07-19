@@ -390,7 +390,7 @@ namespace Carrot_QA_test
                 }
                 catch
                 {
-
+                    tagColl.Clear();
                 }
                 Count.Text = _count;
                 PassCount.Text = Convert.ToString(_passCount);
