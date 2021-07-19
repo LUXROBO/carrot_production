@@ -359,6 +359,7 @@ namespace Carrot_QA_test
 
                 if (tagTimeout != null)
                 {
+                    tagList.Remove(tagTimeout.TagMac);
                     tagColl.Remove(tagTimeout);
                 }
             }
@@ -384,13 +385,11 @@ namespace Carrot_QA_test
                         LVI.SubItems.Add(tag.dbString);
                         LVI.SubItems.Add(tag.serverString);
                         LVI.SubItems.Add(Convert.ToString(tag.TagFlagString));
-
                         listView1.Items.Add(LVI);
                     }
                 }
                 catch
                 {
-                    tagColl.Clear();
                 }
                 Count.Text = _count;
                 PassCount.Text = Convert.ToString(_passCount);
