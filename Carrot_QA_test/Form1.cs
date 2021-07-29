@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Net;
+using System.Net.Sockets;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -38,7 +40,32 @@ namespace Carrot_QA_test
         Timer listTimer;
         Timer dbTimer;
         Mydb mydb = new Mydb();
-        private bool db_timer_flag = false, listup_flag = false;
+
+        public static string GetInternalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+
+            throw new Exception("No network adapters with an IPv4 address in the system!");
+        }
+        public static string GetExternalIPAddress()
+        {
+            string externalip = new WebClient().DownloadString("http://ipinfo.io/ip").Trim();
+
+            if (String.IsNullOrWhiteSpace(externalip))
+            {
+                externalip = GetInternalIPAddress();//null경우 Get Internal IP를 가져오게 한다.
+            }
+
+            return externalip;
+        }
 
         public Form1()
         {
@@ -308,6 +335,16 @@ namespace Carrot_QA_test
         {
             try
             {
+
+                if (GetExternalIPAddress() != "175.209.190.173")
+                {
+                    this.dbTimer.Stop();
+                    if (MessageBox.Show("IP 주소가 다릅니다. VPN과 인터넷 상태를 점검해주세요.","Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                    {
+                        Application.Exit();
+                    }
+                    this.dbTimer.Start();
+                }
                 Taginfo tagTimeout = null;
                 foreach (Taginfo tag in tagColl)
                 {
