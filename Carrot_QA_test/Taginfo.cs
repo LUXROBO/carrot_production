@@ -98,8 +98,9 @@ public class Mydb
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
-    private int UpdateQuery_dtag(string imei, string dtag, string tdtag)
+    private int UpdateQuery_dtag(string imei, string dtag)
     {
+        string tdtag = "NG";
         string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\" where imei =" + imei + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
@@ -147,7 +148,7 @@ public class Mydb
     public int regist_server(string imei)
     {
         int ret, return_ret;
-        string dtag_string, tdtag_string;
+        string dtag_string;
         GetProduct(imei);
         try
         {
@@ -166,11 +167,11 @@ public class Mydb
             regPayload["mdnm"] = "IV-GT1LM1BT";
             regPayload["mnftrNm"] = "LUXROBO";
             dtag_string = pluglist[imei].dtag;
-            tdtag_string = pluglist[imei].tdtag;
-            if (tdtag_string == "OK")
-            {
-                pluglist[imei].testServerFlag = true;
-            }
+            //tdtag_string = pluglist[imei].tdtag;
+            //if (tdtag_string == "OK")
+            //{
+            //    pluglist[imei].testServerFlag = true;
+            //}
             if (dtag_string == "OK")
             {
                 pluglist[imei].mainServerFlag = true;
@@ -183,25 +184,25 @@ public class Mydb
         }
         return_ret = -1;
 
-        if (!pluglist[imei].testServerFlag)
-        {
-            ret = registries_server(testServerUrl, "t-dtag.carrotins.com", "Bearer 8PKLPS2623330268GXRAQK");
+        //if (!pluglist[imei].testServerFlag)
+        //{
+        //    ret = registries_server(testServerUrl, "t-dtag.carrotins.com", "Bearer 8PKLPS2623330268GXRAQK");
 
-            if (ret == 201 || ret == 409)
-            {
-                pluglist[imei].testServerFlag = true;
-                tdtag_string = "OK";
-                return_ret = 2;
-            }
-            else
-            {
-                return_ret = -2;
-            }
-        }
-        else if(tdtag_string == "OK")
-        {
-            return_ret = 2;
-        }
+        //    if (ret == 201 || ret == 409)
+        //    {
+        //        pluglist[imei].testServerFlag = true;
+        //        tdtag_string = "OK";
+        //        return_ret = 2;
+        //    }
+        //    else
+        //    {
+        //        return_ret = -2;
+        //    }
+        //}
+        //else if(tdtag_string == "OK")
+        //{
+        //    return_ret = 2;
+        //}
 
         if(!pluglist[imei].mainServerFlag)
         {
@@ -220,7 +221,7 @@ public class Mydb
         {
             return_ret = 1;
         }
-        UpdateQuery_dtag(imei, dtag_string, tdtag_string);
+        UpdateQuery_dtag(imei, dtag_string);
         return return_ret;
     }
 
