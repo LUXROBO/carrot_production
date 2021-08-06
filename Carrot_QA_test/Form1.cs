@@ -363,27 +363,24 @@ namespace Carrot_QA_test
                             tag.dbString = "OK";
                         else
                             tag.dbString = "Fail";
-                        if (modeFlag == 1)
+                        if (modeFlag == 1 || (modeFlag == 0 && tag.passFlag == "OK"))
                         {
-                            if (tag.TagFlag > 0x01)
+                            int let = mydb.regist_server(imei);
+                            if (let == 1)
                             {
-                                int let = mydb.regist_server(imei);
-                                if (let == 1)
-                                {
-                                    tag.serverString = "OK";
-                                }
-                                else if (let == -1)
-                                {
-                                    tag.serverString = "DB Fail";
-                                }
-                                else if (let == -2)
-                                {
-                                    tag.serverString = "TS Fail";
-                                }
-                                else if (let == -3)
-                                {
-                                    tag.serverString = "MS Fail";
-                                }
+                                tag.serverString = "OK";
+                            }
+                            else if (let == -1)
+                            {
+                                tag.serverString = "DB Fail";
+                            }
+                            else if (let == -2)
+                            {
+                                tag.serverString = "TS Fail";
+                            }
+                            else if (let == -3)
+                            {
+                                tag.serverString = "MS Fail";
                             }
                         }
                         tag.passFlagUpdate = false;
