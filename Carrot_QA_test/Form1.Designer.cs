@@ -64,6 +64,8 @@ namespace Carrot_QA_test
         private Label Count;
         private Label label3;
         private Label label2;
+        private CheckBox VersionCheck;
+        private Label ServerVersionText;
     }
 }
 
