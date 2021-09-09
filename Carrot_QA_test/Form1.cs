@@ -670,7 +670,7 @@ namespace Carrot_QA_test
                                                 taginfo.passFlag = "NG";
                                                 if (VersionCheck.Checked)
                                                 {
-                                                    if (ServerVersion == int.Parse(verionString))
+                                                    if (ServerVersion <= int.Parse(verionString))
                                                     {
                                                         taginfo.passFlag = "OK";
                                                     }
