@@ -674,10 +674,10 @@ namespace Carrot_QA_test
                                                     {
                                                         taginfo.passFlag = "OK";
                                                     }
-                                                    else
-                                                    {
-                                                        taginfo.passFlag = "OK";
-                                                    }
+                                                }
+                                                else
+                                                {
+                                                    taginfo.passFlag = "OK";
                                                 }
                                                 break;
                                         }
