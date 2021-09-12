@@ -100,6 +100,7 @@ namespace Carrot_QA_test
             this.label3 = new System.Windows.Forms.Label();
             this.VersionCheck = new System.Windows.Forms.CheckBox();
             this.ServerVersionText = new System.Windows.Forms.Label();
+            this.Scan = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.listTimer)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dbTimer)).BeginInit();
             this.SuspendLayout();
@@ -320,11 +321,23 @@ namespace Carrot_QA_test
             this.ServerVersionText.TabIndex = 16;
             this.ServerVersionText.Text = "Firmware Version :";
             // 
+            // Scan
+            // 
+            this.Scan.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
+            this.Scan.Location = new System.Drawing.Point(16, 57);
+            this.Scan.Name = "Scan";
+            this.Scan.Size = new System.Drawing.Size(135, 42);
+            this.Scan.TabIndex = 17;
+            this.Scan.Text = "QR Scan";
+            this.Scan.UseVisualStyleBackColor = true;
+            this.Scan.Click += new System.EventHandler(this.Scan_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1405, 1142);
+            this.Controls.Add(this.Scan);
             this.Controls.Add(this.ServerVersionText);
             this.Controls.Add(this.VersionCheck);
             this.Controls.Add(this.BtnMode);
@@ -425,7 +438,7 @@ namespace Carrot_QA_test
                     }
 
                     TimeSpan timeDiff = DateTime.Now - tag.updateTime;
-                    if (timeDiff.Seconds > 10)
+                    if (timeDiff.Seconds > 20)
                     {
                         tagTimeout = tag;
                         continue;
@@ -445,36 +458,38 @@ namespace Carrot_QA_test
         }
         private void ListTimeUp(object source, ElapsedEventArgs e)
         {
-            try
+            if (this.watchStarted == true)
             {
-                listView1.BeginUpdate();
-                listView1.Items.Clear();
                 try
                 {
-                    foreach (Taginfo tag in tagColl)
+                    listView1.BeginUpdate();
+                    listView1.Items.Clear();
+                    try
                     {
-                        ListViewItem LVI = new ListViewItem(tag.TagName);
-                        LVI.SubItems.Add(tag.TagMenu);
-                        LVI.SubItems.Add(Convert.ToString(tag.TagRssi));
-                        LVI.SubItems.Add(tag.passFlag);
-                        LVI.SubItems.Add(tag.dbString);
-                        LVI.SubItems.Add(tag.serverString);
-                        LVI.SubItems.Add(Convert.ToString(tag.TagFlagString));
-                        listView1.Items.Add(LVI);
+                        foreach (Taginfo tag in tagColl)
+                        {
+                            ListViewItem LVI = new ListViewItem(tag.TagName);
+                            LVI.SubItems.Add(tag.TagMenu);
+                            LVI.SubItems.Add(Convert.ToString(tag.TagRssi));
+                            LVI.SubItems.Add(tag.passFlag);
+                            LVI.SubItems.Add(tag.dbString);
+                            LVI.SubItems.Add(tag.serverString);
+                            LVI.SubItems.Add(Convert.ToString(tag.TagFlagString));
+                            listView1.Items.Add(LVI);
+                        }
                     }
+                    catch
+                    {
+                    }
+                    Count.Text = _count;
+                    PassCount.Text = Convert.ToString(_passCount);
                 }
-                catch
+                finally
                 {
+                    listView1.EndUpdate();
+                    Application.DoEvents();
                 }
-                Count.Text = _count;
-                PassCount.Text = Convert.ToString(_passCount);
             }
-            finally
-            {
-                listView1.EndUpdate();
-                Application.DoEvents();
-            }
-
         }
 
         private void BtnStartBle_Click(object sender, EventArgs e)
@@ -505,12 +520,13 @@ namespace Carrot_QA_test
 
         private void BtnClearBle_Click(object sender, EventArgs e)
         {
+            this.listView1.BeginUpdate();
+            this.listView1.Items.Clear();
+            this.listView1.EndUpdate();
             this.tagList.Clear();
             this.tagColl.Clear();
             Count.Text = "0";
             PassCount.Text = "0";
-
-
         }
 
         /** @brief : update filter for the search
@@ -827,5 +843,10 @@ namespace Carrot_QA_test
             Application.DoEvents();
         }
 
+        private void Scan_Click(object sender, EventArgs e)
+        {
+            Form2 dlg = new Form2(ServerVersion.ToString());
+            dlg.Show();
+        }
     }
 }

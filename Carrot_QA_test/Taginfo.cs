@@ -7,6 +7,7 @@ using Windows.UI.Xaml;
 using Newtonsoft.Json.Linq;
 using System.Net;
 using System.IO;
+
 public class Plug {
     public string qa1;
     public string ng1_type;
