@@ -53,8 +53,11 @@ namespace Carrot_QA_test
                         sb.Append(c);
                     }
                 }
+                if (textBox1.Text.Length - 15 < 0)
+                    return;
                 string imei = this.textBox1.Text.Substring(textBox1.Text.Length-15,15);
-                foreach(char ch in imei)
+                this.textBox1.Text = "";
+                foreach (char ch in imei)
                 {
                     if(ch < '0' || ch > '9')
                     {
