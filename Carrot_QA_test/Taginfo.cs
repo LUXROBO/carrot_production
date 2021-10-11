@@ -17,11 +17,12 @@ public class Plug {
     public string ng3_type;
     public string icc_id;
     public string device_id;
-    public string prod_data;
+    public string prod_date;
     public string lot_no;
     public string sn;
     public string tdtag;
     public string dtag;
+    public string ble_id;
     public bool testServerFlag { get; set; } = false;
     public bool mainServerFlag { get; set; } = false;
 };
@@ -34,8 +35,12 @@ public class Mydb
 
     private Dictionary<string, Plug> pluglist = new Dictionary<string, Plug>();
 
-    string mainServerUrl = "https://dtag.carrotins.com:8080/api/v1/dtag/registries";
-    string testServerUrl = "https://t-dtag.carrotins.com:8080/api/v1/dtag/registries";
+    string serverUrl = "https://t-dtag.carrotins.com:8080/api/v1/dtag/registries";
+    string serverBearer = "Bearer KXKQNQ64380880304TLRQQ";
+    string serverHost = "t-dtag.carrotins.com";
+
+    //MainServer "https://dtag.carrotins.com:8080/api/v1/dtag/registries" / "Bearer EJH6NE0851819521SSSA7M" / "dtag.carrotins.com";
+    //TestServer "https://t-dtag.carrotins.com:8080/api/v1/dtag/registries" / "Bearer KXKQNQ64380880304TLRQQ" / "t-dtag.carrotins.com";
     JObject regPayload = new JObject()
         {
             { "deviceId", "LUX1_359627100041471"},
@@ -83,19 +88,19 @@ public class Mydb
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
-    public int UpdateQuery_qa2(string imei, string icc_id, string qa2, string ng2_type)
+    public int UpdateQuery_qa2(string imei, string icc_id, string qa2, string ng2_type, string ble_id)
     {
         if (icc_id == null)
             icc_id = "NULL";
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa2=\"" + qa2 + "\", ng2_type=\"" + ng2_type + "\" where imei =" + imei + ';';
+        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa2=\"" + qa2 + "\", ng2_type=\"" + ng2_type + "\", ble_id =\""+ ble_id + "\" where imei =" + imei + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
-    public int UpdateQuery_qa3(string imei, string icc_id, string qa3, string ng3_type)
+    public int UpdateQuery_qa3(string imei, string icc_id, string qa3, string ng3_type, string ble_id)
     {
         if (icc_id == null)
             icc_id = "NULL";
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\" where imei =" + imei + ';';
+        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\" where imei =" + imei + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
@@ -153,26 +158,26 @@ public class Mydb
         GetProduct(imei);
         try
         {
+            if(pluglist[imei].device_id == "")
+            {
+                pluglist[imei].device_id = "LUX1_" + imei;
+            }
             regPayload["deviceId"] = pluglist[imei].device_id;
             regPayload["cmBzpsRgtDscno"] = pluglist[imei].sn;
             regPayload["divcSrlNo"] = pluglist[imei].lot_no;
-            if(pluglist[imei].prod_data == "NULL")
+            if(pluglist[imei].prod_date == "NULL")
             {
                 regPayload["prddt"] = DateTime.Now.ToString("yyyy-MM-dd");
             }
             else
             {
-                regPayload["prddt"] = pluglist[imei].prod_data;
+                regPayload["prddt"] = pluglist[imei].prod_date;
             }
             regPayload["divcNm"] = "Carrot Plug 1";
             regPayload["mdnm"] = "IV-GT1LM1BT";
             regPayload["mnftrNm"] = "LUXROBO";
+            regPayload["bluetId"] = pluglist[imei].ble_id;
             dtag_string = pluglist[imei].dtag;
-            //tdtag_string = pluglist[imei].tdtag;
-            //if (tdtag_string == "OK")
-            //{
-            //    pluglist[imei].testServerFlag = true;
-            //}
             if (dtag_string == "OK")
             {
                 pluglist[imei].mainServerFlag = true;
@@ -185,29 +190,9 @@ public class Mydb
         }
         return_ret = -1;
 
-        //if (!pluglist[imei].testServerFlag)
-        //{
-        //    ret = registries_server(testServerUrl, "t-dtag.carrotins.com", "Bearer 8PKLPS2623330268GXRAQK");
-
-        //    if (ret == 201 || ret == 409)
-        //    {
-        //        pluglist[imei].testServerFlag = true;
-        //        tdtag_string = "OK";
-        //        return_ret = 2;
-        //    }
-        //    else
-        //    {
-        //        return_ret = -2;
-        //    }
-        //}
-        //else if(tdtag_string == "OK")
-        //{
-        //    return_ret = 2;
-        //}
-
         if(!pluglist[imei].mainServerFlag)
         {
-            ret = registries_server(mainServerUrl, "dtag.carrotins.com", "Bearer EJH6NE0851819521SSSA7M");
+            ret = registries_server(serverUrl, serverHost, serverBearer);
             if (ret == 201 || ret == 409)
             {
                 pluglist[imei].mainServerFlag = true;
@@ -228,7 +213,7 @@ public class Mydb
 
     public Dictionary<string, Plug> GetProduct(string imei)
     {
-        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, dtag, tdtag FROM carrotPlugList.tb_product where imei=" + imei+";", conn);
+        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product where imei=" + imei+";", conn);
         if(pluglist.ContainsKey(imei))
             pluglist.Remove(imei);
         rdr = cmd_select.ExecuteReader();
@@ -243,7 +228,7 @@ public class Mydb
             }
             catch
             {
-                data.device_id = "NULL";
+                data.device_id = "LUX1_"+imei;
             }
             try
             {
@@ -255,7 +240,7 @@ public class Mydb
             }
             try
             {
-                data.icc_id = rdr["sn"].ToString();
+                data.icc_id = rdr["icc_id"].ToString();
             }
             catch
             {
@@ -263,11 +248,19 @@ public class Mydb
             }
             try
             {
-                data.prod_data = rdr["prod_data"].ToString();
+                data.ble_id = rdr["ble_id"].ToString();
             }
             catch
             {
-                data.prod_data = "NULL";
+                data.ble_id = "NULL";
+            }
+            try
+            {
+                data.prod_date = rdr["prod_date"].ToString();
+            }
+            catch
+            {
+                data.prod_date = "NULL";
             }
             try
             {
@@ -307,7 +300,7 @@ public class Mydb
     public Dictionary<string, Plug> ReflashList()
     {
 
-        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, dtag, tdtag FROM carrotPlugList.tb_product LIMIT 0,1000; ", conn);
+        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product LIMIT 0,1000; ", conn);
         pluglist.Clear();
         rdr = cmd_select.ExecuteReader();
         while (rdr.Read())
@@ -331,7 +324,7 @@ public class Mydb
             }
             try
             {
-                data.icc_id = rdr["sn"].ToString();
+                data.icc_id = rdr["icc_id"].ToString();
             }
             catch
             {
@@ -339,11 +332,11 @@ public class Mydb
             }
             try
             {
-                data.prod_data = rdr["prod_data"].ToString();
+                data.prod_date = rdr["prod_date"].ToString();
             }
             catch
             {
-                data.prod_data = "NULL";
+                data.prod_date = "NULL";
             }
             try
             {
@@ -430,12 +423,16 @@ public class Taginfo : INotifyPropertyChanged
             }
         }
     }
+    public string TagBleID = "4C520000-E25D-11EB-BA80-000000000000";
+    public string TagIccID = "";
+    public string TagIMEI = "";
     public bool passFlagUpdate = true;
     public string TagVersion = "";
     public string dbString = "NG";
     public bool dbFlag = false;
     public string serverString = "NG";
     public bool serverFlag = false;
+    public UInt32 TagVersionNumber = 0;
     public DateTime updateTime;
 
     /** existence of data used to hide/show data on display */
@@ -509,6 +506,10 @@ public class Taginfo : INotifyPropertyChanged
         this.TagData = taginfo.TagData;
         this.TagMenu = taginfo.TagMenu;
         this.TagVersion = taginfo.TagVersion;
+        this.TagVersionNumber = taginfo.TagVersionNumber;
+        this.TagIccID = taginfo.TagIccID;
+        this.TagIMEI = taginfo.TagIMEI;
+        this.TagBleID = taginfo.TagBleID;
         this.TagFlagString = taginfo.TagFlagString;
         this.passFlag = taginfo.passFlag;
 

@@ -13,10 +13,14 @@ using Windows.Devices.Bluetooth.Advertisement;
 using Windows.Storage.Streams;
 using Timer = System.Timers.Timer;
 
+
 namespace Carrot_QA_test
 {
     public partial class Form1 : Form
     {
+        static UInt32 FIRMWARE_MAJOR_MASK = 0x10000000;
+        static UInt32 FIRMWARE_MINOR_MASK = 0x00010000;
+        static UInt32 FIRMWARE_PATCH_MASK = 0x00000001;
         /** BLE watcher */
         private BluetoothLEAdvertisementWatcher watcher = new BluetoothLEAdvertisementWatcher();
 
@@ -101,6 +105,7 @@ namespace Carrot_QA_test
             this.VersionCheck = new System.Windows.Forms.CheckBox();
             this.ServerVersionText = new System.Windows.Forms.Label();
             this.Scan = new System.Windows.Forms.Button();
+            this.BLE = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             ((System.ComponentModel.ISupportInitialize)(this.listTimer)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dbTimer)).BeginInit();
             this.SuspendLayout();
@@ -162,6 +167,7 @@ namespace Carrot_QA_test
             this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.IMEI,
             this.CCID,
+            this.BLE,
             this.RSSI,
             this.Pass,
             this.DB,
@@ -332,6 +338,11 @@ namespace Carrot_QA_test
             this.Scan.UseVisualStyleBackColor = true;
             this.Scan.Click += new System.EventHandler(this.Scan_Click);
             // 
+            // BLE
+            // 
+            this.BLE.Text = "BLE UUID";
+            this.BLE.Width = 100;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
@@ -382,9 +393,12 @@ namespace Carrot_QA_test
                         {
                             responseText = sr.ReadToEnd();
                         }
+
                         ServerVersion = int.Parse(responseText.Split('\n')[0]);
-                        ServerVersion %= 65536;
-                        this.ServerVersionText.Text = "Firmware Version : v0.1." + ServerVersion.ToString();
+                        string majorVersion = ((uint)Convert.ToInt32(ServerVersion / 0x10000000)).ToString();
+                        string minorVersion = ((uint)Convert.ToInt32((ServerVersion % 0x10000000) / 0x00010000)).ToString();
+                        string patchVersion = ((uint)Convert.ToInt32((ServerVersion % 0x00010000) / 0x00000001)).ToString();
+                        this.ServerVersionText.Text = "Firmware Version : v"+ majorVersion + "."+ minorVersion + "." + patchVersion;
                     }
                 }
                 if (GetExternalIPAddress() != "175.209.190.173")
@@ -402,13 +416,13 @@ namespace Carrot_QA_test
 
                     if (tag.passFlagUpdate)
                     {
-                        string icc_id = tag.TagMenu;
-                        string imei = tag.TagName;
+                        string icc_id = tag.TagIccID;
+                        string imei = tag.TagIMEI;
                         int result;
                         if (modeFlag == 0)
-                            result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString);
+                            result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
                         else
-                            result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString);
+                            result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
 
                         if (result == 1)
                             tag.dbString = "OK";
@@ -468,8 +482,9 @@ namespace Carrot_QA_test
                     {
                         foreach (Taginfo tag in tagColl)
                         {
-                            ListViewItem LVI = new ListViewItem(tag.TagName);
-                            LVI.SubItems.Add(tag.TagMenu);
+                            ListViewItem LVI = new ListViewItem(tag.TagIMEI);
+                            LVI.SubItems.Add(tag.TagIccID);
+                            LVI.SubItems.Add(tag.TagBleID.Substring(tag.TagBleID.Length - 12, 12));
                             LVI.SubItems.Add(Convert.ToString(tag.TagRssi));
                             LVI.SubItems.Add(tag.passFlag);
                             LVI.SubItems.Add(tag.dbString);
@@ -494,7 +509,6 @@ namespace Carrot_QA_test
 
         private void BtnStartBle_Click(object sender, EventArgs e)
         {
-
             //start scanning
             if (this.watchStarted == false)
             {
@@ -604,22 +618,23 @@ namespace Carrot_QA_test
                             if (taginfo.TagDataRaw.Count >= 3 && taginfo.TagDataRaw[2].Length > 6)
                             {
 
-                                if (taginfo.TagName.Length == 8)
+                                if (taginfo.TagName.Length == 1)
                                 {
-                                    taginfo.TagName = "3596271" + taginfo.TagName;
-                                    taginfo.CarrotPlugFlag = true;
-                                    if (modeFlag == 0)
+                                    taginfo.TagMenu = taginfo.TagDataRaw[2].Replace("-", "");
+                                    string majorVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(2, 1), 16)).ToString();
+                                    string minorVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(3, 1), 16)).ToString();
+                                    string patchVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(0, 2), 16)).ToString();
+                                    taginfo.TagVersionNumber = Convert.ToUInt32(majorVersion) * FIRMWARE_MAJOR_MASK;
+                                    taginfo.TagVersionNumber += Convert.ToUInt32(minorVersion) * FIRMWARE_MINOR_MASK;
+                                    taginfo.TagVersionNumber += Convert.ToUInt32(patchVersion) * FIRMWARE_PATCH_MASK;
+                                    taginfo.TagVersion = 'v' + majorVersion + '.' + minorVersion + '.' + patchVersion;                  // Firmware Version
+                                    taginfo.TagIccID = "898205" + taginfo.TagMenu.Substring(4, 13);                                     // ICC ID
+                                    taginfo.TagFlag = (uint)Convert.ToInt32(taginfo.TagMenu.Substring(17, 1), 16);                      // QA Flag    
+                                    taginfo.TagBleID = "4C520000-E25D-11EB-BA80-" + taginfo.TagMenu.Substring(18, 12);                  // BLE UUID
+                                    taginfo.TagIMEI = "3596271" + taginfo.TagMenu.Substring(30, 8);                                     // IMEI
+                                    taginfo.TagFlagString = taginfo.TagVersion;
+                                    if (modeFlag == 0 && taginfo.TagName == "Q")
                                     {
-                                        taginfo.TagFlagString = "";
-                                        string flag_string = taginfo.TagDataRaw[2].Replace("-", "").Substring(0, 2);
-                                        taginfo.TagMenu = taginfo.TagDataRaw[2].Replace("-", "");
-                                        if (taginfo.TagMenu.Substring(taginfo.TagMenu.Length - 1, 1) != "0")
-                                        {
-                                            taginfo.CarrotPlugFlag = false;
-                                        }
-                                        taginfo.TagMenu = taginfo.TagMenu.Substring(4, taginfo.TagMenu.Length - 5);
-
-                                        taginfo.TagFlag = uint.Parse(flag_string);
                                         if ((taginfo.TagFlag & 0x01) == 0x01)
                                             taginfo.TagFlagString += "GPS Fail";
                                         else
@@ -641,24 +656,15 @@ namespace Carrot_QA_test
                                             taginfo.TagFlagString += "LTE Fail";
                                         else
                                             taginfo.TagFlagString += "LTE OK";
-                                        if((taginfo.TagFlag & 0xFF) == 0)
+                                        if ((taginfo.TagFlag & 0xFF) == 0)
                                         {
                                             taginfo.passFlag = "OK";
                                         }
+                                        taginfo.CarrotPlugFlag = true;
                                     }
-                                    else
+                                    else if (modeFlag == 1 && taginfo.TagName == "O")
                                     {
-                                        taginfo.TagFlagString = "";
-                                        taginfo.TagMenu = taginfo.TagDataRaw[2].Replace("-", "");
-                                        taginfo.TagFlag = (uint)Convert.ToInt32(taginfo.TagMenu.Substring(taginfo.TagMenu.Length - 1, 1), 16);
-                                        if (taginfo.TagFlag == 0)
-                                        {
-                                            taginfo.CarrotPlugFlag = false;
-                                        }
-                                        taginfo.TagMenu = taginfo.TagMenu.Substring(4, taginfo.TagMenu.Length - 5);
-                                        string verionString = ((uint)Convert.ToInt32(taginfo.TagDataRaw[2].Replace("-", "").Substring(0, 2),16)).ToString();
                                         string progressString = "none";
-                                        taginfo.TagFlagString += "v0.1." + verionString;
                                         switch (taginfo.TagFlag)
                                         {
                                             case 0x0:
@@ -686,7 +692,7 @@ namespace Carrot_QA_test
                                                 taginfo.passFlag = "NG";
                                                 if (VersionCheck.Checked)
                                                 {
-                                                    if (ServerVersion <= int.Parse(verionString))
+                                                    if (ServerVersion <= taginfo.TagVersionNumber)
                                                     {
                                                         taginfo.passFlag = "OK";
                                                     }
@@ -698,6 +704,7 @@ namespace Carrot_QA_test
                                                 break;
                                         }
                                         taginfo.TagFlagString += " " + progressString;
+                                        taginfo.CarrotPlugFlag = true;
                                     }
                                 }
                             }
@@ -777,9 +784,9 @@ namespace Carrot_QA_test
                     string imei = tag.TagName;
                     int result;
                     if (modeFlag == 0)
-                        result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString);
+                        result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
                     else
-                        result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString);
+                        result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
 
                     string result_string = "";
                     if (result == 1)
