@@ -405,6 +405,7 @@ public class Taginfo : INotifyPropertyChanged
 
     private uint flag = 0;
     private string _passFlag = "NG";
+    public ulong btAddress;
     public string passFlag
     {
         get
@@ -512,6 +513,7 @@ public class Taginfo : INotifyPropertyChanged
         this.TagBleID = taginfo.TagBleID;
         this.TagFlagString = taginfo.TagFlagString;
         this.passFlag = taginfo.passFlag;
+        this.btAddress = taginfo.btAddress;
 
         this.flag = taginfo.flag;
         this.updateTime = taginfo.updateTime;

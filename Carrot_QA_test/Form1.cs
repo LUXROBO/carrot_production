@@ -9,10 +9,12 @@ using System.Linq;
 using System.Text;
 using System.Timers;
 using System.Windows.Forms;
+using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.Advertisement;
+using Windows.Devices.Enumeration;
 using Windows.Storage.Streams;
+using System.Diagnostics;
 using Timer = System.Timers.Timer;
-
 
 namespace Carrot_QA_test
 {
@@ -88,6 +90,7 @@ namespace Carrot_QA_test
             this.listView1 = new System.Windows.Forms.ListView();
             this.IMEI = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CCID = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.BLE = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.RSSI = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.Pass = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.DB = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -105,7 +108,7 @@ namespace Carrot_QA_test
             this.VersionCheck = new System.Windows.Forms.CheckBox();
             this.ServerVersionText = new System.Windows.Forms.Label();
             this.Scan = new System.Windows.Forms.Button();
-            this.BLE = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.ble_label = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.listTimer)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dbTimer)).BeginInit();
             this.SuspendLayout();
@@ -115,7 +118,7 @@ namespace Carrot_QA_test
             this.txtSearch.Font = new System.Drawing.Font("굴림", 12F);
             this.txtSearch.Location = new System.Drawing.Point(953, 12);
             this.txtSearch.Name = "txtSearch";
-            this.txtSearch.Size = new System.Drawing.Size(436, 35);
+            this.txtSearch.Size = new System.Drawing.Size(255, 35);
             this.txtSearch.TabIndex = 0;
             // 
             // btnStartBle
@@ -195,6 +198,11 @@ namespace Carrot_QA_test
             this.CCID.Text = "CCID";
             this.CCID.Width = 230;
             // 
+            // BLE
+            // 
+            this.BLE.Text = "BLE UUID";
+            this.BLE.Width = 100;
+            // 
             // RSSI
             // 
             this.RSSI.Text = "RSSI";
@@ -235,12 +243,12 @@ namespace Carrot_QA_test
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("굴림", 12F);
-            this.label4.Location = new System.Drawing.Point(862, 18);
+            this.label4.Location = new System.Drawing.Point(772, 17);
             this.label4.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(82, 24);
+            this.label4.Size = new System.Drawing.Size(181, 24);
             this.label4.TabIndex = 12;
-            this.label4.Text = "Search";
+            this.label4.Text = "BLE Connect ID:";
             // 
             // modeLabel
             // 
@@ -338,16 +346,22 @@ namespace Carrot_QA_test
             this.Scan.UseVisualStyleBackColor = true;
             this.Scan.Click += new System.EventHandler(this.Scan_Click);
             // 
-            // BLE
+            // ble_label
             // 
-            this.BLE.Text = "BLE UUID";
-            this.BLE.Width = 100;
+            this.ble_label.AutoSize = true;
+            this.ble_label.Font = new System.Drawing.Font("굴림", 12F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.ble_label.Location = new System.Drawing.Point(1214, 18);
+            this.ble_label.Name = "ble_label";
+            this.ble_label.Size = new System.Drawing.Size(80, 24);
+            this.ble_label.TabIndex = 18;
+            this.ble_label.Text = "Ready";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1405, 1142);
+            this.Controls.Add(this.ble_label);
             this.Controls.Add(this.Scan);
             this.Controls.Add(this.ServerVersionText);
             this.Controls.Add(this.VersionCheck);
@@ -366,12 +380,110 @@ namespace Carrot_QA_test
             this.Controls.Add(this.txtSearch);
             this.Name = "Form1";
             this.Text = "Carrot QA Program";
+
+            this.txtSearch.KeyDown += this.txtSearch_KeyUp;
             ((System.ComponentModel.ISupportInitialize)(this.listTimer)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dbTimer)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
+        int bleState = 0;
+        ulong btAdd;
+
+        private async void txtSearch_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                StringBuilder sb = new StringBuilder();
+                string str = this.txtSearch.Text;
+                foreach (char c in str)
+                {
+                    if ((c >= '0' && c <= '9'))
+                    {
+                        sb.Append(c);
+                    }
+                }
+                if (txtSearch.Text.Length - 15 < 0)
+                {
+
+                    this.ble_label.Text = "Input Error";
+                    return;
+                }
+                string imei = this.txtSearch.Text.Substring(txtSearch.Text.Length - 15, 15);
+                this.txtSearch.Text = "";
+                foreach (char ch in imei)
+                {
+                    if (ch < '0' || ch > '9')
+                    {
+                        this.ble_label.Text = "Input Error";
+                        return;
+                    }
+                }
+                ulong btAddress = 0;
+                foreach (Taginfo tag in tagColl)
+                {
+                    if (tag.TagIMEI == imei)
+                    {
+                        btAddress = tag.btAddress;
+                        break;
+                    }
+                }
+                if (btAddress != 0)
+                {
+                    var device = await BluetoothLEDevice.FromBluetoothAddressAsync(btAddress);
+                    Debug.WriteLine($"BLEWATCHER Found: {imei}");
+                    if(bleState == 0)
+                    {
+                        if (!device.DeviceInformation.Pairing.CanPair)
+                        {
+                            Debug.WriteLine($"BLEWATCHER Not can pair");
+                        }
+                        else if (device.DeviceInformation.Pairing.IsPaired)
+                        {
+                            Debug.WriteLine($"BLEWATCHER is Paired");
+                        }
+                        else
+                        {
+                            DevicePairingResult dpr = await device.DeviceInformation.Pairing.PairAsync();
+                            this.ble_label.Text = "Connecting";
+                            Debug.WriteLine($"BLEWATCHER Pairing Complete");
+                            bleState = 1;
+                            return;
+                        }
+                        bleState = 0;
+                    }
+                    else if (bleState == 1)
+                    {
+                        if (device.ConnectionStatus == BluetoothConnectionStatus.Connected)
+                        {
+                            DeviceUnpairingResult dupr = await device.DeviceInformation.Pairing.UnpairAsync();
+                            Debug.WriteLine($"BLEWATCHER UnpairAsync");
+                            if (dupr.Status == DeviceUnpairingResultStatus.Unpaired)
+                            {
+                                Debug.WriteLine($"BLEWATCHER Unpairing Complete");
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"BLEWATCHER Unpairing Error");
+                            }
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"BLEWATCHER Not paired");
+                        }
+                        this.ble_label.Text = "Ready";
+                        bleState = 0;
+                    }
+                }
+                else
+                {
+                    this.ble_label.Text = "Not Find";
+                }
+            }
+        }
+
+
         private void DbTimeUp(object source, ElapsedEventArgs e)
         {
             try
@@ -395,9 +507,9 @@ namespace Carrot_QA_test
                         }
 
                         ServerVersion = int.Parse(responseText.Split('\n')[0]);
-                        string majorVersion = ((uint)Convert.ToInt32(ServerVersion / 0x10000000)).ToString();
-                        string minorVersion = ((uint)Convert.ToInt32((ServerVersion % 0x10000000) / 0x00010000)).ToString();
-                        string patchVersion = ((uint)Convert.ToInt32((ServerVersion % 0x00010000) / 0x00000001)).ToString();
+                        string majorVersion = ((uint)Convert.ToInt32(ServerVersion / FIRMWARE_MAJOR_MASK)).ToString();
+                        string minorVersion = ((uint)Convert.ToInt32((ServerVersion % FIRMWARE_MAJOR_MASK) / FIRMWARE_MINOR_MASK)).ToString();
+                        string patchVersion = ((uint)Convert.ToInt32((ServerVersion % FIRMWARE_MINOR_MASK) / FIRMWARE_PATCH_MASK)).ToString();
                         this.ServerVersionText.Text = "Firmware Version : v"+ majorVersion + "."+ minorVersion + "." + patchVersion;
                     }
                 }
@@ -601,7 +713,7 @@ namespace Carrot_QA_test
                 taginfo.TagMac = args.BluetoothAddress.ToString("X");
                 taginfo.TagName = args.Advertisement.LocalName;
                 taginfo.updateTime = DateTime.Now;
-
+                
                 //get tag datas
                 string datasection = String.Empty;
                 foreach (BluetoothLEAdvertisementDataSection section in args.Advertisement.DataSections)
@@ -620,6 +732,7 @@ namespace Carrot_QA_test
 
                                 if (taginfo.TagName.Length == 1)
                                 {
+                                    taginfo.btAddress = args.BluetoothAddress;
                                     taginfo.TagMenu = taginfo.TagDataRaw[2].Replace("-", "");
                                     string majorVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(2, 1), 16)).ToString();
                                     string minorVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(3, 1), 16)).ToString();
