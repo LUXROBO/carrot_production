@@ -7,6 +7,7 @@ using Windows.UI.Xaml;
 using Newtonsoft.Json.Linq;
 using System.Net;
 using System.IO;
+using System.Diagnostics;
 
 public class Plug {
     public string qa1;
@@ -165,7 +166,7 @@ public class Mydb
             regPayload["deviceId"] = pluglist[imei].device_id;
             regPayload["cmBzpsRgtDscno"] = pluglist[imei].sn;
             regPayload["divcSrlNo"] = pluglist[imei].lot_no;
-            if(pluglist[imei].prod_date == "NULL")
+            if(pluglist[imei].prod_date == "")
             {
                 regPayload["prddt"] = DateTime.Now.ToString("yyyy-MM-dd");
             }
@@ -184,8 +185,9 @@ public class Mydb
             }
 
         }
-        catch(KeyNotFoundException keyExcp)
+        catch(Exception ex)
         {
+            Debug.WriteLine(ex);
             return -1;
         }
         return_ret = -1;
@@ -260,7 +262,7 @@ public class Mydb
             }
             catch
             {
-                data.prod_date = "NULL";
+                data.prod_date = "";
             }
             try
             {

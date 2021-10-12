@@ -120,6 +120,7 @@ namespace Carrot_QA_test
             this.txtSearch.Name = "txtSearch";
             this.txtSearch.Size = new System.Drawing.Size(255, 35);
             this.txtSearch.TabIndex = 0;
+            this.txtSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtSearch_KeyDown);
             // 
             // btnStartBle
             // 
@@ -187,6 +188,7 @@ namespace Carrot_QA_test
             this.listView1.TabIndex = 5;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
+            this.listView1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listView1_MouseDoubleClick);
             // 
             // IMEI
             // 
@@ -380,8 +382,6 @@ namespace Carrot_QA_test
             this.Controls.Add(this.txtSearch);
             this.Name = "Form1";
             this.Text = "Carrot QA Program";
-
-            this.txtSearch.KeyDown += this.txtSearch_KeyUp;
             ((System.ComponentModel.ISupportInitialize)(this.listTimer)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dbTimer)).EndInit();
             this.ResumeLayout(false);
@@ -389,100 +389,6 @@ namespace Carrot_QA_test
 
         }
         int bleState = 0;
-        ulong btAdd;
-
-        private async void txtSearch_KeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
-            {
-                StringBuilder sb = new StringBuilder();
-                string str = this.txtSearch.Text;
-                foreach (char c in str)
-                {
-                    if ((c >= '0' && c <= '9'))
-                    {
-                        sb.Append(c);
-                    }
-                }
-                if (txtSearch.Text.Length - 15 < 0)
-                {
-
-                    this.ble_label.Text = "Input Error";
-                    return;
-                }
-                string imei = this.txtSearch.Text.Substring(txtSearch.Text.Length - 15, 15);
-                this.txtSearch.Text = "";
-                foreach (char ch in imei)
-                {
-                    if (ch < '0' || ch > '9')
-                    {
-                        this.ble_label.Text = "Input Error";
-                        return;
-                    }
-                }
-                ulong btAddress = 0;
-                foreach (Taginfo tag in tagColl)
-                {
-                    if (tag.TagIMEI == imei)
-                    {
-                        btAddress = tag.btAddress;
-                        break;
-                    }
-                }
-                if (btAddress != 0)
-                {
-                    var device = await BluetoothLEDevice.FromBluetoothAddressAsync(btAddress);
-                    Debug.WriteLine($"BLEWATCHER Found: {imei}");
-                    if(bleState == 0)
-                    {
-                        if (!device.DeviceInformation.Pairing.CanPair)
-                        {
-                            Debug.WriteLine($"BLEWATCHER Not can pair");
-                        }
-                        else if (device.DeviceInformation.Pairing.IsPaired)
-                        {
-                            Debug.WriteLine($"BLEWATCHER is Paired");
-                        }
-                        else
-                        {
-                            DevicePairingResult dpr = await device.DeviceInformation.Pairing.PairAsync();
-                            this.ble_label.Text = "Connecting";
-                            Debug.WriteLine($"BLEWATCHER Pairing Complete");
-                            bleState = 1;
-                            return;
-                        }
-                        bleState = 0;
-                    }
-                    else if (bleState == 1)
-                    {
-                        if (device.ConnectionStatus == BluetoothConnectionStatus.Connected)
-                        {
-                            DeviceUnpairingResult dupr = await device.DeviceInformation.Pairing.UnpairAsync();
-                            Debug.WriteLine($"BLEWATCHER UnpairAsync");
-                            if (dupr.Status == DeviceUnpairingResultStatus.Unpaired)
-                            {
-                                Debug.WriteLine($"BLEWATCHER Unpairing Complete");
-                            }
-                            else
-                            {
-                                Debug.WriteLine($"BLEWATCHER Unpairing Error");
-                            }
-                        }
-                        else
-                        {
-                            Debug.WriteLine($"BLEWATCHER Not paired");
-                        }
-                        this.ble_label.Text = "Ready";
-                        bleState = 0;
-                    }
-                }
-                else
-                {
-                    this.ble_label.Text = "Not Find";
-                }
-            }
-        }
-
 
         private void DbTimeUp(object source, ElapsedEventArgs e)
         {
@@ -608,6 +514,7 @@ namespace Carrot_QA_test
                     catch
                     {
                     }
+                    _count = Convert.ToString(tagColl.Count);
                     Count.Text = _count;
                     PassCount.Text = Convert.ToString(_passCount);
                 }
@@ -618,12 +525,17 @@ namespace Carrot_QA_test
                 }
             }
         }
-
         private void BtnStartBle_Click(object sender, EventArgs e)
         {
             //start scanning
             if (this.watchStarted == false)
             {
+
+                if (this.modeFlag == 0)
+                    this.watcher.AdvertisementFilter.Advertisement.LocalName = "Q";
+                else
+                    this.watcher.AdvertisementFilter.Advertisement.LocalName = "O";
+
                 this.watcher.Received += Tag_Received;
                 this.watcher.Start();
                 this.watchStarted = true;
@@ -644,6 +556,41 @@ namespace Carrot_QA_test
             }
         }
 
+        private void BtnMode_Click(object sender, EventArgs e)
+        {
+            if (this.modeFlag == 0)
+            {
+                this.modeFlag = 1;
+                this.modeLabel.Text = "Carrot Plug 개통 Test Mode";
+            }
+            else
+            {
+                this.modeFlag = 0;
+                this.modeLabel.Text = "Carrot Plug QA Test Mode";
+            }
+
+            this.listView1.BeginUpdate();
+            this.listView1.Items.Clear();
+            this.listView1.EndUpdate();
+            this.tagList.Clear();
+            this.tagColl.Clear();
+            Count.Text = "0";
+            PassCount.Text = "0";
+            _passCount = 0;
+
+            if (this.watchStarted == true)
+            {
+                this.watcher.Stop();
+                this.watcher.Received -= Tag_Received;
+                this.watchStarted = false;
+
+                //update pictogram
+                this.btnStartBle.Text = "Start";
+            }
+            Application.DoEvents();
+        }
+
+
         private void BtnClearBle_Click(object sender, EventArgs e)
         {
             this.listView1.BeginUpdate();
@@ -653,27 +600,9 @@ namespace Carrot_QA_test
             this.tagColl.Clear();
             Count.Text = "0";
             PassCount.Text = "0";
+            _passCount = 0;
         }
 
-        /** @brief : update filter for the search
-         * update shown tags depending on the search
-         */
-        private void TxtSearch_TextChanged(object sender, EventArgs e)
-        {
-            filter = txtSearch.Text;
-            this.tagColl.Clear();
-
-            //update shown tags corresponding to search text
-            foreach (KeyValuePair<string, Taginfo> pair in this.tagList)
-            {
-                Taginfo taginfo = new Taginfo();
-                taginfo = pair.Value;
-                if (Filter(taginfo))
-                {
-                    this.tagColl.Add(taginfo);
-                }
-            }
-        }
         private void BtnSave_Click(object sender, EventArgs e)
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog();
@@ -702,6 +631,69 @@ namespace Carrot_QA_test
             }
 
         }
+
+
+        private void BtnUpload_Click(object sender, EventArgs e)
+        {
+            string msg = "";
+            foreach (Taginfo tag in tagList.Values)
+            {
+                if (tag.CarrotPlugFlag)
+                {
+                    string icc_id = tag.TagMenu;
+                    string imei = tag.TagName;
+                    int result;
+                    if (modeFlag == 0)
+                        result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
+                    else
+                        result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
+
+                    string result_string = "";
+                    if (result == 1)
+                        result_string = "OK";
+                    else
+                        result_string = "Fail";
+                    string reg_result = "Fail";
+                    int let = mydb.regist_server(imei);
+                    if (let == 1)
+                    {
+                        reg_result = "Test, Main Server Register!";
+                        tag.dbString = "OK";
+                        tag.serverString = "OK";
+                    }
+                    else if (let == -1)
+                    {
+                        reg_result = "Not find DB data";
+                        tag.dbString = "Fail";
+                        tag.serverString = "Fail";
+
+                    }
+                    else if (let == -2)
+                    {
+                        reg_result = "Not Connect Test Server, check your IP(use VPN)";
+                        tag.dbString = "OK";
+                        tag.serverString = "Fail";
+                    }
+                    else if (let == -3)
+                    {
+                        reg_result = "Not Connect Main Server, check your IP(use VPN)";
+                        tag.dbString = "OK";
+                        tag.serverString = "Fail";
+                    }
+                    msg += imei + " Upload Result :" + result_string + ", " + reg_result + "\n";
+                    tag.passFlagUpdate = false;
+                }
+            }
+            MessageBox.Show(msg);
+        }
+
+
+        private void Scan_Click(object sender, EventArgs e)
+        {
+            Form2 dlg = new Form2(ServerVersion.ToString());
+            dlg.Show();
+        }
+
         private void Tag_Received(BluetoothLEAdvertisementWatcher received, BluetoothLEAdvertisementReceivedEventArgs args)
         {
 
@@ -713,25 +705,27 @@ namespace Carrot_QA_test
                 taginfo.TagMac = args.BluetoothAddress.ToString("X");
                 taginfo.TagName = args.Advertisement.LocalName;
                 taginfo.updateTime = DateTime.Now;
-                
+                taginfo.CarrotPlugFlag = false;
+                // Debug.WriteLine("ble device :" + taginfo.TagName);
+
                 //get tag datas
                 string datasection = String.Empty;
-                foreach (BluetoothLEAdvertisementDataSection section in args.Advertisement.DataSections)
+                if(taginfo.TagName.Length == 1 && ( taginfo.TagName == "O" || taginfo.TagName == "Q"))
                 {
-                    var data = new byte[section.Data.Length];
-                    using (var reader = DataReader.FromBuffer(section.Data))
+                    foreach (BluetoothLEAdvertisementDataSection section in args.Advertisement.DataSections)
                     {
-                        reader.ReadBytes(data);
-                        datasection = String.Format("{0}", BitConverter.ToString(data));
-                        taginfo.TagDataRaw.Add(datasection);
-                        taginfo.TagRssi = args.RawSignalStrengthInDBm;
-                        try
+                        var data = new byte[section.Data.Length];
+                        using (var reader = DataReader.FromBuffer(section.Data))
                         {
-                            if (taginfo.TagDataRaw.Count >= 3 && taginfo.TagDataRaw[2].Length > 6)
+                            reader.ReadBytes(data);
+                            datasection = String.Format("{0}", BitConverter.ToString(data));
+                            taginfo.TagDataRaw.Add(datasection);
+                            taginfo.TagRssi = args.RawSignalStrengthInDBm;
+                            try
                             {
-
-                                if (taginfo.TagName.Length == 1)
+                                if (taginfo.TagDataRaw.Count >= 3 && taginfo.TagDataRaw[2].Length > 6)
                                 {
+                                    // Debug.WriteLine("Find device :" + taginfo.TagName);
                                     taginfo.btAddress = args.BluetoothAddress;
                                     taginfo.TagMenu = taginfo.TagDataRaw[2].Replace("-", "");
                                     string majorVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(2, 1), 16)).ToString();
@@ -745,7 +739,7 @@ namespace Carrot_QA_test
                                     taginfo.TagFlag = (uint)Convert.ToInt32(taginfo.TagMenu.Substring(17, 1), 16);                      // QA Flag    
                                     taginfo.TagBleID = "4C520000-E25D-11EB-BA80-" + taginfo.TagMenu.Substring(18, 12);                  // BLE UUID
                                     taginfo.TagIMEI = "3596271" + taginfo.TagMenu.Substring(30, 8);                                     // IMEI
-                                    taginfo.TagFlagString = taginfo.TagVersion;
+                                    taginfo.TagFlagString = taginfo.TagVersion + " ";
                                     if (modeFlag == 0 && taginfo.TagName == "Q")
                                     {
                                         if ((taginfo.TagFlag & 0x01) == 0x01)
@@ -820,55 +814,51 @@ namespace Carrot_QA_test
                                         taginfo.CarrotPlugFlag = true;
                                     }
                                 }
+                                else
+                                {
+                                    taginfo.TagMenu = "";
+                                }
                             }
-                            else
+                            catch
                             {
-                                taginfo.TagMenu = "";
-                            }
-                        }
-                        catch
-                        {
 
+                            }
                         }
                     }
                 }
 
                 if (taginfo.CarrotPlugFlag)
                 {
-                    if (taginfo.TagName.Contains(filter))
+                    //add new tag
+                    if (this.tagList.ContainsKey(taginfo.TagMac) == false)
                     {
-                        //add new tag
-                        if (this.tagList.ContainsKey(taginfo.TagMac) == false)
+                        this.tagList.Add(taginfo.TagMac, taginfo);
+                        if (Filter(taginfo))
                         {
-                            this.tagList.Add(taginfo.TagMac, taginfo);
-                            if (Filter(taginfo))
+                            tagColl.Add(taginfo);
+                        }
+                    }
+                    //update existing tag infos
+                    else if (tagList.ContainsValue(taginfo) == false)
+                    {
+                        IEnumerable<Taginfo> existing = tagColl.Where(x => x.TagMac == taginfo.TagMac);
+                        int a = tagColl.IndexOf(existing.FirstOrDefault());
+                        if (Filter(taginfo))
+                        {
+                            if (a >= 0 && a < tagColl.Count())
                             {
-                                tagColl.Add(taginfo);
+                                tagColl[a].update(taginfo);
                             }
                         }
-                        //update existing tag infos
-                        else if (tagList.ContainsValue(taginfo) == false)
+                        this.tagList[taginfo.TagMac].update(taginfo);
+                    }
+                    _passCount = 0;
+                    foreach (Taginfo tag in tagColl)
+                    {
+                        if (tag.passFlag == "OK")
                         {
-                            IEnumerable<Taginfo> existing = tagColl.Where(x => x.TagMac == taginfo.TagMac);
-                            int a = tagColl.IndexOf(existing.FirstOrDefault());
-                            if (Filter(taginfo))
-                            {
-                                if (a >= 0 && a < tagColl.Count())
-                                {
-                                    tagColl[a].update(taginfo);
-                                }
-                            }
-                            this.tagList[taginfo.TagMac].update(taginfo);
+                            _passCount++;
                         }
-                        _passCount = 0;
-                        foreach (Taginfo tag in tagColl)
-                        {
-                            if (tag.passFlag == "OK")
-                            {
-                                _passCount++;
-                            }
-                        }
-                        _count = Convert.ToString(tagColl.Count);
                     }
                 }
             }
@@ -886,87 +876,77 @@ namespace Carrot_QA_test
             return false;
         }
 
-        private void BtnUpload_Click(object sender, EventArgs e)
+        private void listView1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            string msg = "";
-            foreach (Taginfo tag in tagList.Values)
+            if (listView1.SelectedItems.Count == 1)
             {
-                if (tag.CarrotPlugFlag)
+                ListViewItem lvitem = listView1.SelectedItems[0];
+                txtSearch.Text = lvitem.SubItems[0].Text;
+            }
+        }
+
+        private async void txtSearch_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                StringBuilder sb = new StringBuilder();
+                string str = this.txtSearch.Text;
+                foreach (char c in str)
                 {
-                    string icc_id = tag.TagMenu;
-                    string imei = tag.TagName;
-                    int result;
-                    if (modeFlag == 0)
-                        result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
-                    else
-                        result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
+                    if ((c >= '0' && c <= '9'))
+                    {
+                        sb.Append(c);
+                    }
+                }
+                if (txtSearch.Text.Length - 15 < 0)
+                {
 
-                    string result_string = "";
-                    if (result == 1)
-                        result_string = "OK";
-                    else
-                        result_string = "Fail";
-                    string reg_result = "Fail";
-                    int let = mydb.regist_server(imei);
-                    if (let == 1)
+                    this.ble_label.Text = "Input Error";
+                    return;
+                }
+                string imei = this.txtSearch.Text.Substring(txtSearch.Text.Length - 15, 15);
+                this.txtSearch.Text = "";
+                foreach (char ch in imei)
+                {
+                    if (ch < '0' || ch > '9')
                     {
-                        reg_result = "Test, Main Server Register!";
-                        tag.dbString = "OK";
-                        tag.serverString = "OK";
+                        this.ble_label.Text = "Input Error";
+                        return;
                     }
-                    else if (let == -1)
+                }
+                ulong btAddress = 0;
+                foreach (Taginfo tag in tagColl)
+                {
+                    if (tag.TagIMEI == imei)
                     {
-                        reg_result = "Not find DB data";
-                        tag.dbString = "Fail";
-                        tag.serverString = "Fail";
+                        btAddress = tag.btAddress;
+                        break;
+                    }
+                }
+                if (btAddress != 0)
+                {
+                    var device = await BluetoothLEDevice.FromBluetoothAddressAsync(btAddress);
+                    DeviceUnpairingResult dupr = await device.DeviceInformation.Pairing.UnpairAsync();
+                    Debug.WriteLine($"BLEWATCHER Found: {imei}");
+                    if (!device.DeviceInformation.Pairing.IsPaired)
+                    {
+                        Debug.WriteLine($"{device.Name} Try Pairing");
 
+                        var result = await device.DeviceInformation.Pairing.Custom.PairAsync(
+                                DevicePairingKinds.ConfirmOnly, DevicePairingProtectionLevel.None);
+
+                        this.ble_label.Text = "Connecting";
+                        Debug.WriteLine($"BLEWATCHER Pairing Complete");
+                        bleState = 1;
+                        return;
                     }
-                    else if (let == -2)
-                    {
-                        reg_result = "Not Connect Test Server, check your IP(use VPN)";
-                        tag.dbString = "OK";
-                        tag.serverString = "Fail";
-                    }
-                    else if (let == -3)
-                    {
-                        reg_result = "Not Connect Main Server, check your IP(use VPN)";
-                        tag.dbString = "OK";
-                        tag.serverString = "Fail";
-                    }
-                    msg += imei + " Upload Result :" + result_string +", "+ reg_result + "\n";
-                    tag.passFlagUpdate = false;
+                }
+                else
+                {
+                    this.ble_label.Text = "Not Find";
                 }
             }
-            MessageBox.Show(msg);
-        }
 
-        private void BtnMode_Click(object sender, EventArgs e)
-        {
-            if (this.modeFlag == 0)
-            {
-                this.modeFlag = 1;
-                this.modeLabel.Text = "Carrot Plug 개통 Test Mode";
-                this.tagList.Clear();
-                this.tagColl.Clear();
-                Count.Text = "0";
-                PassCount.Text = "0";
-            }
-            else
-            {
-                this.modeFlag = 0;
-                this.modeLabel.Text = "Carrot Plug QA Test Mode";
-                this.tagList.Clear();
-                this.tagColl.Clear();
-                Count.Text = "0";
-                PassCount.Text = "0";
-            }
-            Application.DoEvents();
-        }
-
-        private void Scan_Click(object sender, EventArgs e)
-        {
-            Form2 dlg = new Form2(ServerVersion.ToString());
-            dlg.Show();
         }
     }
 }
