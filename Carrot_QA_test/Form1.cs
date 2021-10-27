@@ -926,16 +926,15 @@ namespace Carrot_QA_test
                 if (btAddress != 0)
                 {
                     var device = await BluetoothLEDevice.FromBluetoothAddressAsync(btAddress);
-                    DeviceUnpairingResult dupr = await device.DeviceInformation.Pairing.UnpairAsync();
+                    //DeviceUnpairingResult dupr = await device.DeviceInformation.Pairing.UnpairAsync();
                     Debug.WriteLine($"BLEWATCHER Found: {imei}");
                     if (!device.DeviceInformation.Pairing.IsPaired)
                     {
                         Debug.WriteLine($"{device.Name} Try Pairing");
 
-                        var result = await device.DeviceInformation.Pairing.Custom.PairAsync(
-                                DevicePairingKinds.ConfirmOnly, DevicePairingProtectionLevel.None);
-
+                        var result = await device.DeviceInformation.Pairing.PairAsync();
                         this.ble_label.Text = "Connecting";
+                        DeviceUnpairingResult dupr = await device.DeviceInformation.Pairing.UnpairAsync();
                         Debug.WriteLine($"BLEWATCHER Pairing Complete");
                         bleState = 1;
                         return;

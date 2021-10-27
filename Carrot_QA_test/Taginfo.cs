@@ -36,9 +36,15 @@ public class Mydb
 
     private Dictionary<string, Plug> pluglist = new Dictionary<string, Plug>();
 
-    string serverUrl = "https://t-dtag.carrotins.com:8080/api/v1/dtag/registries";
-    string serverBearer = "Bearer KXKQNQ64380880304TLRQQ";
-    string serverHost = "t-dtag.carrotins.com";
+    // Test Server
+    //string serverUrl = "https://t-dtag.carrotins.com:8080/api/v1/dtag/registries";
+    //string serverBearer = "Bearer KXKQNQ64380880304TLRQQ";
+    //string serverHost = "t-dtag.carrotins.com";
+
+    // Main Server
+    string serverUrl = "https://dtag.carrotins.com:8080/api/v1/dtag/registries";
+    string serverBearer = "Bearer EJH6NE0851819521SSSA7M";
+    string serverHost = "dtag.carrotins.com";
 
     //MainServer "https://dtag.carrotins.com:8080/api/v1/dtag/registries" / "Bearer EJH6NE0851819521SSSA7M" / "dtag.carrotins.com";
     //TestServer "https://t-dtag.carrotins.com:8080/api/v1/dtag/registries" / "Bearer KXKQNQ64380880304TLRQQ" / "t-dtag.carrotins.com";
