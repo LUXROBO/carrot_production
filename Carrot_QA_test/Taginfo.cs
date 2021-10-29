@@ -31,7 +31,7 @@ public class Plug {
 public class Mydb
 {
     private MySqlConnection conn;
-    private readonly string ConnUrl = "Server=release-carrot-cluster.cluster-ro-cb10can9foe2.ap-northeast-2.rds.amazonaws.com;Database=carrotPlugList;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
+    private readonly string ConnUrl = "Server=release-carrot-cluster.cluster-cb10can9foe2.ap-northeast-2.rds.amazonaws.com;Database=carrotPlugList;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
     public MySqlDataReader rdr;
 
     private Dictionary<string, Plug> pluglist = new Dictionary<string, Plug>();
@@ -67,6 +67,7 @@ public class Mydb
         {
             conn.Open();
             Console.WriteLine("connReader ON");
+            new MySqlCommand("set sql_safe_updates=0;", conn);
         }
     }
 
@@ -78,6 +79,7 @@ public class Mydb
         {
             conn.Open();
             Console.WriteLine("connReader ON");
+            new MySqlCommand("set sql_safe_updates=0;", conn);
         }
     }
 
