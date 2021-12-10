@@ -431,7 +431,23 @@ namespace Carrot_QA_test
                         this.ServerVersionText.Text = "Firmware Version : v"+ majorVersion + "."+ minorVersion + "." + patchVersion;
                     }
                 }
-                if (GetExternalIPAddress() != "175.209.190.173")
+                string ip = GetExternalIPAddress();
+                /*
+                 * 생산현장 
+                    고정 IP : 112.216.234.42
+                    고정 IP : 112.216.234.43
+                    고정 IP : 112.216.234.44  총 3개
+
+                    GPS검사실 
+                    고정 IP : 106.245.254.26
+
+                    개통검사실
+                    ​고정 IP : 112.216.238.122
+                    
+                    럭스로보 연구소
+                    고정 IP : 175.209.190.173
+                */
+                if (!(ip == "175.209.190.173" || ip == "112.216.238.122" || ip == "106.245.254.26" || ip == "112.216.234.42" || ip == "112.216.234.43" || ip == "112.216.234.44"))
                 {
                     this.dbTimer.Stop();
                     if (MessageBox.Show("IP 주소가 다릅니다. VPN과 인터넷 상태를 점검해주세요.","Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
@@ -477,11 +493,26 @@ namespace Carrot_QA_test
                             {
                                 tag.serverString = "MS Fail";
                             }
+                            else if (let == -4)
+                            {
+                                tag.serverString = "Time Out";
+                                this.dbTimer.Stop();
+                                if (MessageBox.Show("인터넷 연결 상태가 좋지 않습니다. 점검 해주세요.", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                                {
+                                    Application.Exit();
+                                }
+                                this.dbTimer.Start();
+                            }
                         }
                         tag.passFlagUpdate = false;
                     }
 
                     TimeSpan timeDiff = DateTime.Now - tag.updateTime;
+                    if((tag.TagRssi < -120) && (timeDiff.Seconds > 5))
+                    {
+                        tagTimeout = tag;
+                        continue;
+                    }
                     if (timeDiff.Seconds > 20)
                     {
                         tagTimeout = tag;
@@ -879,7 +910,7 @@ namespace Carrot_QA_test
         /** @brief : filter tag mac adress or name
          * @return : true if tag matches false otherwise
          */
-        private bool Filter(Taginfo taginfo)
+                private bool Filter(Taginfo taginfo)
         {
             if (taginfo.TagMac.ToLower().Contains(filter.ToLower()) || taginfo.TagName.ToLower().Contains(filter.ToLower()))
             {

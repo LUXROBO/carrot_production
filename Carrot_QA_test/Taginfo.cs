@@ -209,7 +209,11 @@ public class Mydb
                 dtag_string = "OK";
                 return_ret = 1;
             }
-            else
+            else if (ret == 408)
+            {
+                return_ret = -4;
+            }
+            else 
             {
                 return_ret = -3;
             }
