@@ -574,12 +574,12 @@ namespace Carrot_QA_test
             if (this.watchStarted == false)
             {
 
-                if (this.modeFlag == 0)
-                    this.watcher.AdvertisementFilter.Advertisement.LocalName = "Q";
-                else
-                    this.watcher.AdvertisementFilter.Advertisement.LocalName = "O";
-
+                //if (this.modeFlag == 0)
+                //    this.watcher.AdvertisementFilter.Advertisement.LocalName = "Q";
+                //else
+                //    this.watcher.AdvertisementFilter.Advertisement.LocalName = "O";
                 this.watcher.Received += Tag_Received;
+                this.watcher.ScanningMode = BluetoothLEScanningMode.Active;
                 this.watcher.Start();
                 this.watchStarted = true;
 
@@ -737,11 +737,11 @@ namespace Carrot_QA_test
             dlg.Show();
         }
 
-        private void Tag_Received(BluetoothLEAdvertisementWatcher received, BluetoothLEAdvertisementReceivedEventArgs args)
+        private async void Tag_Received(BluetoothLEAdvertisementWatcher received, BluetoothLEAdvertisementReceivedEventArgs args)
         {
 
             //show only connectable tags
-            if (args.AdvertisementType == BluetoothLEAdvertisementType.NonConnectableUndirected || args.AdvertisementType == BluetoothLEAdvertisementType.ConnectableUndirected)
+            //if (args.AdvertisementType == BluetoothLEAdvertisementType.NonConnectableUndirected || args.AdvertisementType == BluetoothLEAdvertisementType.ConnectableUndirected || args.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse)
             {
                 //get tag infos
                 Taginfo taginfo = new Taginfo();
@@ -749,12 +749,15 @@ namespace Carrot_QA_test
                 taginfo.TagName = args.Advertisement.LocalName;
                 taginfo.updateTime = DateTime.Now;
                 taginfo.CarrotPlugFlag = false;
-                // Debug.WriteLine("ble device :" + taginfo.TagName);
+                //ulong blAddress = args.BluetoothAddress;
+                //BluetoothDevice blDevice = await Windows.Devices.Bluetooth.BluetoothDevice.FromBluetoothAddressAsync(blAddress);
+                //Debug.WriteLine("ble device :" + taginfo.TagName);
 
                 //get tag datas
                 string datasection = String.Empty;
-                if(taginfo.TagName.Length == 1 && ( taginfo.TagName == "O" || taginfo.TagName == "Q"))
-                {
+                if(taginfo.TagName.Length == 1 && ( taginfo.TagName == "O" || taginfo.TagName == "Q") || args.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse)
+                //if (taginfo.TagName.Length == 1 && (taginfo.TagName == "O" || taginfo.TagName == "Q"))
+                    {
                     foreach (BluetoothLEAdvertisementDataSection section in args.Advertisement.DataSections)
                     {
                         var data = new byte[section.Data.Length];
@@ -764,11 +767,12 @@ namespace Carrot_QA_test
                             datasection = String.Format("{0}", BitConverter.ToString(data));
                             taginfo.TagDataRaw.Add(datasection);
                             taginfo.TagRssi = args.RawSignalStrengthInDBm;
+                            Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " Find device :" + taginfo.TagMac + "("+ args.AdvertisementType.ToString() + ") L:" + section.Data.Length +" Data: " + datasection);
                             try
                             {
-                                if (taginfo.TagDataRaw.Count >= 3 && taginfo.TagDataRaw[2].Length > 6)
+                                if (section.Data.Length > 6)
                                 {
-                                    // Debug.WriteLine("Find device :" + taginfo.TagName);
+                                    // 
                                     taginfo.btAddress = args.BluetoothAddress;
                                     taginfo.TagMenu = taginfo.TagDataRaw[2].Replace("-", "");
                                     string majorVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(2, 1), 16)).ToString();
