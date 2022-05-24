@@ -770,7 +770,11 @@ namespace Carrot_QA_test
                             Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " Find device :" + taginfo.TagMac + "("+ args.AdvertisementType.ToString() + ") L:" + section.Data.Length +" Data: " + datasection);
                             try
                             {
-                                if (section.Data.Length > 6)
+                                if(arg.AdvertisementType == BluetoothLEAdvertisementType.ScanningMode)
+                                {
+                                    Debug.WriteLine("SR :" + taginfo.TagName +" / "+ taginfo.TagDataRaw.ToString())
+                                }
+                                else if (section.Data.Length > 6)
                                 {
                                     // 
                                     taginfo.btAddress = args.BluetoothAddress;
@@ -793,6 +797,8 @@ namespace Carrot_QA_test
                                             taginfo.TagFlagString += "GPS Fail";
                                         else
                                             taginfo.TagFlagString += "GPS OK";
+                                        if(taginfo.ng2_rawdata_flag)
+                                            taginfo.TagFlagString += "("+ taginfo.ng2_gpsSnr.ToString() + ")";
                                         taginfo.TagFlagString += ", ";
                                         if ((taginfo.TagFlag & 0x02) == 0x02)
                                             taginfo.TagFlagString += "BLE Fail";
@@ -805,11 +811,18 @@ namespace Carrot_QA_test
                                             taginfo.TagFlagString += "CAP Over";
                                         else
                                             taginfo.TagFlagString += "CAP OK";
+                                        if(taginfo.ng2_rawdata_flag)
+                                            taginfo.TagFlagString += "("+ taginfo.ng2_cap.ToString() + ")";
                                         taginfo.TagFlagString += ", ";
                                         if ((taginfo.TagFlag & 0xF0) != 0x00)
                                             taginfo.TagFlagString += "LTE Fail";
                                         else
                                             taginfo.TagFlagString += "LTE OK";
+                                        if(taginfo.ng2_rawdata_flag)
+                                        {
+                                            taginfo.TagFlagString += "("+taginfo.ng2_b3_min.ToString()+","+taginfo.ng2_b3_avg.ToString() +","+taginfo.ng2_b3_max.ToString();
+                                            taginfo.TagFlagString += "/"+taginfo.ng2_b5_min.ToString()+","+taginfo.ng2_b5_avg.ToString() +","+taginfo.ng2_b5_max.ToString()+")";
+                                        }
                                         if ((taginfo.TagFlag & 0xFF) == 0)
                                         {
                                             taginfo.passFlag = "OK";

@@ -93,15 +93,37 @@ public class Mydb
     {
         if (icc_id == null)
             icc_id = "NULL";
+        now
         string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei =" + imei + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
-    public int UpdateQuery_qa2(string imei, string icc_id, string qa2, string ng2_type, string ble_id)
+    public int UpdateQuery_qa2(string imei, string icc_id, string qa2, string ng2_type, string ble_id, taginfo taginfo)
     {
         if (icc_id == null)
             icc_id = "NULL";
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa2=\"" + qa2 + "\", ng2_type=\"" + ng2_type + "\", ble_id =\""+ ble_id + "\" where imei =" + imei + ';';
+        DateTime update_date = DateTime.Now;
+        string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
+        string str_update;
+        str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id 
+        str_update += ", qa2=\"" + qa2;
+        str_update += "\", ng2_type=\"" + ng2_type;
+        str_update += "\", ble_id =\"" + ble_id;
+        str_update += "\", qa2_update_date =\""+ date_str;
+        if(taginfo.ng2_rawdata_flag)
+        {
+            str_update += "\", qa2_gps_snr =\""+ taginfo.ng2_gpsSnr;
+            str_update += "\", qa2_temp =\""+ taginfo.ng2_temp;
+            str_update += "\", qa2_ble_rssi =\""+ taginfo.ng2_ble_rssi;
+            str_update += "\", qa2_lte_b3_min =\""+ taginfo.ng2_b3_min;
+            str_update += "\", qa2_lte_b3_avg =\""+ taginfo.ng2_b3_avg;
+            str_update += "\", qa2_lte_b3_max =\""+ taginfo.ng2_b3_max;
+            str_update += "\", qa2_lte_b5_min =\""+ taginfo.ng2_b5_min;
+            str_update += "\", qa2_lte_b5_avg =\""+ taginfo.ng2_b5_avg;
+            str_update += "\", qa2_lte_b5_max =\""+ taginfo.ng2_b5_max;
+        }        
+        str_update += "\" where imei =" + imei + ';';
+
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
@@ -109,14 +131,18 @@ public class Mydb
     {
         if (icc_id == null)
             icc_id = "NULL";
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\" where imei =" + imei + ';';
+        DateTime update_date = DateTime.Now;
+        string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
+        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei =" + imei + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
     private int UpdateQuery_dtag(string imei, string dtag)
     {
         string tdtag = "NG";
-        string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\" where imei =" + imei + ';';
+        DateTime update_date = DateTime.Now;
+        string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
+        string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei =" + imei + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
@@ -419,6 +445,19 @@ public class Taginfo : INotifyPropertyChanged
 
     private uint flag = 0;
     private string _passFlag = "NG";
+
+    private int ng2_gpsSnr_raw = 0;
+    private int ng2_temp_raw = 0;
+    private int ng2_cap_raw = 0;
+    private int ng2_b3_min_raw = 0;
+    private int ng2_b3_avg_raw = 0;
+    private int ng2_b3_max_raw = 0;
+    private int ng2_b5_min_raw = 0;
+    private int ng2_b5_avg_raw = 0;
+    private int ng2_b5_max_raw = 0;
+    private int ng2_ble_rssi_raw = 0;
+    private bool ng2_rawdata_flag_raw = false;
+
     public ulong btAddress;
     public string passFlag
     {
@@ -472,7 +511,18 @@ public class Taginfo : INotifyPropertyChanged
     public List<string> TagDataRaw = new List<string>();
     public string TagData { get { return data; } set { data = value; OnPropertyChanged("TagData"); } }
     public string TagMenu { get { return menu; } set { menu = value; OnPropertyChanged("TagMenu"); } }
-    public string TagFlagString { get { return flagString; } set { flagString = value; OnPropertyChanged("TagFlagString"); } }
+    public string TagFlagString { get { return flagString; }    set { flagString        = value; OnPropertyChanged("TagFlagString"); } }
+    public int ng2_gpsSnr   { get { return ng2_gpsSnr_raw; }    set { ng2_gpsSnr_raw    = value; OnPropertyChanged("ng2_gpsSnr"); } }
+    public int ng2_temp     { get { return ng2_temp_raw; }      set { ng2_temp_raw      = value; OnPropertyChanged("ng2_temp"); } }
+    public int ng2_cap      { get { return ng2_cap_raw; }       set { ng2_cap_raw       = value; OnPropertyChanged("ng2_cap"); } }
+    public int ng2_ble_rssi { get { return ng2_ble_rssi_raw; }  set { ng2_ble_rssi_raw  = value; OnPropertyChanged("ng2_ble_rssi"); } }
+    public int ng2_b3_min   { get { return ng2_b3_min_raw; }    set { ng2_b3_min_raw    = value; OnPropertyChanged("ng2_b3_min"); } }
+    public int ng2_b3_avg   { get { return ng2_b3_avg_raw; }    set { ng2_b3_avg_raw    = value; OnPropertyChanged("ng2_b3_avg"); } }
+    public int ng2_b3_max   { get { return ng2_b3_max_raw; }    set { ng2_b3_max_raw    = value; OnPropertyChanged("ng2_b3_max"); } }
+    public int ng2_b5_min   { get { return ng2_b5_min_raw; }    set { ng2_b5_min_raw    = value; OnPropertyChanged("ng2_b5_min"); } }
+    public int ng2_b5_avg   { get { return ng2_b5_avg_raw; }    set { ng2_b5_avg_raw    = value; OnPropertyChanged("ng2_b5_avg"); } }
+    public int ng2_b5_max   { get { return ng2_b5_max_raw; }    set { ng2_b5_max_raw    = value; OnPropertyChanged("ng2_b5_max"); } }
+    public bool ng2_rawdata_flag { get { return ng2_rawdata_flag_raw; }    set { ng2_rawdata_flag_raw    = value; OnPropertyChanged("ng2_rawdata_flag"); } }
     public uint TagFlag { get { return flag; } set { flag = value; OnPropertyChanged("TagFlag"); } }
     private string TagCaptorType { get; set; }
     public object TagDataVisibility { get { if (dataExist) { return Visibility.Visible; } else { return Visibility.Collapsed; } } }
@@ -516,20 +566,29 @@ public class Taginfo : INotifyPropertyChanged
      */
     public void update(Taginfo taginfo)
     {
-        this.TagName = taginfo.TagName;
-        this.TagRssi = taginfo.TagRssi;
-        this.TagData = taginfo.TagData;
-        this.TagMenu = taginfo.TagMenu;
-        this.TagVersion = taginfo.TagVersion;
-        this.TagVersionNumber = taginfo.TagVersionNumber;
-        this.TagIccID = taginfo.TagIccID;
-        this.TagIMEI = taginfo.TagIMEI;
-        this.TagBleID = taginfo.TagBleID;
-        this.TagFlagString = taginfo.TagFlagString;
-        this.passFlag = taginfo.passFlag;
-        this.btAddress = taginfo.btAddress;
-
-        this.flag = taginfo.flag;
-        this.updateTime = taginfo.updateTime;
+        this.TagName            = taginfo.TagName;
+        this.TagRssi            = taginfo.TagRssi;
+        this.TagData            = taginfo.TagData;
+        this.TagMenu            = taginfo.TagMenu;
+        this.TagVersion         = taginfo.TagVersion;
+        this.TagVersionNumber   = taginfo.TagVersionNumber;
+        this.TagIccID           = taginfo.TagIccID;
+        this.TagIMEI            = taginfo.TagIMEI;
+        this.TagBleID           = taginfo.TagBleID;
+        this.TagFlagString      = taginfo.TagFlagString;
+        this.ng2_b3_avg         = taginfo.ng2_b3_avg;
+        this.ng2_b3_min         = taginfo.ng2_b3_min;
+        this.ng2_b3_max         = taginfo.ng2_b3_max;
+        this.ng2_b5_avg         = taginfo.ng2_b5_avg;
+        this.ng2_b5_min         = taginfo.ng2_b5_min;
+        this.ng2_b5_max         = taginfo.ng2_b5_max;
+        this.ng2_rawdata_flag   = taginfo.ng2_rawdata_flag;
+        this.ng2_temp           = taginfo.ng2_temp;
+        this.ng2_cap            = taginfo.ng2_cap;
+        this.ng2_gpsSnr         = taginfo.ng2_gpsSnr;
+        this.passFlag           = taginfo.passFlag;
+        this.btAddress          = taginfo.btAddress;
+        this.flag               = taginfo.flag;
+        this.updateTime         = taginfo.updateTime;
 }
 }
