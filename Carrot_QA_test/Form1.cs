@@ -466,7 +466,7 @@ namespace Carrot_QA_test
                         string imei = tag.TagIMEI;
                         int result;
                         if (modeFlag == 0)
-                            result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
+                            result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID, tag);
                         else
                             result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
 
@@ -687,7 +687,7 @@ namespace Carrot_QA_test
                     string imei = tag.TagName;
                     int result;
                     if (modeFlag == 0)
-                        result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
+                        result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID, tag);
                     else
                         result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
 
@@ -767,15 +767,15 @@ namespace Carrot_QA_test
                             datasection = String.Format("{0}", BitConverter.ToString(data));
                             taginfo.TagDataRaw.Add(datasection);
                             taginfo.TagRssi = args.RawSignalStrengthInDBm;
-                            Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " Find device :" + taginfo.TagMac + "("+ args.AdvertisementType.ToString() + ") L:" + section.Data.Length +" Data: " + datasection);
                             try
                             {
-                                if(arg.AdvertisementType == BluetoothLEAdvertisementType.ScanningMode)
+                                if(args.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse)
                                 {
-                                    Debug.WriteLine("SR :" + taginfo.TagName +" / "+ taginfo.TagDataRaw.ToString())
+                                    Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " SR :" + taginfo.TagName +"("+ taginfo.TagMac +"), Data : " + datasection);
                                 }
                                 else if (section.Data.Length > 6)
                                 {
+                                    Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " FD :" + taginfo.TagName + "(" +taginfo.TagMac + " / " + args.AdvertisementType.ToString() + ") L:" + section.Data.Length + " Data: " + datasection);
                                     // 
                                     taginfo.btAddress = args.BluetoothAddress;
                                     taginfo.TagMenu = taginfo.TagDataRaw[2].Replace("-", "");

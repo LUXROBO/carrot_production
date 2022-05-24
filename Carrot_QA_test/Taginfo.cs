@@ -93,19 +93,18 @@ public class Mydb
     {
         if (icc_id == null)
             icc_id = "NULL";
-        now
         string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei =" + imei + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
-    public int UpdateQuery_qa2(string imei, string icc_id, string qa2, string ng2_type, string ble_id, taginfo taginfo)
+    public int UpdateQuery_qa2(string imei, string icc_id, string qa2, string ng2_type, string ble_id, Taginfo taginfo)
     {
         if (icc_id == null)
             icc_id = "NULL";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
         string str_update;
-        str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id 
+        str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id; 
         str_update += ", qa2=\"" + qa2;
         str_update += "\", ng2_type=\"" + ng2_type;
         str_update += "\", ble_id =\"" + ble_id;
