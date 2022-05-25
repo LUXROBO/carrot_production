@@ -771,7 +771,23 @@ namespace Carrot_QA_test
                             {
                                 if(args.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse)
                                 {
-                                    Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " SR :" + taginfo.TagName +"("+ taginfo.TagMac +"), Data : " + datasection);
+                                    if(this.tagList.ContainsKey(taginfo.TagMac) == ture)
+                                    {
+                                        string tempStr = taginfo.TagDataRaw[2].Replace("-", "");
+                                        taginfo.ng2_gpsSnr = Convert.ToInt32(tempStr.Substring(2,2))
+                                        taginfo.ng2_temp = Convert.ToInt32(tempStr.Substring(4,2))
+                                        taginfo.ng2_cap = Convert.ToInt32(tempStr.Substring(6,2))
+                                        taginfo.ng2_b3_min = Convert.ToInt32(tempStr.Substring(8,2))
+                                        taginfo.ng2_b3_avg = Convert.ToInt32(tempStr.Substring(10,2))
+                                        taginfo.ng2_b3_max = Convert.ToInt32(tempStr.Substring(12,2))
+                                        taginfo.ng2_b5_min = Convert.ToInt32(tempStr.Substring(14,2))
+                                        taginfo.ng2_b5_avg = Convert.ToInt32(tempStr.Substring(16,2))
+                                        taginfo.ng2_b5_max = Convert.ToInt32(tempStr.Substring(18,2))
+                                        taginfo.ng2_ble_rssi = taginfo.TagRssi;
+                                        taginfo.ng2_rawdata_flag = ture
+                                        Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " SR :" + taginfo.TagName +"("+ taginfo.TagMac +"), Data : " + datasection);
+
+                                    }
                                 }
                                 else if (section.Data.Length > 6)
                                 {
