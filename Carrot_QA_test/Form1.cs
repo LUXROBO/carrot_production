@@ -739,13 +739,21 @@ namespace Carrot_QA_test
 
         private async void Tag_Received(BluetoothLEAdvertisementWatcher received, BluetoothLEAdvertisementReceivedEventArgs args)
         {
+            string macTemp = args.BluetoothAddress.ToString("X");
 
             //show only connectable tags
-            //if (args.AdvertisementType == BluetoothLEAdvertisementType.NonConnectableUndirected || args.AdvertisementType == BluetoothLEAdvertisementType.ConnectableUndirected || args.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse)
+            if (args.Advertisement.LocalName.Length == 1 && (args.Advertisement.LocalName == "O" || args.Advertisement.LocalName == "Q") 
+                || (args.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse && (this.tagList.ContainsKey(macTemp))))
             {
                 //get tag infos
                 Taginfo taginfo = new Taginfo();
-                taginfo.TagMac = args.BluetoothAddress.ToString("X");
+                taginfo.TagMac = macTemp;
+                //update existing tag infos
+                if (this.tagList.ContainsKey(macTemp) == true)
+                {
+                    taginfo = this.tagList[macTemp];
+                }
+
                 taginfo.TagName = args.Advertisement.LocalName;
                 taginfo.updateTime = DateTime.Now;
                 taginfo.CarrotPlugFlag = false;
@@ -755,150 +763,118 @@ namespace Carrot_QA_test
 
                 //get tag datas
                 string datasection = String.Empty;
-                if(taginfo.TagName.Length == 1 && ( taginfo.TagName == "O" || taginfo.TagName == "Q") || args.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse)
                 //if (taginfo.TagName.Length == 1 && (taginfo.TagName == "O" || taginfo.TagName == "Q"))
+               
+                foreach (BluetoothLEAdvertisementDataSection section in args.Advertisement.DataSections)
+                {
+                    var data = new byte[section.Data.Length];
+                    using (var reader = DataReader.FromBuffer(section.Data))
                     {
-                    foreach (BluetoothLEAdvertisementDataSection section in args.Advertisement.DataSections)
-                    {
-                        var data = new byte[section.Data.Length];
-                        using (var reader = DataReader.FromBuffer(section.Data))
+                        reader.ReadBytes(data);
+                        datasection = String.Format("{0}", BitConverter.ToString(data));
+                        taginfo.TagDataRaw.Clear();
+                        taginfo.TagDataRaw.Add(datasection);
+                        taginfo.TagRssi = args.RawSignalStrengthInDBm;
+                        
+                        try
                         {
-                            reader.ReadBytes(data);
-                            datasection = String.Format("{0}", BitConverter.ToString(data));
-                            taginfo.TagDataRaw.Add(datasection);
-                            taginfo.TagRssi = args.RawSignalStrengthInDBm;
-                            try
+                            if(args.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse)
                             {
-                                if(args.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse)
+                                if(this.tagList.ContainsKey(taginfo.TagMac) == true)
                                 {
-                                    if(this.tagList.ContainsKey(taginfo.TagMac) == ture)
-                                    {
-                                        string tempStr = taginfo.TagDataRaw[2].Replace("-", "");
-                                        taginfo.ng2_gpsSnr = Convert.ToInt32(tempStr.Substring(2,2))
-                                        taginfo.ng2_temp = Convert.ToInt32(tempStr.Substring(4,2))
-                                        taginfo.ng2_cap = Convert.ToInt32(tempStr.Substring(6,2))
-                                        taginfo.ng2_b3_min = Convert.ToInt32(tempStr.Substring(8,2))
-                                        taginfo.ng2_b3_avg = Convert.ToInt32(tempStr.Substring(10,2))
-                                        taginfo.ng2_b3_max = Convert.ToInt32(tempStr.Substring(12,2))
-                                        taginfo.ng2_b5_min = Convert.ToInt32(tempStr.Substring(14,2))
-                                        taginfo.ng2_b5_avg = Convert.ToInt32(tempStr.Substring(16,2))
-                                        taginfo.ng2_b5_max = Convert.ToInt32(tempStr.Substring(18,2))
-                                        taginfo.ng2_ble_rssi = taginfo.TagRssi;
-                                        taginfo.ng2_rawdata_flag = ture
-                                        Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " SR :" + taginfo.TagName +"("+ taginfo.TagMac +"), Data : " + datasection);
+                                    string tempStr = taginfo.TagDataRaw[0].Replace("-", "");
+                                    taginfo.ng2_gpsSnr = Convert.ToInt32(tempStr.Substring(6, 2), 16);
+                                    taginfo.ng2_temp = Convert.ToInt32(tempStr.Substring(8, 2), 16);
+                                    taginfo.ng2_cap = Convert.ToInt32(tempStr.Substring(10, 2), 16);
+                                    taginfo.ng2_b3_min = Convert.ToInt32(tempStr.Substring(12, 2), 16);
+                                    taginfo.ng2_b3_avg = Convert.ToInt32(tempStr.Substring(14, 2), 16);
+                                    taginfo.ng2_b3_max = Convert.ToInt32(tempStr.Substring(16, 2), 16);
+                                    taginfo.ng2_b5_min = Convert.ToInt32(tempStr.Substring(18, 2), 16);
+                                    taginfo.ng2_b5_avg = Convert.ToInt32(tempStr.Substring(20, 2), 16);
+                                    taginfo.ng2_b5_max = Convert.ToInt32(tempStr.Substring(22, 2), 16);
+                                    taginfo.ng2_ble_rssi = taginfo.TagRssi;
+                                    taginfo.ng2_rawdata_flag = true;
+                                    Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " SR :" + taginfo.TagName +"("+ taginfo.TagMac +"), Data : " + datasection);
 
-                                    }
                                 }
-                                else if (section.Data.Length > 6)
+                            }
+                            else if (section.Data.Length > 6)
+                            {
+                                // 
+                                taginfo.btAddress = args.BluetoothAddress;
+                                taginfo.TagMenu = taginfo.TagDataRaw[0].Replace("-", "");
+                                string majorVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(2, 1), 16)).ToString();
+                                string minorVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(3, 1), 16)).ToString();
+                                string patchVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(0, 2), 16)).ToString();
+                                taginfo.TagVersionNumber = Convert.ToUInt32(majorVersion) * FIRMWARE_MAJOR_MASK;
+                                taginfo.TagVersionNumber += Convert.ToUInt32(minorVersion) * FIRMWARE_MINOR_MASK;
+                                taginfo.TagVersionNumber += Convert.ToUInt32(patchVersion) * FIRMWARE_PATCH_MASK;
+                                taginfo.TagVersion = 'v' + majorVersion + '.' + minorVersion + '.' + patchVersion;                  // Firmware Version
+                                taginfo.TagIccID = "898205" + taginfo.TagMenu.Substring(4, 13);                                     // ICC ID
+                                taginfo.TagFlag = (uint)Convert.ToInt32(taginfo.TagMenu.Substring(17, 1), 16);                      // QA Flag    
+                                taginfo.TagBleID = "4C520000-E25D-11EB-BA80-" + taginfo.TagMenu.Substring(18, 12);                  // BLE UUID
+                                taginfo.TagIMEI = "3596271" + taginfo.TagMenu.Substring(30, 8);                                     // IMEI
+                                taginfo.TagFlagString = taginfo.TagVersion + " ";
+                                if (modeFlag == 0 && taginfo.TagName == "Q")
                                 {
-                                    Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " FD :" + taginfo.TagName + "(" +taginfo.TagMac + " / " + args.AdvertisementType.ToString() + ") L:" + section.Data.Length + " Data: " + datasection);
-                                    // 
-                                    taginfo.btAddress = args.BluetoothAddress;
-                                    taginfo.TagMenu = taginfo.TagDataRaw[2].Replace("-", "");
-                                    string majorVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(2, 1), 16)).ToString();
-                                    string minorVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(3, 1), 16)).ToString();
-                                    string patchVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(0, 2), 16)).ToString();
-                                    taginfo.TagVersionNumber = Convert.ToUInt32(majorVersion) * FIRMWARE_MAJOR_MASK;
-                                    taginfo.TagVersionNumber += Convert.ToUInt32(minorVersion) * FIRMWARE_MINOR_MASK;
-                                    taginfo.TagVersionNumber += Convert.ToUInt32(patchVersion) * FIRMWARE_PATCH_MASK;
-                                    taginfo.TagVersion = 'v' + majorVersion + '.' + minorVersion + '.' + patchVersion;                  // Firmware Version
-                                    taginfo.TagIccID = "898205" + taginfo.TagMenu.Substring(4, 13);                                     // ICC ID
-                                    taginfo.TagFlag = (uint)Convert.ToInt32(taginfo.TagMenu.Substring(17, 1), 16);                      // QA Flag    
-                                    taginfo.TagBleID = "4C520000-E25D-11EB-BA80-" + taginfo.TagMenu.Substring(18, 12);                  // BLE UUID
-                                    taginfo.TagIMEI = "3596271" + taginfo.TagMenu.Substring(30, 8);                                     // IMEI
-                                    taginfo.TagFlagString = taginfo.TagVersion + " ";
-                                    if (modeFlag == 0 && taginfo.TagName == "Q")
+                                    taginfo.CarrotPlugFlag = true;
+                                }
+                                else if (modeFlag == 1 && taginfo.TagName == "O")
+                                {
+                                    string progressString = "none";
+                                    switch (taginfo.TagFlag)
                                     {
-                                        if ((taginfo.TagFlag & 0x01) == 0x01)
-                                            taginfo.TagFlagString += "GPS Fail";
-                                        else
-                                            taginfo.TagFlagString += "GPS OK";
-                                        if(taginfo.ng2_rawdata_flag)
-                                            taginfo.TagFlagString += "("+ taginfo.ng2_gpsSnr.ToString() + ")";
-                                        taginfo.TagFlagString += ", ";
-                                        if ((taginfo.TagFlag & 0x02) == 0x02)
-                                            taginfo.TagFlagString += "BLE Fail";
-                                        else
-                                            taginfo.TagFlagString += "BLE OK";
-                                        taginfo.TagFlagString += ", ";
-                                        if ((taginfo.TagFlag & 0x0C) == 0x08)
-                                            taginfo.TagFlagString += "CAP Low";
-                                        else if ((taginfo.TagFlag & 0x0C) == 0x04)
-                                            taginfo.TagFlagString += "CAP Over";
-                                        else
-                                            taginfo.TagFlagString += "CAP OK";
-                                        if(taginfo.ng2_rawdata_flag)
-                                            taginfo.TagFlagString += "("+ taginfo.ng2_cap.ToString() + ")";
-                                        taginfo.TagFlagString += ", ";
-                                        if ((taginfo.TagFlag & 0xF0) != 0x00)
-                                            taginfo.TagFlagString += "LTE Fail";
-                                        else
-                                            taginfo.TagFlagString += "LTE OK";
-                                        if(taginfo.ng2_rawdata_flag)
-                                        {
-                                            taginfo.TagFlagString += "("+taginfo.ng2_b3_min.ToString()+","+taginfo.ng2_b3_avg.ToString() +","+taginfo.ng2_b3_max.ToString();
-                                            taginfo.TagFlagString += "/"+taginfo.ng2_b5_min.ToString()+","+taginfo.ng2_b5_avg.ToString() +","+taginfo.ng2_b5_max.ToString()+")";
-                                        }
-                                        if ((taginfo.TagFlag & 0xFF) == 0)
-                                        {
-                                            taginfo.passFlag = "OK";
-                                        }
-                                        taginfo.CarrotPlugFlag = true;
-                                    }
-                                    else if (modeFlag == 1 && taginfo.TagName == "O")
-                                    {
-                                        string progressString = "none";
-                                        switch (taginfo.TagFlag)
-                                        {
-                                            case 0x0:
-                                                progressString = "Booting -> CCID/IMEI check";
-                                                taginfo.passFlag = "NG";
-                                                break;
-                                            case 0x1:
-                                                progressString = "CCID/IMEI OK -> Phone number";
-                                                taginfo.passFlag = "NG";
-                                                break;
-                                            case 0x2:
-                                                progressString = "Phone number OK -> FOTA";
-                                                taginfo.passFlag = "NG";
-                                                break;
-                                            case 0x3:
-                                                progressString = "FOTA OK -> Provisioning";
-                                                taginfo.passFlag = "NG";
-                                                break;
-                                            case 0x4:
-                                                progressString = "Provisioning OK -> MQTT Connect";
-                                                taginfo.passFlag = "NG";
-                                                break;
-                                            case 0xF:
-                                                progressString = "Open Success";
-                                                taginfo.passFlag = "NG";
-                                                if (VersionCheck.Checked)
-                                                {
-                                                    if (ServerVersion <= taginfo.TagVersionNumber)
-                                                    {
-                                                        taginfo.passFlag = "OK";
-                                                    }
-                                                }
-                                                else
+                                        case 0x0:
+                                            progressString = "Booting -> CCID/IMEI check";
+                                            taginfo.passFlag = "NG";
+                                            break;
+                                        case 0x1:
+                                            progressString = "CCID/IMEI OK -> Phone number";
+                                            taginfo.passFlag = "NG";
+                                            break;
+                                        case 0x2:
+                                            progressString = "Phone number OK -> FOTA";
+                                            taginfo.passFlag = "NG";
+                                            break;
+                                        case 0x3:
+                                            progressString = "FOTA OK -> Provisioning";
+                                            taginfo.passFlag = "NG";
+                                            break;
+                                        case 0x4:
+                                            progressString = "Provisioning OK -> MQTT Connect";
+                                            taginfo.passFlag = "NG";
+                                            break;
+                                        case 0xF:
+                                            progressString = "Open Success";
+                                            taginfo.passFlag = "NG";
+                                            if (VersionCheck.Checked)
+                                            {
+                                                if (ServerVersion <= taginfo.TagVersionNumber)
                                                 {
                                                     taginfo.passFlag = "OK";
                                                 }
-                                                break;
-                                        }
-                                        taginfo.TagFlagString += " " + progressString;
-                                        taginfo.CarrotPlugFlag = true;
+                                            }
+                                            else
+                                            {
+                                                taginfo.passFlag = "OK";
+                                            }
+                                            break;
                                     }
+                                    taginfo.TagFlagString += " " + progressString;
+                                    taginfo.CarrotPlugFlag = true;
+
                                 }
-                                else
-                                {
-                                    taginfo.TagMenu = "";
-                                }
-                            }
-                            catch
-                            {
+                                Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " FD :" + taginfo.TagName + "(" + taginfo.TagMac + " / " + args.AdvertisementType.ToString() + ") L:" + section.Data.Length + " Data: " + datasection);
 
                             }
+                            else
+                            {
+                                taginfo.TagMenu = "";
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
                         }
                     }
                 }
@@ -943,7 +919,7 @@ namespace Carrot_QA_test
         /** @brief : filter tag mac adress or name
          * @return : true if tag matches false otherwise
          */
-                private bool Filter(Taginfo taginfo)
+        private bool Filter(Taginfo taginfo)
         {
             if (taginfo.TagMac.ToLower().Contains(filter.ToLower()) || taginfo.TagName.ToLower().Contains(filter.ToLower()))
             {
