@@ -112,14 +112,15 @@ public class Mydb
         if(taginfo.ng2_rawdata_flag)
         {
             str_update += "\", qa2_gps_snr =\""+ taginfo.ng2_gpsSnr;
-            str_update += "\", qa2_temp =\""+ taginfo.ng2_temp;
+            str_update += "\", qa2_temperature =\"" + taginfo.ng2_temp;
+            str_update += "\", qa2_cap =\"" + taginfo.ng2_cap;
             str_update += "\", qa2_ble_rssi =\""+ taginfo.ng2_ble_rssi;
-            str_update += "\", qa2_lte_b3_min =\""+ taginfo.ng2_b3_min;
-            str_update += "\", qa2_lte_b3_avg =\""+ taginfo.ng2_b3_avg;
-            str_update += "\", qa2_lte_b3_max =\""+ taginfo.ng2_b3_max;
-            str_update += "\", qa2_lte_b5_min =\""+ taginfo.ng2_b5_min;
-            str_update += "\", qa2_lte_b5_avg =\""+ taginfo.ng2_b5_avg;
-            str_update += "\", qa2_lte_b5_max =\""+ taginfo.ng2_b5_max;
+            str_update += "\", qa2_lte_b3_min =\"-"+ taginfo.ng2_b3_min;
+            str_update += "\", qa2_lte_b3_avg =\"-"+ taginfo.ng2_b3_avg;
+            str_update += "\", qa2_lte_b3_max =\"-"+ taginfo.ng2_b3_max;
+            str_update += "\", qa2_lte_b5_min =\"-"+ taginfo.ng2_b5_min;
+            str_update += "\", qa2_lte_b5_avg =\"-"+ taginfo.ng2_b5_avg;
+            str_update += "\", qa2_lte_b5_max =\"-"+ taginfo.ng2_b5_max;
         }        
         str_update += "\" where imei =" + imei + ';';
 

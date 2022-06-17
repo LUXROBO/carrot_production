@@ -117,9 +117,9 @@ namespace Carrot_QA_test
             // 
             this.txtSearch.Font = new System.Drawing.Font("굴림", 12F);
             this.txtSearch.Location = new System.Drawing.Point(667, 8);
-            this.txtSearch.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.txtSearch.Margin = new System.Windows.Forms.Padding(2);
             this.txtSearch.Name = "txtSearch";
-            this.txtSearch.Size = new System.Drawing.Size(180, 35);
+            this.txtSearch.Size = new System.Drawing.Size(180, 26);
             this.txtSearch.TabIndex = 0;
             this.txtSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtSearch_KeyDown);
             // 
@@ -127,7 +127,7 @@ namespace Carrot_QA_test
             // 
             this.btnStartBle.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
             this.btnStartBle.Location = new System.Drawing.Point(668, 40);
-            this.btnStartBle.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnStartBle.Margin = new System.Windows.Forms.Padding(2);
             this.btnStartBle.Name = "btnStartBle";
             this.btnStartBle.Size = new System.Drawing.Size(77, 28);
             this.btnStartBle.TabIndex = 1;
@@ -139,7 +139,7 @@ namespace Carrot_QA_test
             // 
             this.btnClearBle.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
             this.btnClearBle.Location = new System.Drawing.Point(749, 40);
-            this.btnClearBle.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnClearBle.Margin = new System.Windows.Forms.Padding(2);
             this.btnClearBle.Name = "btnClearBle";
             this.btnClearBle.Size = new System.Drawing.Size(70, 28);
             this.btnClearBle.TabIndex = 2;
@@ -151,7 +151,7 @@ namespace Carrot_QA_test
             // 
             this.BtnUpload.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
             this.BtnUpload.Location = new System.Drawing.Point(822, 40);
-            this.BtnUpload.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.BtnUpload.Margin = new System.Windows.Forms.Padding(2);
             this.BtnUpload.Name = "BtnUpload";
             this.BtnUpload.Size = new System.Drawing.Size(73, 28);
             this.BtnUpload.TabIndex = 3;
@@ -163,7 +163,7 @@ namespace Carrot_QA_test
             // 
             this.btnSave.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
             this.btnSave.Location = new System.Drawing.Point(899, 40);
-            this.btnSave.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnSave.Margin = new System.Windows.Forms.Padding(2);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(73, 28);
             this.btnSave.TabIndex = 4;
@@ -187,7 +187,7 @@ namespace Carrot_QA_test
             this.listView1.GridLines = true;
             this.listView1.HideSelection = false;
             this.listView1.Location = new System.Drawing.Point(9, 74);
-            this.listView1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.listView1.Margin = new System.Windows.Forms.Padding(2);
             this.listView1.MultiSelect = false;
             this.listView1.Name = "listView1";
             this.listView1.Size = new System.Drawing.Size(964, 676);
@@ -253,7 +253,7 @@ namespace Carrot_QA_test
             this.label4.Font = new System.Drawing.Font("굴림", 12F);
             this.label4.Location = new System.Drawing.Point(540, 11);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(181, 24);
+            this.label4.Size = new System.Drawing.Size(126, 16);
             this.label4.TabIndex = 12;
             this.label4.Text = "BLE Connect ID:";
             // 
@@ -263,9 +263,9 @@ namespace Carrot_QA_test
             this.modeLabel.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
             this.modeLabel.Location = new System.Drawing.Point(8, 12);
             this.modeLabel.Name = "modeLabel";
-            this.modeLabel.Size = new System.Drawing.Size(367, 24);
+            this.modeLabel.Size = new System.Drawing.Size(261, 16);
             this.modeLabel.TabIndex = 13;
-            this.modeLabel.Text = "Carrot Plug v1.2 QA Test Mode";
+            this.modeLabel.Text = "Carrot Plug v2.0 QA Test Mode";
             // 
             // BtnMode
             // 
@@ -285,7 +285,7 @@ namespace Carrot_QA_test
             this.PassCount.Location = new System.Drawing.Point(346, 44);
             this.PassCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.PassCount.Name = "PassCount";
-            this.PassCount.Size = new System.Drawing.Size(24, 24);
+            this.PassCount.Size = new System.Drawing.Size(16, 16);
             this.PassCount.TabIndex = 11;
             this.PassCount.Text = "-";
             // 
@@ -296,7 +296,7 @@ namespace Carrot_QA_test
             this.Count.Location = new System.Drawing.Point(252, 44);
             this.Count.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.Count.Name = "Count";
-            this.Count.Size = new System.Drawing.Size(24, 24);
+            this.Count.Size = new System.Drawing.Size(16, 16);
             this.Count.TabIndex = 10;
             this.Count.Text = "-";
             // 
@@ -307,7 +307,7 @@ namespace Carrot_QA_test
             this.label2.Location = new System.Drawing.Point(110, 44);
             this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(187, 24);
+            this.label2.Size = new System.Drawing.Size(130, 16);
             this.label2.TabIndex = 8;
             this.label2.Text = "Number of Tag : ";
             // 
@@ -318,7 +318,7 @@ namespace Carrot_QA_test
             this.label3.Location = new System.Drawing.Point(280, 44);
             this.label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(75, 24);
+            this.label3.Size = new System.Drawing.Size(54, 16);
             this.label3.TabIndex = 9;
             this.label3.Text = "Pass :";
             // 
@@ -328,9 +328,9 @@ namespace Carrot_QA_test
             this.VersionCheck.Checked = true;
             this.VersionCheck.CheckState = System.Windows.Forms.CheckState.Checked;
             this.VersionCheck.Location = new System.Drawing.Point(415, 15);
-            this.VersionCheck.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.VersionCheck.Margin = new System.Windows.Forms.Padding(2);
             this.VersionCheck.Name = "VersionCheck";
-            this.VersionCheck.Size = new System.Drawing.Size(111, 21);
+            this.VersionCheck.Size = new System.Drawing.Size(104, 16);
             this.VersionCheck.TabIndex = 15;
             this.VersionCheck.Text = "버전 확인 모드";
             this.VersionCheck.UseVisualStyleBackColor = true;
@@ -342,7 +342,7 @@ namespace Carrot_QA_test
             this.ServerVersionText.Location = new System.Drawing.Point(412, 44);
             this.ServerVersionText.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.ServerVersionText.Name = "ServerVersionText";
-            this.ServerVersionText.Size = new System.Drawing.Size(201, 24);
+            this.ServerVersionText.Size = new System.Drawing.Size(140, 16);
             this.ServerVersionText.TabIndex = 16;
             this.ServerVersionText.Text = "Firmware Version :";
             // 
@@ -350,7 +350,7 @@ namespace Carrot_QA_test
             // 
             this.Scan.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
             this.Scan.Location = new System.Drawing.Point(11, 38);
-            this.Scan.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Scan.Margin = new System.Windows.Forms.Padding(2);
             this.Scan.Name = "Scan";
             this.Scan.Size = new System.Drawing.Size(94, 28);
             this.Scan.TabIndex = 17;
@@ -365,7 +365,7 @@ namespace Carrot_QA_test
             this.ble_label.Location = new System.Drawing.Point(850, 12);
             this.ble_label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.ble_label.Name = "ble_label";
-            this.ble_label.Size = new System.Drawing.Size(80, 24);
+            this.ble_label.Size = new System.Drawing.Size(57, 16);
             this.ble_label.TabIndex = 18;
             this.ble_label.Text = "Ready";
             // 
@@ -391,7 +391,7 @@ namespace Carrot_QA_test
             this.Controls.Add(this.btnClearBle);
             this.Controls.Add(this.btnStartBle);
             this.Controls.Add(this.txtSearch);
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
             this.Text = "Carrot QA Program";
             ((System.ComponentModel.ISupportInitialize)(this.listTimer)).EndInit();
@@ -783,18 +783,18 @@ namespace Carrot_QA_test
                                 if(this.tagList.ContainsKey(taginfo.TagMac) == true)
                                 {
                                     string tempStr = taginfo.TagDataRaw[0].Replace("-", "");
-                                    taginfo.ng2_gpsSnr = Convert.ToInt32(tempStr.Substring(6, 2), 16);
-                                    taginfo.ng2_temp = Convert.ToInt32(tempStr.Substring(8, 2), 16);
+                                    taginfo.ng2_gpsSnr = Convert.ToInt32(tempStr.Substring(6, 2), 10);
+                                    taginfo.ng2_temp = Convert.ToInt32(tempStr.Substring(8, 2), 10);
                                     taginfo.ng2_cap = Convert.ToInt32(tempStr.Substring(10, 2), 16);
-                                    taginfo.ng2_b3_min = Convert.ToInt32(tempStr.Substring(12, 2), 16);
-                                    taginfo.ng2_b3_avg = Convert.ToInt32(tempStr.Substring(14, 2), 16);
-                                    taginfo.ng2_b3_max = Convert.ToInt32(tempStr.Substring(16, 2), 16);
-                                    taginfo.ng2_b5_min = Convert.ToInt32(tempStr.Substring(18, 2), 16);
-                                    taginfo.ng2_b5_avg = Convert.ToInt32(tempStr.Substring(20, 2), 16);
-                                    taginfo.ng2_b5_max = Convert.ToInt32(tempStr.Substring(22, 2), 16);
+                                    taginfo.ng2_b3_min = Convert.ToInt32(tempStr.Substring(12, 2), 10);
+                                    taginfo.ng2_b3_avg = Convert.ToInt32(tempStr.Substring(14, 2), 10);
+                                    taginfo.ng2_b3_max = Convert.ToInt32(tempStr.Substring(16, 2), 10);
+                                    taginfo.ng2_b5_min = Convert.ToInt32(tempStr.Substring(18, 2), 10);
+                                    taginfo.ng2_b5_avg = Convert.ToInt32(tempStr.Substring(20, 2), 10);
+                                    taginfo.ng2_b5_max = Convert.ToInt32(tempStr.Substring(22, 2), 10);
                                     taginfo.ng2_ble_rssi = taginfo.TagRssi;
                                     taginfo.ng2_rawdata_flag = true;
-                                    Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " SR :" + taginfo.TagName +"("+ taginfo.TagMac +"), Data : " + datasection);
+                                    // Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " SR :" + taginfo.TagName +"("+ taginfo.TagMac +"), Data : " + datasection);
 
                                 }
                             }
@@ -817,6 +817,41 @@ namespace Carrot_QA_test
                                 taginfo.TagFlagString = taginfo.TagVersion + " ";
                                 if (modeFlag == 0 && taginfo.TagName == "Q")
                                 {
+
+                                    if ((taginfo.TagFlag & 0x01) == 0x01)
+                                        taginfo.TagFlagString += "GPS Fail";
+                                    else
+                                        taginfo.TagFlagString += "GPS OK";
+                                    if (taginfo.ng2_rawdata_flag)
+                                        taginfo.TagFlagString += "(" + taginfo.ng2_gpsSnr.ToString() + ")";
+                                    taginfo.TagFlagString += ", ";
+                                    if ((taginfo.TagFlag & 0x02) == 0x02)
+                                        taginfo.TagFlagString += "BLE Fail";
+                                    else
+                                        taginfo.TagFlagString += "BLE OK";
+                                    taginfo.TagFlagString += ", ";
+                                    if ((taginfo.TagFlag & 0x0C) == 0x08)
+                                        taginfo.TagFlagString += "CAP Low";
+                                    else if ((taginfo.TagFlag & 0x0C) == 0x04)
+                                        taginfo.TagFlagString += "CAP Over";
+                                    else
+                                        taginfo.TagFlagString += "CAP OK";
+                                    if (taginfo.ng2_rawdata_flag)
+                                        taginfo.TagFlagString += "(" + taginfo.ng2_cap.ToString() + ")";
+                                    taginfo.TagFlagString += ", ";
+                                    if ((taginfo.TagFlag & 0xF0) != 0x00)
+                                        taginfo.TagFlagString += "LTE Fail";
+                                    else
+                                        taginfo.TagFlagString += "LTE OK";
+                                    if (taginfo.ng2_rawdata_flag)
+                                    {
+                                        taginfo.TagFlagString += "(" + taginfo.ng2_b3_min.ToString() + "," + taginfo.ng2_b3_avg.ToString() + "," + taginfo.ng2_b3_max.ToString();
+                                        taginfo.TagFlagString += "/" + taginfo.ng2_b5_min.ToString() + "," + taginfo.ng2_b5_avg.ToString() + "," + taginfo.ng2_b5_max.ToString() + ")";
+                                    }
+                                    if ((taginfo.TagFlag & 0xFF) == 0)
+                                    {
+                                        taginfo.passFlag = "OK";
+                                    }
                                     taginfo.CarrotPlugFlag = true;
                                 }
                                 else if (modeFlag == 1 && taginfo.TagName == "O")
@@ -864,7 +899,7 @@ namespace Carrot_QA_test
                                     taginfo.CarrotPlugFlag = true;
 
                                 }
-                                Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " FD :" + taginfo.TagName + "(" + taginfo.TagMac + " / " + args.AdvertisementType.ToString() + ") L:" + section.Data.Length + " Data: " + datasection);
+                                // Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " FD :" + taginfo.TagName + "(" + taginfo.TagMac + " / " + args.AdvertisementType.ToString() + ") L:" + section.Data.Length + " Data: " + datasection);
 
                             }
                             else
