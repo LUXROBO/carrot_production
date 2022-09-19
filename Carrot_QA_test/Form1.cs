@@ -37,6 +37,7 @@ namespace Carrot_QA_test
 
         /** dictionnary of known tag */
         public Dictionary<string, Taginfo> tagList = new Dictionary<string, Taginfo>();
+        public Dictionary<string, Taginfo> tagSearch = new Dictionary<string, Taginfo>();
 
         /** search filter */
         private String _count = "0";
@@ -46,6 +47,7 @@ namespace Carrot_QA_test
         Timer listTimer;
         Timer dbTimer;
         Mydb mydb = new Mydb();
+        string pVersion = "3.0(BG770)";
 
         public int ServerVersion { get; private set; }
 
@@ -265,7 +267,7 @@ namespace Carrot_QA_test
             this.modeLabel.Name = "modeLabel";
             this.modeLabel.Size = new System.Drawing.Size(261, 16);
             this.modeLabel.TabIndex = 13;
-            this.modeLabel.Text = "Carrot Plug v2.0 QA Test Mode";
+            this.modeLabel.Text = "Carrot Plug v" + pVersion + " QA Test Mode";
             // 
             // BtnMode
             // 
@@ -604,12 +606,12 @@ namespace Carrot_QA_test
             if (this.modeFlag == 0)
             {
                 this.modeFlag = 1;
-                this.modeLabel.Text = "Carrot Plug v1.2 개통 Test Mode";
+                this.modeLabel.Text = "Carrot Plug v"+pVersion+" 개통 Test Mode";
             }
             else
             {
                 this.modeFlag = 0;
-                this.modeLabel.Text = "Carrot Plug v1.2 QA Test Mode";
+                this.modeLabel.Text = "Carrot Plug v" + pVersion + " QA Test Mode";
             }
 
             this.listView1.BeginUpdate();
@@ -742,24 +744,35 @@ namespace Carrot_QA_test
             string macTemp = args.BluetoothAddress.ToString("X");
 
             //show only connectable tags
-            if (args.Advertisement.LocalName.Length == 1 && (args.Advertisement.LocalName == "O" || args.Advertisement.LocalName == "Q") 
-                || (args.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse && (this.tagList.ContainsKey(macTemp))))
+            if (args.Advertisement.LocalName == "O" || args.Advertisement.LocalName == "Q" || this.tagSearch.ContainsKey(macTemp))
             {
+
                 //get tag infos
                 Taginfo taginfo = new Taginfo();
                 taginfo.TagMac = macTemp;
+
+                if (this.tagSearch.ContainsKey(taginfo.TagMac) == false)
+                {
+                    this.tagSearch.Add(taginfo.TagMac, taginfo);
+                }
+
                 //update existing tag infos
                 if (this.tagList.ContainsKey(macTemp) == true)
                 {
                     taginfo = this.tagList[macTemp];
                 }
 
-                taginfo.TagName = args.Advertisement.LocalName;
+                if (args.Advertisement.LocalName != "")
+                    taginfo.TagName = args.Advertisement.LocalName;
+                else
+                {
+                    taginfo.TagName = this.tagSearch[macTemp].TagName;
+                }
                 taginfo.updateTime = DateTime.Now;
                 taginfo.CarrotPlugFlag = false;
                 //ulong blAddress = args.BluetoothAddress;
                 //BluetoothDevice blDevice = await Windows.Devices.Bluetooth.BluetoothDevice.FromBluetoothAddressAsync(blAddress);
-                //Debug.WriteLine("ble device :" + taginfo.TagName);
+                Debug.WriteLine("ble device :" + taginfo.TagName + "\tmac :" + taginfo.TagMac + "\ttype :" + args.AdvertisementType);
 
                 //get tag datas
                 string datasection = String.Empty;
@@ -813,7 +826,8 @@ namespace Carrot_QA_test
                                 taginfo.TagIccID = "898205" + taginfo.TagMenu.Substring(4, 13);                                     // ICC ID
                                 taginfo.TagFlag = (uint)Convert.ToInt32(taginfo.TagMenu.Substring(17, 1), 16);                      // QA Flag    
                                 taginfo.TagBleID = "4C520000-E25D-11EB-BA80-" + taginfo.TagMenu.Substring(18, 12);                  // BLE UUID
-                                taginfo.TagIMEI = "3596271" + taginfo.TagMenu.Substring(30, 8);                                     // IMEI
+                                //taginfo.TagIMEI = "3596271" + taginfo.TagMenu.Substring(30, 8);                                     // IMEI
+                                taginfo.TagIMEI = "8635930" + taginfo.TagMenu.Substring(30, 8);                                     // IMEI
                                 taginfo.TagFlagString = taginfo.TagVersion + " ";
                                 if (modeFlag == 0 && taginfo.TagName == "Q")
                                 {
@@ -830,16 +844,14 @@ namespace Carrot_QA_test
                                     else
                                         taginfo.TagFlagString += "BLE OK";
                                     taginfo.TagFlagString += ", ";
-                                    if ((taginfo.TagFlag & 0x0C) == 0x08)
-                                        taginfo.TagFlagString += "CAP Low";
-                                    else if ((taginfo.TagFlag & 0x0C) == 0x04)
-                                        taginfo.TagFlagString += "CAP Over";
+                                    if ((taginfo.TagFlag & 0x04) == 0x04)
+                                        taginfo.TagFlagString += "CAP Fail";
                                     else
                                         taginfo.TagFlagString += "CAP OK";
                                     if (taginfo.ng2_rawdata_flag)
                                         taginfo.TagFlagString += "(" + taginfo.ng2_cap.ToString() + ")";
                                     taginfo.TagFlagString += ", ";
-                                    if ((taginfo.TagFlag & 0xF0) != 0x00)
+                                    if ((taginfo.TagFlag & 0x08) == 0x08)
                                         taginfo.TagFlagString += "LTE Fail";
                                     else
                                         taginfo.TagFlagString += "LTE OK";
