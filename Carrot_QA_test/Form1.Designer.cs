@@ -67,6 +67,8 @@ namespace Carrot_QA_test
         private CheckBox VersionCheck;
         private Label ServerVersionText;
         private Button Scan;
+        private ColumnHeader BLE;
+        private Label ble_label;
     }
 }
 

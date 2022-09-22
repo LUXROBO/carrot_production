@@ -7,6 +7,7 @@ using Windows.UI.Xaml;
 using Newtonsoft.Json.Linq;
 using System.Net;
 using System.IO;
+using System.Diagnostics;
 
 public class Plug {
     public string qa1;
@@ -17,11 +18,12 @@ public class Plug {
     public string ng3_type;
     public string icc_id;
     public string device_id;
-    public string prod_data;
+    public string prod_date;
     public string lot_no;
     public string sn;
     public string tdtag;
     public string dtag;
+    public string ble_id;
     public bool testServerFlag { get; set; } = false;
     public bool mainServerFlag { get; set; } = false;
 };
@@ -29,13 +31,23 @@ public class Plug {
 public class Mydb
 {
     private MySqlConnection conn;
-    private readonly string ConnUrl = "Server=release-carrot-cluster.cluster-ro-cb10can9foe2.ap-northeast-2.rds.amazonaws.com;Database=carrotPlugList;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
+    private readonly string ConnUrl = "Server=release-carrot-cluster.cluster-cb10can9foe2.ap-northeast-2.rds.amazonaws.com;Database=carrotPlugList;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
     public MySqlDataReader rdr;
 
     private Dictionary<string, Plug> pluglist = new Dictionary<string, Plug>();
 
-    string mainServerUrl = "https://dtag.carrotins.com:8080/api/v1/dtag/registries";
-    string testServerUrl = "https://t-dtag.carrotins.com:8080/api/v1/dtag/registries";
+    // Test Server
+    //string serverUrl = "https://t-dtag.carrotins.com:8080/api/v1/dtag/registries";
+    //string serverBearer = "Bearer KXKQNQ64380880304TLRQQ";
+    //string serverHost = "t-dtag.carrotins.com";
+
+    // Main Server
+    string serverUrl = "https://dtag.carrotins.com:8080/api/v1/dtag/registries";
+    string serverBearer = "Bearer EJH6NE0851819521SSSA7M";
+    string serverHost = "dtag.carrotins.com";
+
+    //MainServer "https://dtag.carrotins.com:8080/api/v1/dtag/registries" / "Bearer EJH6NE0851819521SSSA7M" / "dtag.carrotins.com";
+    //TestServer "https://t-dtag.carrotins.com:8080/api/v1/dtag/registries" / "Bearer KXKQNQ64380880304TLRQQ" / "t-dtag.carrotins.com";
     JObject regPayload = new JObject()
         {
             { "deviceId", "LUX1_359627100041471"},
@@ -55,6 +67,7 @@ public class Mydb
         {
             conn.Open();
             Console.WriteLine("connReader ON");
+            new MySqlCommand("set sql_safe_updates=0;", conn);
         }
     }
 
@@ -66,6 +79,7 @@ public class Mydb
         {
             conn.Open();
             Console.WriteLine("connReader ON");
+            new MySqlCommand("set sql_safe_updates=0;", conn);
         }
     }
 
@@ -83,26 +97,52 @@ public class Mydb
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
-    public int UpdateQuery_qa2(string imei, string icc_id, string qa2, string ng2_type)
+    public int UpdateQuery_qa2(string imei, string icc_id, string qa2, string ng2_type, string ble_id, Taginfo taginfo)
     {
         if (icc_id == null)
             icc_id = "NULL";
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa2=\"" + qa2 + "\", ng2_type=\"" + ng2_type + "\" where imei =" + imei + ';';
+        DateTime update_date = DateTime.Now;
+        string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
+        string str_update;
+        str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id; 
+        str_update += ", qa2=\"" + qa2;
+        str_update += "\", ng2_type=\"" + ng2_type;
+        str_update += "\", ble_id =\"" + ble_id;
+        str_update += "\", qa2_update_date =\""+ date_str;
+        if(taginfo.ng2_rawdata_flag)
+        {
+            str_update += "\", qa2_gps_snr =\""+ taginfo.ng2_gpsSnr;
+            str_update += "\", qa2_temperature =\"" + taginfo.ng2_temp;
+            str_update += "\", qa2_cap =\"" + taginfo.ng2_cap;
+            str_update += "\", qa2_ble_rssi =\""+ taginfo.ng2_ble_rssi;
+            str_update += "\", qa2_lte_b3_min =\"-"+ taginfo.ng2_b3_min;
+            str_update += "\", qa2_lte_b3_avg =\"-"+ taginfo.ng2_b3_avg;
+            str_update += "\", qa2_lte_b3_max =\"-"+ taginfo.ng2_b3_max;
+            str_update += "\", qa2_lte_b5_min =\"-"+ taginfo.ng2_b5_min;
+            str_update += "\", qa2_lte_b5_avg =\"-"+ taginfo.ng2_b5_avg;
+            str_update += "\", qa2_lte_b5_max =\"-"+ taginfo.ng2_b5_max;
+        }        
+        str_update += "\" where imei =" + imei + ';';
+
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
-    public int UpdateQuery_qa3(string imei, string icc_id, string qa3, string ng3_type)
+    public int UpdateQuery_qa3(string imei, string icc_id, string qa3, string ng3_type, string ble_id)
     {
         if (icc_id == null)
             icc_id = "NULL";
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\" where imei =" + imei + ';';
+        DateTime update_date = DateTime.Now;
+        string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
+        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei =" + imei + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
     private int UpdateQuery_dtag(string imei, string dtag)
     {
         string tdtag = "NG";
-        string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\" where imei =" + imei + ';';
+        DateTime update_date = DateTime.Now;
+        string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
+        string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei =" + imei + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
@@ -153,68 +193,53 @@ public class Mydb
         GetProduct(imei);
         try
         {
+            if(pluglist[imei].device_id == "")
+            {
+                pluglist[imei].device_id = "LUX1_" + imei;
+            }
             regPayload["deviceId"] = pluglist[imei].device_id;
             regPayload["cmBzpsRgtDscno"] = pluglist[imei].sn;
             regPayload["divcSrlNo"] = pluglist[imei].lot_no;
-            if(pluglist[imei].prod_data == "NULL")
+            if(pluglist[imei].prod_date == "")
             {
                 regPayload["prddt"] = DateTime.Now.ToString("yyyy-MM-dd");
             }
             else
             {
-                regPayload["prddt"] = pluglist[imei].prod_data;
+                regPayload["prddt"] = pluglist[imei].prod_date;
             }
             regPayload["divcNm"] = "Carrot Plug 1";
             regPayload["mdnm"] = "IV-GT1LM1BT";
             regPayload["mnftrNm"] = "LUXROBO";
+            regPayload["bluetId"] = pluglist[imei].ble_id;
             dtag_string = pluglist[imei].dtag;
-            //tdtag_string = pluglist[imei].tdtag;
-            //if (tdtag_string == "OK")
-            //{
-            //    pluglist[imei].testServerFlag = true;
-            //}
             if (dtag_string == "OK")
             {
                 pluglist[imei].mainServerFlag = true;
             }
 
         }
-        catch(KeyNotFoundException keyExcp)
+        catch(Exception ex)
         {
+            Debug.WriteLine(ex);
             return -1;
         }
         return_ret = -1;
 
-        //if (!pluglist[imei].testServerFlag)
-        //{
-        //    ret = registries_server(testServerUrl, "t-dtag.carrotins.com", "Bearer 8PKLPS2623330268GXRAQK");
-
-        //    if (ret == 201 || ret == 409)
-        //    {
-        //        pluglist[imei].testServerFlag = true;
-        //        tdtag_string = "OK";
-        //        return_ret = 2;
-        //    }
-        //    else
-        //    {
-        //        return_ret = -2;
-        //    }
-        //}
-        //else if(tdtag_string == "OK")
-        //{
-        //    return_ret = 2;
-        //}
-
         if(!pluglist[imei].mainServerFlag)
         {
-            ret = registries_server(mainServerUrl, "dtag.carrotins.com", "Bearer EJH6NE0851819521SSSA7M");
+            ret = registries_server(serverUrl, serverHost, serverBearer);
             if (ret == 201 || ret == 409)
             {
                 pluglist[imei].mainServerFlag = true;
                 dtag_string = "OK";
                 return_ret = 1;
             }
-            else
+            else if (ret == 408)
+            {
+                return_ret = -4;
+            }
+            else 
             {
                 return_ret = -3;
             }
@@ -228,7 +253,7 @@ public class Mydb
 
     public Dictionary<string, Plug> GetProduct(string imei)
     {
-        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, dtag, tdtag FROM carrotPlugList.tb_product where imei=" + imei+";", conn);
+        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product where imei=" + imei+";", conn);
         if(pluglist.ContainsKey(imei))
             pluglist.Remove(imei);
         rdr = cmd_select.ExecuteReader();
@@ -243,7 +268,7 @@ public class Mydb
             }
             catch
             {
-                data.device_id = "NULL";
+                data.device_id = "LUX1_"+imei;
             }
             try
             {
@@ -255,7 +280,7 @@ public class Mydb
             }
             try
             {
-                data.icc_id = rdr["sn"].ToString();
+                data.icc_id = rdr["icc_id"].ToString();
             }
             catch
             {
@@ -263,11 +288,19 @@ public class Mydb
             }
             try
             {
-                data.prod_data = rdr["prod_data"].ToString();
+                data.ble_id = rdr["ble_id"].ToString();
             }
             catch
             {
-                data.prod_data = "NULL";
+                data.ble_id = "NULL";
+            }
+            try
+            {
+                data.prod_date = rdr["prod_date"].ToString();
+            }
+            catch
+            {
+                data.prod_date = "";
             }
             try
             {
@@ -307,7 +340,7 @@ public class Mydb
     public Dictionary<string, Plug> ReflashList()
     {
 
-        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, dtag, tdtag FROM carrotPlugList.tb_product LIMIT 0,1000; ", conn);
+        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product LIMIT 0,1000; ", conn);
         pluglist.Clear();
         rdr = cmd_select.ExecuteReader();
         while (rdr.Read())
@@ -331,7 +364,7 @@ public class Mydb
             }
             try
             {
-                data.icc_id = rdr["sn"].ToString();
+                data.icc_id = rdr["icc_id"].ToString();
             }
             catch
             {
@@ -339,11 +372,11 @@ public class Mydb
             }
             try
             {
-                data.prod_data = rdr["prod_data"].ToString();
+                data.prod_date = rdr["prod_date"].ToString();
             }
             catch
             {
-                data.prod_data = "NULL";
+                data.prod_date = "NULL";
             }
             try
             {
@@ -412,6 +445,20 @@ public class Taginfo : INotifyPropertyChanged
 
     private uint flag = 0;
     private string _passFlag = "NG";
+
+    private int ng2_gpsSnr_raw = 0;
+    private int ng2_temp_raw = 0;
+    private int ng2_cap_raw = 0;
+    private int ng2_b3_min_raw = 0;
+    private int ng2_b3_avg_raw = 0;
+    private int ng2_b3_max_raw = 0;
+    private int ng2_b5_min_raw = 0;
+    private int ng2_b5_avg_raw = 0;
+    private int ng2_b5_max_raw = 0;
+    private int ng2_ble_rssi_raw = 0;
+    private bool ng2_rawdata_flag_raw = false;
+
+    public ulong btAddress;
     public string passFlag
     {
         get
@@ -430,12 +477,16 @@ public class Taginfo : INotifyPropertyChanged
             }
         }
     }
+    public string TagBleID = "4C520000-E25D-11EB-BA80-000000000000";
+    public string TagIccID = "";
+    public string TagIMEI = "";
     public bool passFlagUpdate = true;
     public string TagVersion = "";
     public string dbString = "NG";
     public bool dbFlag = false;
     public string serverString = "NG";
     public bool serverFlag = false;
+    public UInt32 TagVersionNumber = 0;
     public DateTime updateTime;
 
     /** existence of data used to hide/show data on display */
@@ -460,7 +511,18 @@ public class Taginfo : INotifyPropertyChanged
     public List<string> TagDataRaw = new List<string>();
     public string TagData { get { return data; } set { data = value; OnPropertyChanged("TagData"); } }
     public string TagMenu { get { return menu; } set { menu = value; OnPropertyChanged("TagMenu"); } }
-    public string TagFlagString { get { return flagString; } set { flagString = value; OnPropertyChanged("TagFlagString"); } }
+    public string TagFlagString { get { return flagString; }    set { flagString        = value; OnPropertyChanged("TagFlagString"); } }
+    public int ng2_gpsSnr   { get { return ng2_gpsSnr_raw; }    set { ng2_gpsSnr_raw    = value; OnPropertyChanged("ng2_gpsSnr"); } }
+    public int ng2_temp     { get { return ng2_temp_raw; }      set { ng2_temp_raw      = value; OnPropertyChanged("ng2_temp"); } }
+    public int ng2_cap      { get { return ng2_cap_raw; }       set { ng2_cap_raw       = value; OnPropertyChanged("ng2_cap"); } }
+    public int ng2_ble_rssi { get { return ng2_ble_rssi_raw; }  set { ng2_ble_rssi_raw  = value; OnPropertyChanged("ng2_ble_rssi"); } }
+    public int ng2_b3_min   { get { return ng2_b3_min_raw; }    set { ng2_b3_min_raw    = value; OnPropertyChanged("ng2_b3_min"); } }
+    public int ng2_b3_avg   { get { return ng2_b3_avg_raw; }    set { ng2_b3_avg_raw    = value; OnPropertyChanged("ng2_b3_avg"); } }
+    public int ng2_b3_max   { get { return ng2_b3_max_raw; }    set { ng2_b3_max_raw    = value; OnPropertyChanged("ng2_b3_max"); } }
+    public int ng2_b5_min   { get { return ng2_b5_min_raw; }    set { ng2_b5_min_raw    = value; OnPropertyChanged("ng2_b5_min"); } }
+    public int ng2_b5_avg   { get { return ng2_b5_avg_raw; }    set { ng2_b5_avg_raw    = value; OnPropertyChanged("ng2_b5_avg"); } }
+    public int ng2_b5_max   { get { return ng2_b5_max_raw; }    set { ng2_b5_max_raw    = value; OnPropertyChanged("ng2_b5_max"); } }
+    public bool ng2_rawdata_flag { get { return ng2_rawdata_flag_raw; }    set { ng2_rawdata_flag_raw    = value; OnPropertyChanged("ng2_rawdata_flag"); } }
     public uint TagFlag { get { return flag; } set { flag = value; OnPropertyChanged("TagFlag"); } }
     private string TagCaptorType { get; set; }
     public object TagDataVisibility { get { if (dataExist) { return Visibility.Visible; } else { return Visibility.Collapsed; } } }
@@ -504,15 +566,29 @@ public class Taginfo : INotifyPropertyChanged
      */
     public void update(Taginfo taginfo)
     {
-        this.TagName = taginfo.TagName;
-        this.TagRssi = taginfo.TagRssi;
-        this.TagData = taginfo.TagData;
-        this.TagMenu = taginfo.TagMenu;
-        this.TagVersion = taginfo.TagVersion;
-        this.TagFlagString = taginfo.TagFlagString;
-        this.passFlag = taginfo.passFlag;
-
-        this.flag = taginfo.flag;
-        this.updateTime = taginfo.updateTime;
+        this.TagName            = taginfo.TagName;
+        this.TagRssi            = taginfo.TagRssi;
+        this.TagData            = taginfo.TagData;
+        this.TagMenu            = taginfo.TagMenu;
+        this.TagVersion         = taginfo.TagVersion;
+        this.TagVersionNumber   = taginfo.TagVersionNumber;
+        this.TagIccID           = taginfo.TagIccID;
+        this.TagIMEI            = taginfo.TagIMEI;
+        this.TagBleID           = taginfo.TagBleID;
+        this.TagFlagString      = taginfo.TagFlagString;
+        this.ng2_b3_avg         = taginfo.ng2_b3_avg;
+        this.ng2_b3_min         = taginfo.ng2_b3_min;
+        this.ng2_b3_max         = taginfo.ng2_b3_max;
+        this.ng2_b5_avg         = taginfo.ng2_b5_avg;
+        this.ng2_b5_min         = taginfo.ng2_b5_min;
+        this.ng2_b5_max         = taginfo.ng2_b5_max;
+        this.ng2_rawdata_flag   = taginfo.ng2_rawdata_flag;
+        this.ng2_temp           = taginfo.ng2_temp;
+        this.ng2_cap            = taginfo.ng2_cap;
+        this.ng2_gpsSnr         = taginfo.ng2_gpsSnr;
+        this.passFlag           = taginfo.passFlag;
+        this.btAddress          = taginfo.btAddress;
+        this.flag               = taginfo.flag;
+        this.updateTime         = taginfo.updateTime;
 }
 }

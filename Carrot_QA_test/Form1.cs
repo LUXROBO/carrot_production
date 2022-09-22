@@ -9,14 +9,20 @@ using System.Linq;
 using System.Text;
 using System.Timers;
 using System.Windows.Forms;
+using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.Advertisement;
+using Windows.Devices.Enumeration;
 using Windows.Storage.Streams;
+using System.Diagnostics;
 using Timer = System.Timers.Timer;
 
 namespace Carrot_QA_test
 {
     public partial class Form1 : Form
     {
+        static UInt32 FIRMWARE_MAJOR_MASK = 0x10000000;
+        static UInt32 FIRMWARE_MINOR_MASK = 0x00010000;
+        static UInt32 FIRMWARE_PATCH_MASK = 0x00000001;
         /** BLE watcher */
         private BluetoothLEAdvertisementWatcher watcher = new BluetoothLEAdvertisementWatcher();
 
@@ -31,6 +37,7 @@ namespace Carrot_QA_test
 
         /** dictionnary of known tag */
         public Dictionary<string, Taginfo> tagList = new Dictionary<string, Taginfo>();
+        public Dictionary<string, Taginfo> tagSearch = new Dictionary<string, Taginfo>();
 
         /** search filter */
         private String _count = "0";
@@ -40,6 +47,7 @@ namespace Carrot_QA_test
         Timer listTimer;
         Timer dbTimer;
         Mydb mydb = new Mydb();
+        string pVersion = "3.0(BG770)";
 
         public int ServerVersion { get; private set; }
 
@@ -84,6 +92,7 @@ namespace Carrot_QA_test
             this.listView1 = new System.Windows.Forms.ListView();
             this.IMEI = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CCID = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.BLE = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.RSSI = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.Pass = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.DB = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -101,6 +110,7 @@ namespace Carrot_QA_test
             this.VersionCheck = new System.Windows.Forms.CheckBox();
             this.ServerVersionText = new System.Windows.Forms.Label();
             this.Scan = new System.Windows.Forms.Button();
+            this.ble_label = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.listTimer)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dbTimer)).BeginInit();
             this.SuspendLayout();
@@ -108,17 +118,20 @@ namespace Carrot_QA_test
             // txtSearch
             // 
             this.txtSearch.Font = new System.Drawing.Font("굴림", 12F);
-            this.txtSearch.Location = new System.Drawing.Point(953, 12);
+            this.txtSearch.Location = new System.Drawing.Point(667, 8);
+            this.txtSearch.Margin = new System.Windows.Forms.Padding(2);
             this.txtSearch.Name = "txtSearch";
-            this.txtSearch.Size = new System.Drawing.Size(436, 35);
+            this.txtSearch.Size = new System.Drawing.Size(180, 26);
             this.txtSearch.TabIndex = 0;
+            this.txtSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtSearch_KeyDown);
             // 
             // btnStartBle
             // 
             this.btnStartBle.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.btnStartBle.Location = new System.Drawing.Point(955, 60);
+            this.btnStartBle.Location = new System.Drawing.Point(668, 40);
+            this.btnStartBle.Margin = new System.Windows.Forms.Padding(2);
             this.btnStartBle.Name = "btnStartBle";
-            this.btnStartBle.Size = new System.Drawing.Size(110, 42);
+            this.btnStartBle.Size = new System.Drawing.Size(77, 28);
             this.btnStartBle.TabIndex = 1;
             this.btnStartBle.Text = "Start";
             this.btnStartBle.UseVisualStyleBackColor = true;
@@ -127,9 +140,10 @@ namespace Carrot_QA_test
             // btnClearBle
             // 
             this.btnClearBle.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.btnClearBle.Location = new System.Drawing.Point(1070, 60);
+            this.btnClearBle.Location = new System.Drawing.Point(749, 40);
+            this.btnClearBle.Margin = new System.Windows.Forms.Padding(2);
             this.btnClearBle.Name = "btnClearBle";
-            this.btnClearBle.Size = new System.Drawing.Size(100, 42);
+            this.btnClearBle.Size = new System.Drawing.Size(70, 28);
             this.btnClearBle.TabIndex = 2;
             this.btnClearBle.Text = "Clear";
             this.btnClearBle.UseVisualStyleBackColor = true;
@@ -138,9 +152,10 @@ namespace Carrot_QA_test
             // BtnUpload
             // 
             this.BtnUpload.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.BtnUpload.Location = new System.Drawing.Point(1175, 60);
+            this.BtnUpload.Location = new System.Drawing.Point(822, 40);
+            this.BtnUpload.Margin = new System.Windows.Forms.Padding(2);
             this.BtnUpload.Name = "BtnUpload";
-            this.BtnUpload.Size = new System.Drawing.Size(105, 42);
+            this.BtnUpload.Size = new System.Drawing.Size(73, 28);
             this.BtnUpload.TabIndex = 3;
             this.BtnUpload.Text = "Upload";
             this.BtnUpload.UseVisualStyleBackColor = true;
@@ -149,9 +164,10 @@ namespace Carrot_QA_test
             // btnSave
             // 
             this.btnSave.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.btnSave.Location = new System.Drawing.Point(1285, 60);
+            this.btnSave.Location = new System.Drawing.Point(899, 40);
+            this.btnSave.Margin = new System.Windows.Forms.Padding(2);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(105, 42);
+            this.btnSave.Size = new System.Drawing.Size(73, 28);
             this.btnSave.TabIndex = 4;
             this.btnSave.Text = "Save";
             this.btnSave.UseVisualStyleBackColor = true;
@@ -162,6 +178,7 @@ namespace Carrot_QA_test
             this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.IMEI,
             this.CCID,
+            this.BLE,
             this.RSSI,
             this.Pass,
             this.DB,
@@ -171,13 +188,15 @@ namespace Carrot_QA_test
             this.listView1.FullRowSelect = true;
             this.listView1.GridLines = true;
             this.listView1.HideSelection = false;
-            this.listView1.Location = new System.Drawing.Point(13, 111);
+            this.listView1.Location = new System.Drawing.Point(9, 74);
+            this.listView1.Margin = new System.Windows.Forms.Padding(2);
             this.listView1.MultiSelect = false;
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(1376, 1012);
+            this.listView1.Size = new System.Drawing.Size(964, 676);
             this.listView1.TabIndex = 5;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
+            this.listView1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listView1_MouseDoubleClick);
             // 
             // IMEI
             // 
@@ -188,6 +207,11 @@ namespace Carrot_QA_test
             // 
             this.CCID.Text = "CCID";
             this.CCID.Width = 230;
+            // 
+            // BLE
+            // 
+            this.BLE.Text = "BLE UUID";
+            this.BLE.Width = 100;
             // 
             // RSSI
             // 
@@ -229,31 +253,28 @@ namespace Carrot_QA_test
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("굴림", 12F);
-            this.label4.Location = new System.Drawing.Point(862, 18);
-            this.label4.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+            this.label4.Location = new System.Drawing.Point(540, 11);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(82, 24);
+            this.label4.Size = new System.Drawing.Size(126, 16);
             this.label4.TabIndex = 12;
-            this.label4.Text = "Search";
+            this.label4.Text = "BLE Connect ID:";
             // 
             // modeLabel
             // 
             this.modeLabel.AutoSize = true;
             this.modeLabel.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.modeLabel.Location = new System.Drawing.Point(12, 18);
-            this.modeLabel.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+            this.modeLabel.Location = new System.Drawing.Point(8, 12);
             this.modeLabel.Name = "modeLabel";
-            this.modeLabel.Size = new System.Drawing.Size(308, 24);
+            this.modeLabel.Size = new System.Drawing.Size(261, 16);
             this.modeLabel.TabIndex = 13;
-            this.modeLabel.Text = "Carrot Plug QA Test Mode";
+            this.modeLabel.Text = "Carrot Plug v" + pVersion + " QA Test Mode";
             // 
             // BtnMode
             // 
             this.BtnMode.Font = new System.Drawing.Font("굴림", 12F);
-            this.BtnMode.Location = new System.Drawing.Point(365, 15);
-            this.BtnMode.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
+            this.BtnMode.Location = new System.Drawing.Point(284, 11);
             this.BtnMode.Name = "BtnMode";
-            this.BtnMode.Size = new System.Drawing.Size(180, 34);
+            this.BtnMode.Size = new System.Drawing.Size(126, 23);
             this.BtnMode.TabIndex = 14;
             this.BtnMode.Text = "Mode Change";
             this.BtnMode.UseVisualStyleBackColor = true;
@@ -263,9 +284,10 @@ namespace Carrot_QA_test
             // 
             this.PassCount.AutoSize = true;
             this.PassCount.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.PassCount.Location = new System.Drawing.Point(495, 66);
+            this.PassCount.Location = new System.Drawing.Point(346, 44);
+            this.PassCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.PassCount.Name = "PassCount";
-            this.PassCount.Size = new System.Drawing.Size(24, 24);
+            this.PassCount.Size = new System.Drawing.Size(16, 16);
             this.PassCount.TabIndex = 11;
             this.PassCount.Text = "-";
             // 
@@ -273,9 +295,10 @@ namespace Carrot_QA_test
             // 
             this.Count.AutoSize = true;
             this.Count.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.Count.Location = new System.Drawing.Point(360, 66);
+            this.Count.Location = new System.Drawing.Point(252, 44);
+            this.Count.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.Count.Name = "Count";
-            this.Count.Size = new System.Drawing.Size(24, 24);
+            this.Count.Size = new System.Drawing.Size(16, 16);
             this.Count.TabIndex = 10;
             this.Count.Text = "-";
             // 
@@ -283,9 +306,10 @@ namespace Carrot_QA_test
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("굴림", 12F);
-            this.label2.Location = new System.Drawing.Point(157, 66);
+            this.label2.Location = new System.Drawing.Point(110, 44);
+            this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(187, 24);
+            this.label2.Size = new System.Drawing.Size(130, 16);
             this.label2.TabIndex = 8;
             this.label2.Text = "Number of Tag : ";
             // 
@@ -293,9 +317,10 @@ namespace Carrot_QA_test
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("굴림", 12F);
-            this.label3.Location = new System.Drawing.Point(400, 66);
+            this.label3.Location = new System.Drawing.Point(280, 44);
+            this.label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(75, 24);
+            this.label3.Size = new System.Drawing.Size(54, 16);
             this.label3.TabIndex = 9;
             this.label3.Text = "Pass :";
             // 
@@ -304,9 +329,10 @@ namespace Carrot_QA_test
             this.VersionCheck.AutoSize = true;
             this.VersionCheck.Checked = true;
             this.VersionCheck.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.VersionCheck.Location = new System.Drawing.Point(593, 23);
+            this.VersionCheck.Location = new System.Drawing.Point(415, 15);
+            this.VersionCheck.Margin = new System.Windows.Forms.Padding(2);
             this.VersionCheck.Name = "VersionCheck";
-            this.VersionCheck.Size = new System.Drawing.Size(154, 22);
+            this.VersionCheck.Size = new System.Drawing.Size(104, 16);
             this.VersionCheck.TabIndex = 15;
             this.VersionCheck.Text = "버전 확인 모드";
             this.VersionCheck.UseVisualStyleBackColor = true;
@@ -315,28 +341,42 @@ namespace Carrot_QA_test
             // 
             this.ServerVersionText.AutoSize = true;
             this.ServerVersionText.Font = new System.Drawing.Font("굴림", 12F);
-            this.ServerVersionText.Location = new System.Drawing.Point(589, 66);
+            this.ServerVersionText.Location = new System.Drawing.Point(412, 44);
+            this.ServerVersionText.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.ServerVersionText.Name = "ServerVersionText";
-            this.ServerVersionText.Size = new System.Drawing.Size(201, 24);
+            this.ServerVersionText.Size = new System.Drawing.Size(140, 16);
             this.ServerVersionText.TabIndex = 16;
             this.ServerVersionText.Text = "Firmware Version :";
             // 
             // Scan
             // 
             this.Scan.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.Scan.Location = new System.Drawing.Point(16, 57);
+            this.Scan.Location = new System.Drawing.Point(11, 38);
+            this.Scan.Margin = new System.Windows.Forms.Padding(2);
             this.Scan.Name = "Scan";
-            this.Scan.Size = new System.Drawing.Size(135, 42);
+            this.Scan.Size = new System.Drawing.Size(94, 28);
             this.Scan.TabIndex = 17;
             this.Scan.Text = "QR Scan";
             this.Scan.UseVisualStyleBackColor = true;
             this.Scan.Click += new System.EventHandler(this.Scan_Click);
             // 
+            // ble_label
+            // 
+            this.ble_label.AutoSize = true;
+            this.ble_label.Font = new System.Drawing.Font("굴림", 12F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.ble_label.Location = new System.Drawing.Point(850, 12);
+            this.ble_label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.ble_label.Name = "ble_label";
+            this.ble_label.Size = new System.Drawing.Size(57, 16);
+            this.ble_label.TabIndex = 18;
+            this.ble_label.Text = "Ready";
+            // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1405, 1142);
+            this.ClientSize = new System.Drawing.Size(983, 761);
+            this.Controls.Add(this.ble_label);
             this.Controls.Add(this.Scan);
             this.Controls.Add(this.ServerVersionText);
             this.Controls.Add(this.VersionCheck);
@@ -353,6 +393,7 @@ namespace Carrot_QA_test
             this.Controls.Add(this.btnClearBle);
             this.Controls.Add(this.btnStartBle);
             this.Controls.Add(this.txtSearch);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
             this.Text = "Carrot QA Program";
             ((System.ComponentModel.ISupportInitialize)(this.listTimer)).EndInit();
@@ -361,6 +402,8 @@ namespace Carrot_QA_test
             this.PerformLayout();
 
         }
+        int bleState = 0;
+
         private void DbTimeUp(object source, ElapsedEventArgs e)
         {
             try
@@ -382,12 +425,31 @@ namespace Carrot_QA_test
                         {
                             responseText = sr.ReadToEnd();
                         }
+
                         ServerVersion = int.Parse(responseText.Split('\n')[0]);
-                        ServerVersion %= 65536;
-                        this.ServerVersionText.Text = "Firmware Version : v0.1." + ServerVersion.ToString();
+                        string majorVersion = ((uint)Convert.ToInt32(ServerVersion / FIRMWARE_MAJOR_MASK)).ToString();
+                        string minorVersion = ((uint)Convert.ToInt32((ServerVersion % FIRMWARE_MAJOR_MASK) / FIRMWARE_MINOR_MASK)).ToString();
+                        string patchVersion = ((uint)Convert.ToInt32((ServerVersion % FIRMWARE_MINOR_MASK) / FIRMWARE_PATCH_MASK)).ToString();
+                        this.ServerVersionText.Text = "Firmware Version : v"+ majorVersion + "."+ minorVersion + "." + patchVersion;
                     }
                 }
-                if (GetExternalIPAddress() != "175.209.190.173")
+                string ip = GetExternalIPAddress();
+                /*
+                 * 생산현장 
+                    고정 IP : 112.216.234.42
+                    고정 IP : 112.216.234.43
+                    고정 IP : 112.216.234.44  총 3개
+
+                    GPS검사실 
+                    고정 IP : 106.245.254.26
+
+                    개통검사실
+                    ​고정 IP : 112.216.238.122
+                    
+                    럭스로보 연구소
+                    고정 IP : 175.209.190.173
+                */
+                if (!(ip == "175.209.190.173" || ip == "112.216.238.122" || ip == "106.245.254.26" || ip == "112.216.234.42" || ip == "112.216.234.43" || ip == "112.216.234.44"))
                 {
                     this.dbTimer.Stop();
                     if (MessageBox.Show("IP 주소가 다릅니다. VPN과 인터넷 상태를 점검해주세요.","Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
@@ -402,13 +464,13 @@ namespace Carrot_QA_test
 
                     if (tag.passFlagUpdate)
                     {
-                        string icc_id = tag.TagMenu;
-                        string imei = tag.TagName;
+                        string icc_id = tag.TagIccID;
+                        string imei = tag.TagIMEI;
                         int result;
                         if (modeFlag == 0)
-                            result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString);
+                            result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID, tag);
                         else
-                            result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString);
+                            result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
 
                         if (result == 1)
                             tag.dbString = "OK";
@@ -433,11 +495,26 @@ namespace Carrot_QA_test
                             {
                                 tag.serverString = "MS Fail";
                             }
+                            else if (let == -4)
+                            {
+                                tag.serverString = "Time Out";
+                                this.dbTimer.Stop();
+                                if (MessageBox.Show("인터넷 연결 상태가 좋지 않습니다. 점검 해주세요.", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                                {
+                                    Application.Exit();
+                                }
+                                this.dbTimer.Start();
+                            }
                         }
                         tag.passFlagUpdate = false;
                     }
 
                     TimeSpan timeDiff = DateTime.Now - tag.updateTime;
+                    if((tag.TagRssi < -120) && (timeDiff.Seconds > 5))
+                    {
+                        tagTimeout = tag;
+                        continue;
+                    }
                     if (timeDiff.Seconds > 20)
                     {
                         tagTimeout = tag;
@@ -468,8 +545,9 @@ namespace Carrot_QA_test
                     {
                         foreach (Taginfo tag in tagColl)
                         {
-                            ListViewItem LVI = new ListViewItem(tag.TagName);
-                            LVI.SubItems.Add(tag.TagMenu);
+                            ListViewItem LVI = new ListViewItem(tag.TagIMEI);
+                            LVI.SubItems.Add(tag.TagIccID);
+                            LVI.SubItems.Add(tag.TagBleID.Substring(tag.TagBleID.Length - 12, 12));
                             LVI.SubItems.Add(Convert.ToString(tag.TagRssi));
                             LVI.SubItems.Add(tag.passFlag);
                             LVI.SubItems.Add(tag.dbString);
@@ -481,6 +559,7 @@ namespace Carrot_QA_test
                     catch
                     {
                     }
+                    _count = Convert.ToString(tagColl.Count);
                     Count.Text = _count;
                     PassCount.Text = Convert.ToString(_passCount);
                 }
@@ -491,14 +570,18 @@ namespace Carrot_QA_test
                 }
             }
         }
-
         private void BtnStartBle_Click(object sender, EventArgs e)
         {
-
             //start scanning
             if (this.watchStarted == false)
             {
+
+                //if (this.modeFlag == 0)
+                //    this.watcher.AdvertisementFilter.Advertisement.LocalName = "Q";
+                //else
+                //    this.watcher.AdvertisementFilter.Advertisement.LocalName = "O";
                 this.watcher.Received += Tag_Received;
+                this.watcher.ScanningMode = BluetoothLEScanningMode.Active;
                 this.watcher.Start();
                 this.watchStarted = true;
 
@@ -518,6 +601,41 @@ namespace Carrot_QA_test
             }
         }
 
+        private void BtnMode_Click(object sender, EventArgs e)
+        {
+            if (this.modeFlag == 0)
+            {
+                this.modeFlag = 1;
+                this.modeLabel.Text = "Carrot Plug v"+pVersion+" 개통 Test Mode";
+            }
+            else
+            {
+                this.modeFlag = 0;
+                this.modeLabel.Text = "Carrot Plug v" + pVersion + " QA Test Mode";
+            }
+
+            this.listView1.BeginUpdate();
+            this.listView1.Items.Clear();
+            this.listView1.EndUpdate();
+            this.tagList.Clear();
+            this.tagColl.Clear();
+            Count.Text = "0";
+            PassCount.Text = "0";
+            _passCount = 0;
+
+            if (this.watchStarted == true)
+            {
+                this.watcher.Stop();
+                this.watcher.Received -= Tag_Received;
+                this.watchStarted = false;
+
+                //update pictogram
+                this.btnStartBle.Text = "Start";
+            }
+            Application.DoEvents();
+        }
+
+
         private void BtnClearBle_Click(object sender, EventArgs e)
         {
             this.listView1.BeginUpdate();
@@ -527,27 +645,9 @@ namespace Carrot_QA_test
             this.tagColl.Clear();
             Count.Text = "0";
             PassCount.Text = "0";
+            _passCount = 0;
         }
 
-        /** @brief : update filter for the search
-         * update shown tags depending on the search
-         */
-        private void TxtSearch_TextChanged(object sender, EventArgs e)
-        {
-            filter = txtSearch.Text;
-            this.tagColl.Clear();
-
-            //update shown tags corresponding to search text
-            foreach (KeyValuePair<string, Taginfo> pair in this.tagList)
-            {
-                Taginfo taginfo = new Taginfo();
-                taginfo = pair.Value;
-                if (Filter(taginfo))
-                {
-                    this.tagColl.Add(taginfo);
-                }
-            }
-        }
         private void BtnSave_Click(object sender, EventArgs e)
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog();
@@ -576,195 +676,7 @@ namespace Carrot_QA_test
             }
 
         }
-        private void Tag_Received(BluetoothLEAdvertisementWatcher received, BluetoothLEAdvertisementReceivedEventArgs args)
-        {
 
-            //show only connectable tags
-            if (args.AdvertisementType == BluetoothLEAdvertisementType.NonConnectableUndirected || args.AdvertisementType == BluetoothLEAdvertisementType.ConnectableUndirected)
-            {
-                //get tag infos
-                Taginfo taginfo = new Taginfo();
-                taginfo.TagMac = args.BluetoothAddress.ToString("X");
-                taginfo.TagName = args.Advertisement.LocalName;
-                taginfo.updateTime = DateTime.Now;
-
-                //get tag datas
-                string datasection = String.Empty;
-                foreach (BluetoothLEAdvertisementDataSection section in args.Advertisement.DataSections)
-                {
-                    var data = new byte[section.Data.Length];
-                    using (var reader = DataReader.FromBuffer(section.Data))
-                    {
-                        reader.ReadBytes(data);
-                        datasection = String.Format("{0}", BitConverter.ToString(data));
-                        taginfo.TagDataRaw.Add(datasection);
-                        taginfo.TagRssi = args.RawSignalStrengthInDBm;
-                        try
-                        {
-                            if (taginfo.TagDataRaw.Count >= 3 && taginfo.TagDataRaw[2].Length > 6)
-                            {
-
-                                if (taginfo.TagName.Length == 8)
-                                {
-                                    taginfo.TagName = "3596271" + taginfo.TagName;
-                                    taginfo.CarrotPlugFlag = true;
-                                    if (modeFlag == 0)
-                                    {
-                                        taginfo.TagFlagString = "";
-                                        string flag_string = taginfo.TagDataRaw[2].Replace("-", "").Substring(0, 2);
-                                        taginfo.TagMenu = taginfo.TagDataRaw[2].Replace("-", "");
-                                        if (taginfo.TagMenu.Substring(taginfo.TagMenu.Length - 1, 1) != "0")
-                                        {
-                                            taginfo.CarrotPlugFlag = false;
-                                        }
-                                        taginfo.TagMenu = taginfo.TagMenu.Substring(4, taginfo.TagMenu.Length - 5);
-
-                                        taginfo.TagFlag = uint.Parse(flag_string);
-                                        if ((taginfo.TagFlag & 0x01) == 0x01)
-                                            taginfo.TagFlagString += "GPS Fail";
-                                        else
-                                            taginfo.TagFlagString += "GPS OK";
-                                        taginfo.TagFlagString += ", ";
-                                        if ((taginfo.TagFlag & 0x02) == 0x02)
-                                            taginfo.TagFlagString += "BLE Fail";
-                                        else
-                                            taginfo.TagFlagString += "BLE OK";
-                                        taginfo.TagFlagString += ", ";
-                                        if ((taginfo.TagFlag & 0x0C) == 0x08)
-                                            taginfo.TagFlagString += "CAP Low";
-                                        else if ((taginfo.TagFlag & 0x0C) == 0x04)
-                                            taginfo.TagFlagString += "CAP Over";
-                                        else
-                                            taginfo.TagFlagString += "CAP OK";
-                                        taginfo.TagFlagString += ", ";
-                                        if ((taginfo.TagFlag & 0xF0) != 0x00)
-                                            taginfo.TagFlagString += "LTE Fail";
-                                        else
-                                            taginfo.TagFlagString += "LTE OK";
-                                        if((taginfo.TagFlag & 0xFF) == 0)
-                                        {
-                                            taginfo.passFlag = "OK";
-                                        }
-                                    }
-                                    else
-                                    {
-                                        taginfo.TagFlagString = "";
-                                        taginfo.TagMenu = taginfo.TagDataRaw[2].Replace("-", "");
-                                        taginfo.TagFlag = (uint)Convert.ToInt32(taginfo.TagMenu.Substring(taginfo.TagMenu.Length - 1, 1), 16);
-                                        if (taginfo.TagFlag == 0)
-                                        {
-                                            taginfo.CarrotPlugFlag = false;
-                                        }
-                                        taginfo.TagMenu = taginfo.TagMenu.Substring(4, taginfo.TagMenu.Length - 5);
-                                        string verionString = ((uint)Convert.ToInt32(taginfo.TagDataRaw[2].Replace("-", "").Substring(0, 2),16)).ToString();
-                                        string progressString = "none";
-                                        taginfo.TagFlagString += "v0.1." + verionString;
-                                        switch (taginfo.TagFlag)
-                                        {
-                                            case 0x0:
-                                                progressString = "Booting -> CCID/IMEI check";
-                                                taginfo.passFlag = "NG";
-                                                break;
-                                            case 0x1:
-                                                progressString = "CCID/IMEI OK -> Phone number";
-                                                taginfo.passFlag = "NG";
-                                                break;
-                                            case 0x2:
-                                                progressString = "Phone number OK -> FOTA";
-                                                taginfo.passFlag = "NG";
-                                                break;
-                                            case 0x3:
-                                                progressString = "FOTA OK -> Provisioning";
-                                                taginfo.passFlag = "NG";
-                                                break;
-                                            case 0x4:
-                                                progressString = "Provisioning OK -> MQTT Connect";
-                                                taginfo.passFlag = "NG";
-                                                break;
-                                            case 0xF:
-                                                progressString = "Open Success";
-                                                taginfo.passFlag = "NG";
-                                                if (VersionCheck.Checked)
-                                                {
-                                                    if (ServerVersion <= int.Parse(verionString))
-                                                    {
-                                                        taginfo.passFlag = "OK";
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    taginfo.passFlag = "OK";
-                                                }
-                                                break;
-                                        }
-                                        taginfo.TagFlagString += " " + progressString;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                taginfo.TagMenu = "";
-                            }
-                        }
-                        catch
-                        {
-
-                        }
-                    }
-                }
-
-                if (taginfo.CarrotPlugFlag)
-                {
-                    if (taginfo.TagName.Contains(filter))
-                    {
-                        //add new tag
-                        if (this.tagList.ContainsKey(taginfo.TagMac) == false)
-                        {
-                            this.tagList.Add(taginfo.TagMac, taginfo);
-                            if (Filter(taginfo))
-                            {
-                                tagColl.Add(taginfo);
-                            }
-                        }
-                        //update existing tag infos
-                        else if (tagList.ContainsValue(taginfo) == false)
-                        {
-                            IEnumerable<Taginfo> existing = tagColl.Where(x => x.TagMac == taginfo.TagMac);
-                            int a = tagColl.IndexOf(existing.FirstOrDefault());
-                            if (Filter(taginfo))
-                            {
-                                if (a >= 0 && a < tagColl.Count())
-                                {
-                                    tagColl[a].update(taginfo);
-                                }
-                            }
-                            this.tagList[taginfo.TagMac].update(taginfo);
-                        }
-                        _passCount = 0;
-                        foreach (Taginfo tag in tagColl)
-                        {
-                            if (tag.passFlag == "OK")
-                            {
-                                _passCount++;
-                            }
-                        }
-                        _count = Convert.ToString(tagColl.Count);
-                    }
-                }
-            }
-        }
-
-        /** @brief : filter tag mac adress or name
-         * @return : true if tag matches false otherwise
-         */
-        private bool Filter(Taginfo taginfo)
-        {
-            if (taginfo.TagMac.ToLower().Contains(filter.ToLower()) || taginfo.TagName.ToLower().Contains(filter.ToLower()))
-            {
-                return true;
-            }
-            return false;
-        }
 
         private void BtnUpload_Click(object sender, EventArgs e)
         {
@@ -777,9 +689,9 @@ namespace Carrot_QA_test
                     string imei = tag.TagName;
                     int result;
                     if (modeFlag == 0)
-                        result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString);
+                        result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID, tag);
                     else
-                        result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString);
+                        result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
 
                     string result_string = "";
                     if (result == 1)
@@ -813,40 +725,326 @@ namespace Carrot_QA_test
                         tag.dbString = "OK";
                         tag.serverString = "Fail";
                     }
-                    msg += imei + " Upload Result :" + result_string +", "+ reg_result + "\n";
+                    msg += imei + " Upload Result :" + result_string + ", " + reg_result + "\n";
                     tag.passFlagUpdate = false;
                 }
             }
             MessageBox.Show(msg);
         }
 
-        private void BtnMode_Click(object sender, EventArgs e)
-        {
-            if (this.modeFlag == 0)
-            {
-                this.modeFlag = 1;
-                this.modeLabel.Text = "Carrot Plug 개통 Test Mode";
-                this.tagList.Clear();
-                this.tagColl.Clear();
-                Count.Text = "0";
-                PassCount.Text = "0";
-            }
-            else
-            {
-                this.modeFlag = 0;
-                this.modeLabel.Text = "Carrot Plug QA Test Mode";
-                this.tagList.Clear();
-                this.tagColl.Clear();
-                Count.Text = "0";
-                PassCount.Text = "0";
-            }
-            Application.DoEvents();
-        }
 
         private void Scan_Click(object sender, EventArgs e)
         {
             Form2 dlg = new Form2(ServerVersion.ToString());
             dlg.Show();
+        }
+
+        private async void Tag_Received(BluetoothLEAdvertisementWatcher received, BluetoothLEAdvertisementReceivedEventArgs args)
+        {
+            string macTemp = args.BluetoothAddress.ToString("X");
+
+            //show only connectable tags
+            if (args.Advertisement.LocalName == "O" || args.Advertisement.LocalName == "Q" || this.tagSearch.ContainsKey(macTemp))
+            {
+
+                //get tag infos
+                Taginfo taginfo = new Taginfo();
+                taginfo.TagMac = macTemp;
+
+                if (this.tagSearch.ContainsKey(taginfo.TagMac) == false)
+                {
+                    this.tagSearch.Add(taginfo.TagMac, taginfo);
+                }
+
+                //update existing tag infos
+                if (this.tagList.ContainsKey(macTemp) == true)
+                {
+                    taginfo = this.tagList[macTemp];
+                }
+
+                if (args.Advertisement.LocalName != "")
+                    taginfo.TagName = args.Advertisement.LocalName;
+                else
+                {
+                    taginfo.TagName = this.tagSearch[macTemp].TagName;
+                }
+                taginfo.updateTime = DateTime.Now;
+                taginfo.CarrotPlugFlag = false;
+                //ulong blAddress = args.BluetoothAddress;
+                //BluetoothDevice blDevice = await Windows.Devices.Bluetooth.BluetoothDevice.FromBluetoothAddressAsync(blAddress);
+                Debug.WriteLine("ble device :" + taginfo.TagName + "\tmac :" + taginfo.TagMac + "\ttype :" + args.AdvertisementType);
+
+                //get tag datas
+                string datasection = String.Empty;
+                //if (taginfo.TagName.Length == 1 && (taginfo.TagName == "O" || taginfo.TagName == "Q"))
+               
+                foreach (BluetoothLEAdvertisementDataSection section in args.Advertisement.DataSections)
+                {
+                    var data = new byte[section.Data.Length];
+                    using (var reader = DataReader.FromBuffer(section.Data))
+                    {
+                        reader.ReadBytes(data);
+                        datasection = String.Format("{0}", BitConverter.ToString(data));
+                        taginfo.TagDataRaw.Clear();
+                        taginfo.TagDataRaw.Add(datasection);
+                        taginfo.TagRssi = args.RawSignalStrengthInDBm;
+                        
+                        try
+                        {
+                            if(args.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse)
+                            {
+                                if(this.tagList.ContainsKey(taginfo.TagMac) == true)
+                                {
+                                    string tempStr = taginfo.TagDataRaw[0].Replace("-", "");
+                                    taginfo.ng2_gpsSnr = Convert.ToInt32(tempStr.Substring(6, 2), 10);
+                                    taginfo.ng2_temp = Convert.ToInt32(tempStr.Substring(8, 2), 10);
+                                    taginfo.ng2_cap = Convert.ToInt32(tempStr.Substring(10, 2), 16);
+                                    taginfo.ng2_b3_min = Convert.ToInt32(tempStr.Substring(12, 2), 10);
+                                    taginfo.ng2_b3_avg = Convert.ToInt32(tempStr.Substring(14, 2), 10);
+                                    taginfo.ng2_b3_max = Convert.ToInt32(tempStr.Substring(16, 2), 10);
+                                    taginfo.ng2_b5_min = Convert.ToInt32(tempStr.Substring(18, 2), 10);
+                                    taginfo.ng2_b5_avg = Convert.ToInt32(tempStr.Substring(20, 2), 10);
+                                    taginfo.ng2_b5_max = Convert.ToInt32(tempStr.Substring(22, 2), 10);
+                                    taginfo.ng2_ble_rssi = taginfo.TagRssi;
+                                    taginfo.ng2_rawdata_flag = true;
+                                    // Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " SR :" + taginfo.TagName +"("+ taginfo.TagMac +"), Data : " + datasection);
+
+                                }
+                            }
+                            else if (section.Data.Length > 6)
+                            {
+                                // 
+                                taginfo.btAddress = args.BluetoothAddress;
+                                taginfo.TagMenu = taginfo.TagDataRaw[0].Replace("-", "");
+                                string majorVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(2, 1), 16)).ToString();
+                                string minorVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(3, 1), 16)).ToString();
+                                string patchVersion = ((uint)Convert.ToInt32(taginfo.TagMenu.Substring(0, 2), 16)).ToString();
+                                taginfo.TagVersionNumber = Convert.ToUInt32(majorVersion) * FIRMWARE_MAJOR_MASK;
+                                taginfo.TagVersionNumber += Convert.ToUInt32(minorVersion) * FIRMWARE_MINOR_MASK;
+                                taginfo.TagVersionNumber += Convert.ToUInt32(patchVersion) * FIRMWARE_PATCH_MASK;
+                                taginfo.TagVersion = 'v' + majorVersion + '.' + minorVersion + '.' + patchVersion;                  // Firmware Version
+                                taginfo.TagIccID = "898205" + taginfo.TagMenu.Substring(4, 13);                                     // ICC ID
+                                taginfo.TagFlag = (uint)Convert.ToInt32(taginfo.TagMenu.Substring(17, 1), 16);                      // QA Flag    
+                                taginfo.TagBleID = "4C520000-E25D-11EB-BA80-" + taginfo.TagMenu.Substring(18, 12);                  // BLE UUID
+                                //taginfo.TagIMEI = "3596271" + taginfo.TagMenu.Substring(30, 8);                                     // IMEI
+                                taginfo.TagIMEI = "8635930" + taginfo.TagMenu.Substring(30, 8);                                     // IMEI
+                                taginfo.TagFlagString = taginfo.TagVersion + " ";
+                                if (modeFlag == 0 && taginfo.TagName == "Q")
+                                {
+
+                                    if ((taginfo.TagFlag & 0x01) == 0x01)
+                                        taginfo.TagFlagString += "GPS Fail";
+                                    else
+                                        taginfo.TagFlagString += "GPS OK";
+                                    if (taginfo.ng2_rawdata_flag)
+                                        taginfo.TagFlagString += "(" + taginfo.ng2_gpsSnr.ToString() + ")";
+                                    taginfo.TagFlagString += ", ";
+                                    if ((taginfo.TagFlag & 0x02) == 0x02)
+                                        taginfo.TagFlagString += "BLE Fail";
+                                    else
+                                        taginfo.TagFlagString += "BLE OK";
+                                    taginfo.TagFlagString += ", ";
+                                    if ((taginfo.TagFlag & 0x04) == 0x04)
+                                        taginfo.TagFlagString += "CAP Fail";
+                                    else
+                                        taginfo.TagFlagString += "CAP OK";
+                                    if (taginfo.ng2_rawdata_flag)
+                                        taginfo.TagFlagString += "(" + taginfo.ng2_cap.ToString() + ")";
+                                    taginfo.TagFlagString += ", ";
+                                    if ((taginfo.TagFlag & 0x08) == 0x08)
+                                        taginfo.TagFlagString += "LTE Fail";
+                                    else
+                                        taginfo.TagFlagString += "LTE OK";
+                                    if (taginfo.ng2_rawdata_flag)
+                                    {
+                                        taginfo.TagFlagString += "(" + taginfo.ng2_b3_min.ToString() + "," + taginfo.ng2_b3_avg.ToString() + "," + taginfo.ng2_b3_max.ToString();
+                                        taginfo.TagFlagString += "/" + taginfo.ng2_b5_min.ToString() + "," + taginfo.ng2_b5_avg.ToString() + "," + taginfo.ng2_b5_max.ToString() + ")";
+                                    }
+                                    if ((taginfo.TagFlag & 0xFF) == 0)
+                                    {
+                                        taginfo.passFlag = "OK";
+                                    }
+                                    taginfo.CarrotPlugFlag = true;
+                                }
+                                else if (modeFlag == 1 && taginfo.TagName == "O")
+                                {
+                                    string progressString = "none";
+                                    switch (taginfo.TagFlag)
+                                    {
+                                        case 0x0:
+                                            progressString = "Booting -> CCID/IMEI check";
+                                            taginfo.passFlag = "NG";
+                                            break;
+                                        case 0x1:
+                                            progressString = "CCID/IMEI OK -> Phone number";
+                                            taginfo.passFlag = "NG";
+                                            break;
+                                        case 0x2:
+                                            progressString = "Phone number OK -> FOTA";
+                                            taginfo.passFlag = "NG";
+                                            break;
+                                        case 0x3:
+                                            progressString = "FOTA OK -> Provisioning";
+                                            taginfo.passFlag = "NG";
+                                            break;
+                                        case 0x4:
+                                            progressString = "Provisioning OK -> MQTT Connect";
+                                            taginfo.passFlag = "NG";
+                                            break;
+                                        case 0xF:
+                                            progressString = "Open Success";
+                                            taginfo.passFlag = "NG";
+                                            if (VersionCheck.Checked)
+                                            {
+                                                if (ServerVersion <= taginfo.TagVersionNumber)
+                                                {
+                                                    taginfo.passFlag = "OK";
+                                                }
+                                            }
+                                            else
+                                            {
+                                                taginfo.passFlag = "OK";
+                                            }
+                                            break;
+                                    }
+                                    taginfo.TagFlagString += " " + progressString;
+                                    taginfo.CarrotPlugFlag = true;
+
+                                }
+                                // Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " FD :" + taginfo.TagName + "(" + taginfo.TagMac + " / " + args.AdvertisementType.ToString() + ") L:" + section.Data.Length + " Data: " + datasection);
+
+                            }
+                            else
+                            {
+                                taginfo.TagMenu = "";
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
+                    }
+                }
+
+                if (taginfo.CarrotPlugFlag)
+                {
+                    //add new tag
+                    if (this.tagList.ContainsKey(taginfo.TagMac) == false)
+                    {
+                        this.tagList.Add(taginfo.TagMac, taginfo);
+                        if (Filter(taginfo))
+                        {
+                            tagColl.Add(taginfo);
+                        }
+                    }
+                    //update existing tag infos
+                    else if (tagList.ContainsValue(taginfo) == false)
+                    {
+                        IEnumerable<Taginfo> existing = tagColl.Where(x => x.TagMac == taginfo.TagMac);
+                        int a = tagColl.IndexOf(existing.FirstOrDefault());
+                        if (Filter(taginfo))
+                        {
+                            if (a >= 0 && a < tagColl.Count())
+                            {
+                                tagColl[a].update(taginfo);
+                            }
+                        }
+                        this.tagList[taginfo.TagMac].update(taginfo);
+                    }
+                    _passCount = 0;
+                    foreach (Taginfo tag in tagColl)
+                    {
+                        if (tag.passFlag == "OK")
+                        {
+                            _passCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+        /** @brief : filter tag mac adress or name
+         * @return : true if tag matches false otherwise
+         */
+        private bool Filter(Taginfo taginfo)
+        {
+            if (taginfo.TagMac.ToLower().Contains(filter.ToLower()) || taginfo.TagName.ToLower().Contains(filter.ToLower()))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private void listView1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if (listView1.SelectedItems.Count == 1)
+            {
+                ListViewItem lvitem = listView1.SelectedItems[0];
+                txtSearch.Text = lvitem.SubItems[0].Text;
+            }
+        }
+
+        private async void txtSearch_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                StringBuilder sb = new StringBuilder();
+                string str = this.txtSearch.Text;
+                foreach (char c in str)
+                {
+                    if ((c >= '0' && c <= '9'))
+                    {
+                        sb.Append(c);
+                    }
+                }
+                if (txtSearch.Text.Length - 15 < 0)
+                {
+
+                    this.ble_label.Text = "Input Error";
+                    return;
+                }
+                string imei = this.txtSearch.Text.Substring(txtSearch.Text.Length - 15, 15);
+                this.txtSearch.Text = "";
+                foreach (char ch in imei)
+                {
+                    if (ch < '0' || ch > '9')
+                    {
+                        this.ble_label.Text = "Input Error";
+                        return;
+                    }
+                }
+                ulong btAddress = 0;
+                foreach (Taginfo tag in tagColl)
+                {
+                    if (tag.TagIMEI == imei)
+                    {
+                        btAddress = tag.btAddress;
+                        break;
+                    }
+                }
+                if (btAddress != 0)
+                {
+                    var device = await BluetoothLEDevice.FromBluetoothAddressAsync(btAddress);
+                    //DeviceUnpairingResult dupr = await device.DeviceInformation.Pairing.UnpairAsync();
+                    Debug.WriteLine($"BLEWATCHER Found: {imei}");
+                    if (!device.DeviceInformation.Pairing.IsPaired)
+                    {
+                        Debug.WriteLine($"{device.Name} Try Pairing");
+
+                        var result = await device.DeviceInformation.Pairing.PairAsync();
+                        this.ble_label.Text = "Connecting";
+                        DeviceUnpairingResult dupr = await device.DeviceInformation.Pairing.UnpairAsync();
+                        Debug.WriteLine($"BLEWATCHER Pairing Complete");
+                        bleState = 1;
+                        return;
+                    }
+                }
+                else
+                {
+                    this.ble_label.Text = "Not Find";
+                }
+            }
+
         }
     }
 }
