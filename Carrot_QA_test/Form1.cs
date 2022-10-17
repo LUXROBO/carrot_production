@@ -740,9 +740,9 @@ namespace Carrot_QA_test
                                         taginfo.TagFlagString += "(" + taginfo.ng2_gpsSnr.ToString() + ")";
                                     taginfo.TagFlagString += ", ";
                                     if ((taginfo.TagFlag & 0x02) == 0x02)
-                                        taginfo.TagFlagString += "BLE Fail";
+                                        taginfo.TagFlagString += "TEMP Fail";
                                     else
-                                        taginfo.TagFlagString += "BLE OK";
+                                        taginfo.TagFlagString += "TEMP OK";
                                     taginfo.TagFlagString += ", ";
                                     if ((taginfo.TagFlag & 0x04) == 0x04)
                                         taginfo.TagFlagString += "CAP Fail";
