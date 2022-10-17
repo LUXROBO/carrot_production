@@ -195,7 +195,7 @@ public class Mydb
         {
             if(pluglist[imei].device_id == "")
             {
-                pluglist[imei].device_id = "LUX1_" + imei;
+                pluglist[imei].device_id = "LUX2_" + imei;
             }
             regPayload["deviceId"] = pluglist[imei].device_id;
             regPayload["cmBzpsRgtDscno"] = pluglist[imei].sn;
@@ -208,8 +208,8 @@ public class Mydb
             {
                 regPayload["prddt"] = pluglist[imei].prod_date;
             }
-            regPayload["divcNm"] = "Carrot Plug 1";
-            regPayload["mdnm"] = "IV-GT1LM1BT";
+            regPayload["divcNm"] = "Carrot Plug 3";
+            regPayload["mdnm"] = "Carrot Plug 3";
             regPayload["mnftrNm"] = "LUXROBO";
             regPayload["bluetId"] = pluglist[imei].ble_id;
             dtag_string = pluglist[imei].dtag;
