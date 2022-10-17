@@ -24,7 +24,6 @@ namespace Carrot_QA_test
         private System.Windows.Forms.TextBox txtSearch;
         private System.Windows.Forms.Button btnStartBle;
         private System.Windows.Forms.Button btnClearBle;
-        private System.Windows.Forms.Button BtnUpload;
         private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.ListView listView1;
         private System.ComponentModel.IContainer components = null;
@@ -58,7 +57,6 @@ namespace Carrot_QA_test
         private Label modeLabel;
         private Label label4;
         private Button BtnMode;
-        private ColumnHeader DB;
         private ColumnHeader Reg;
         private Label PassCount;
         private Label Count;
@@ -67,6 +65,7 @@ namespace Carrot_QA_test
         private Button Scan;
         private ColumnHeader BLE;
         private Label ble_label;
+        private Label mode_label;
     }
 }
 

@@ -87,7 +87,6 @@ namespace Carrot_QA_test
             this.txtSearch = new System.Windows.Forms.TextBox();
             this.btnStartBle = new System.Windows.Forms.Button();
             this.btnClearBle = new System.Windows.Forms.Button();
-            this.BtnUpload = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
             this.listView1 = new System.Windows.Forms.ListView();
             this.IMEI = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -95,7 +94,6 @@ namespace Carrot_QA_test
             this.BLE = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.RSSI = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.Pass = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.DB = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.Reg = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.Note = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.listTimer = new System.Timers.Timer();
@@ -109,6 +107,7 @@ namespace Carrot_QA_test
             this.label3 = new System.Windows.Forms.Label();
             this.Scan = new System.Windows.Forms.Button();
             this.ble_label = new System.Windows.Forms.Label();
+            this.mode_label = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.listTimer)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dbTimer)).BeginInit();
             this.SuspendLayout();
@@ -138,22 +137,11 @@ namespace Carrot_QA_test
             this.btnClearBle.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
             this.btnClearBle.Location = new System.Drawing.Point(1070, 60);
             this.btnClearBle.Name = "btnClearBle";
-            this.btnClearBle.Size = new System.Drawing.Size(100, 42);
+            this.btnClearBle.Size = new System.Drawing.Size(208, 42);
             this.btnClearBle.TabIndex = 2;
             this.btnClearBle.Text = "Clear";
             this.btnClearBle.UseVisualStyleBackColor = true;
             this.btnClearBle.Click += new System.EventHandler(this.BtnClearBle_Click);
-            // 
-            // BtnUpload
-            // 
-            this.BtnUpload.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.BtnUpload.Location = new System.Drawing.Point(1174, 60);
-            this.BtnUpload.Name = "BtnUpload";
-            this.BtnUpload.Size = new System.Drawing.Size(104, 42);
-            this.BtnUpload.TabIndex = 3;
-            this.BtnUpload.Text = "Upload";
-            this.BtnUpload.UseVisualStyleBackColor = true;
-            this.BtnUpload.Click += new System.EventHandler(this.BtnUpload_Click);
             // 
             // btnSave
             // 
@@ -174,7 +162,6 @@ namespace Carrot_QA_test
             this.BLE,
             this.RSSI,
             this.Pass,
-            this.DB,
             this.Reg,
             this.Note});
             this.listView1.Font = new System.Drawing.Font("굴림", 12F);
@@ -213,10 +200,6 @@ namespace Carrot_QA_test
             // Pass
             // 
             this.Pass.Text = "Pass";
-            // 
-            // DB
-            // 
-            this.DB.Text = "DB";
             // 
             // Reg
             // 
@@ -259,15 +242,15 @@ namespace Carrot_QA_test
             this.modeLabel.Location = new System.Drawing.Point(11, 18);
             this.modeLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.modeLabel.Name = "modeLabel";
-            this.modeLabel.Size = new System.Drawing.Size(459, 24);
+            this.modeLabel.Size = new System.Drawing.Size(286, 24);
             this.modeLabel.TabIndex = 13;
-            this.modeLabel.Text = "Carrot Plug v3.0(BG770) QA Test Mode";
+            this.modeLabel.Text = "Carrot Plug v3.1(BG770)";
             // 
             // BtnMode
             // 
             this.BtnMode.Font = new System.Drawing.Font("굴림", 12F);
             this.BtnMode.Location = new System.Drawing.Point(498, 11);
-            this.BtnMode.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.BtnMode.Margin = new System.Windows.Forms.Padding(4);
             this.BtnMode.Name = "BtnMode";
             this.BtnMode.Size = new System.Drawing.Size(180, 34);
             this.BtnMode.TabIndex = 14;
@@ -336,11 +319,23 @@ namespace Carrot_QA_test
             this.ble_label.TabIndex = 18;
             this.ble_label.Text = "Ready";
             // 
+            // mode_label
+            // 
+            this.mode_label.AutoSize = true;
+            this.mode_label.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
+            this.mode_label.Location = new System.Drawing.Point(305, 18);
+            this.mode_label.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.mode_label.Name = "mode_label";
+            this.mode_label.Size = new System.Drawing.Size(174, 24);
+            this.mode_label.TabIndex = 19;
+            this.mode_label.Text = "QA Test Mode";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1404, 1142);
+            this.Controls.Add(this.mode_label);
             this.Controls.Add(this.ble_label);
             this.Controls.Add(this.Scan);
             this.Controls.Add(this.BtnMode);
@@ -352,7 +347,6 @@ namespace Carrot_QA_test
             this.Controls.Add(this.label2);
             this.Controls.Add(this.listView1);
             this.Controls.Add(this.btnSave);
-            this.Controls.Add(this.BtnUpload);
             this.Controls.Add(this.btnClearBle);
             this.Controls.Add(this.btnStartBle);
             this.Controls.Add(this.txtSearch);
@@ -438,7 +432,7 @@ namespace Carrot_QA_test
                             tag.dbString = "OK";
                         else
                             tag.dbString = "Fail";
-                        if (modeFlag == 1 || (modeFlag == 0 && tag.passFlag == "OK"))
+                        /*if (modeFlag == 1 || (modeFlag == 0 && tag.passFlag == "OK"))
                         {
                             int let = mydb.regist_server(imei);
                             if (let == 1)
@@ -467,7 +461,7 @@ namespace Carrot_QA_test
                                 }
                                 this.dbTimer.Start();
                             }
-                        }
+                        }*/
                         tag.passFlagUpdate = false;
                     }
 
@@ -513,7 +507,6 @@ namespace Carrot_QA_test
                             LVI.SubItems.Add(Convert.ToString(tag.TagRssi));
                             LVI.SubItems.Add(tag.passFlag);
                             LVI.SubItems.Add(tag.dbString);
-                            LVI.SubItems.Add(tag.serverString);
                             LVI.SubItems.Add(Convert.ToString(tag.TagFlagString));
                             listView1.Items.Add(LVI);
                         }
@@ -568,12 +561,12 @@ namespace Carrot_QA_test
             if (this.modeFlag == 0)
             {
                 this.modeFlag = 1;
-                this.modeLabel.Text = "Carrot Plug v"+pVersion+" 개통 Test Mode";
+                this.mode_label.Text = "개통 Test Mode";
             }
             else
             {
                 this.modeFlag = 0;
-                this.modeLabel.Text = "Carrot Plug v" + pVersion + " QA Test Mode";
+                this.mode_label.Text = " QA Test Mode";
             }
 
             this.listView1.BeginUpdate();
@@ -637,61 +630,6 @@ namespace Carrot_QA_test
                 sw.Dispose();
             }
 
-        }
-
-
-        private void BtnUpload_Click(object sender, EventArgs e)
-        {
-            string msg = "";
-            foreach (Taginfo tag in tagList.Values)
-            {
-                if (tag.CarrotPlugFlag)
-                {
-                    string icc_id = tag.TagMenu;
-                    string imei = tag.TagName;
-                    int result;
-                    if (modeFlag == 0)
-                        result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID, tag);
-                    else
-                        result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
-
-                    string result_string = "";
-                    if (result == 1)
-                        result_string = "OK";
-                    else
-                        result_string = "Fail";
-                    string reg_result = "Fail";
-                    int let = mydb.regist_server(imei);
-                    if (let == 1)
-                    {
-                        reg_result = "Test, Main Server Register!";
-                        tag.dbString = "OK";
-                        tag.serverString = "OK";
-                    }
-                    else if (let == -1)
-                    {
-                        reg_result = "Not find DB data";
-                        tag.dbString = "Fail";
-                        tag.serverString = "Fail";
-
-                    }
-                    else if (let == -2)
-                    {
-                        reg_result = "Not Connect Test Server, check your IP(use VPN)";
-                        tag.dbString = "OK";
-                        tag.serverString = "Fail";
-                    }
-                    else if (let == -3)
-                    {
-                        reg_result = "Not Connect Main Server, check your IP(use VPN)";
-                        tag.dbString = "OK";
-                        tag.serverString = "Fail";
-                    }
-                    msg += imei + " Upload Result :" + result_string + ", " + reg_result + "\n";
-                    tag.passFlagUpdate = false;
-                }
-            }
-            MessageBox.Show(msg);
         }
 
 

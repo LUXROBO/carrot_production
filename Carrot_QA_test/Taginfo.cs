@@ -484,7 +484,6 @@ public class Taginfo : INotifyPropertyChanged
     public string TagVersion = "";
     public string dbString = "NG";
     public bool dbFlag = false;
-    public string serverString = "NG";
     public bool serverFlag = false;
     public UInt32 TagVersionNumber = 0;
     public DateTime updateTime;
