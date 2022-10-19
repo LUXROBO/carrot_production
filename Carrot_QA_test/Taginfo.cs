@@ -33,6 +33,7 @@ public class Mydb
     private MySqlConnection conn;
     private readonly string ConnUrl = "Server=release-carrot-cluster.cluster-cb10can9foe2.ap-northeast-2.rds.amazonaws.com;Database=carrotPlugList;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
     public MySqlDataReader rdr;
+    private System.Timers.Timer timer = new System.Timers.Timer(); 
 
     private Dictionary<string, Plug> pluglist = new Dictionary<string, Plug>();
 
@@ -68,18 +69,10 @@ public class Mydb
             conn.Open();
             Console.WriteLine("connReader ON");
             new MySqlCommand("set sql_safe_updates=0;", conn);
-        }
-    }
+            timer.Interval = 1000;
+            timer.Elapsed += new System.Timers.ElapsedEventHandler(timer_Elapsed);
+            timer.Start();
 
-    public Mydb(string url)
-    {
-
-        conn = new MySqlConnection(url);
-        if (conn.State == ConnectionState.Closed)
-        {
-            conn.Open();
-            Console.WriteLine("connReader ON");
-            new MySqlCommand("set sql_safe_updates=0;", conn);
         }
     }
 
@@ -88,16 +81,41 @@ public class Mydb
         conn.Close();
     }
 
+    List<String> uq_qa2 = new List<String>();
+    delegate void TimerEventFiredDelegate();
+    void timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+    {
+        timer_updater();
+    }
 
-    public int UpdateQuery(string imei, string icc_id)
+    private void timer_updater()
+    {
+        String str_update = "";
+        Console.WriteLine("timer_updater - " + uq_qa2.Count);
+        if (uq_qa2.Count > 0)
+        {
+            foreach (String s in uq_qa2)
+            {
+                str_update += s;
+            }
+            MySqlCommand cmd = new MySqlCommand(str_update, conn);
+            if (cmd.ExecuteNonQuery() > 0)
+            {
+                uq_qa2.Clear();
+                Console.WriteLine("timer_updater - OK" + uq_qa2.Count);
+            }
+        }
+    }
+
+    public void UpdateQuery(string imei, string icc_id)
     {
         if (icc_id == null)
             icc_id = "NULL";
         string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei =" + imei + ';';
-        return new MySqlCommand(str_update, conn).ExecuteNonQuery();
+        uq_qa2.Add(str_update);
     }
 
-    public int UpdateQuery_qa2(string imei, string icc_id, string qa2, string ng2_type, string ble_id, Taginfo taginfo)
+    public void UpdateQuery_qa2(string imei, string icc_id, string qa2, string ng2_type, string ble_id, Taginfo taginfo)
     {
         if (icc_id == null)
             icc_id = "NULL";
@@ -124,26 +142,28 @@ public class Mydb
         }        
         str_update += "\" where imei =" + imei + ';';
 
-        return new MySqlCommand(str_update, conn).ExecuteNonQuery();
+        uq_qa2.Add(str_update);
     }
 
-    public int UpdateQuery_qa3(string imei, string icc_id, string qa3, string ng3_type, string ble_id)
+    public void UpdateQuery_qa3(string imei, string icc_id, string qa3, string ng3_type, string ble_id)
     {
         if (icc_id == null)
             icc_id = "NULL";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
         string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei =" + imei + ';';
-        return new MySqlCommand(str_update, conn).ExecuteNonQuery();
+
+        uq_qa2.Add(str_update);
     }
 
-    private int UpdateQuery_dtag(string imei, string dtag)
+    private void UpdateQuery_dtag(string imei, string dtag)
     {
         string tdtag = "NG";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
         string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei =" + imei + ';';
-        return new MySqlCommand(str_update, conn).ExecuteNonQuery();
+
+        uq_qa2.Add(str_update);
     }
 
     private int registries_server(string url, string host, string bearer)

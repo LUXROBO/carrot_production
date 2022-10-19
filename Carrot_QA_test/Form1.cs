@@ -424,14 +424,14 @@ namespace Carrot_QA_test
                         string imei = tag.TagIMEI;
                         int result;
                         if (modeFlag == 0)
-                            result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID, tag);
+                            mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID, tag);
                         else
-                            result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
+                            mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
 
-                        if (result == 1)
+                        /*if (result == 1)
                             tag.dbString = "OK";
                         else
-                            tag.dbString = "Fail";
+                            tag.dbString = "Fail";*/
                         /*if (modeFlag == 1 || (modeFlag == 0 && tag.passFlag == "OK"))
                         {
                             int let = mydb.regist_server(imei);
