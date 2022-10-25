@@ -96,7 +96,7 @@ public class Mydb
         {
             foreach (String s in uq_qa2)
             {
-                str_update += s;
+                str_update += s + "\n";
             }
             MySqlCommand cmd = new MySqlCommand(str_update, conn);
             if (cmd.ExecuteNonQuery() > 0)

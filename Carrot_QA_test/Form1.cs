@@ -244,7 +244,7 @@ namespace Carrot_QA_test
             this.modeLabel.Name = "modeLabel";
             this.modeLabel.Size = new System.Drawing.Size(286, 24);
             this.modeLabel.TabIndex = 13;
-            this.modeLabel.Text = "Carrot Plug v3.1(BG770)";
+            this.modeLabel.Text = "Carrot Plug v3.2(BG770)";
             // 
             // BtnMode
             // 
