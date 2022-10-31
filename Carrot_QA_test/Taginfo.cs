@@ -93,7 +93,7 @@ public class Mydb
     {
         if (icc_id == null)
             icc_id = "NULL";
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei =" + imei + ';';
+        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei ='" + imei + "';";
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
@@ -122,7 +122,7 @@ public class Mydb
             str_update += "\", qa2_lte_b5_avg =\"-"+ taginfo.ng2_b5_avg;
             str_update += "\", qa2_lte_b5_max =\"-"+ taginfo.ng2_b5_max;
         }        
-        str_update += "\" where imei =" + imei + ';';
+        str_update += "\" where imei ='" + imei + "';";
 
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
@@ -133,7 +133,7 @@ public class Mydb
             icc_id = "NULL";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei =" + imei + ';';
+        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
@@ -142,7 +142,7 @@ public class Mydb
         string tdtag = "NG";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
-        string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei =" + imei + ';';
+        string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
