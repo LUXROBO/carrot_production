@@ -66,6 +66,7 @@ namespace Carrot_QA_test
         private ColumnHeader BLE;
         private Label ble_label;
         private Label mode_label;
+        private SplitContainer splitContainer1;
     }
 }
 

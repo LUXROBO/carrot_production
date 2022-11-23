@@ -456,6 +456,18 @@ public class Taginfo : INotifyPropertyChanged
     private int ng2_b5_avg_raw = 0;
     private int ng2_b5_max_raw = 0;
     private int ng2_ble_rssi_raw = 0;
+    
+    /*∞ÒµÂª˘«√ µ•¿Ã≈Õ*/
+    private int ng2_gold_gps_raw = 0;
+    private int ng2_gold_gps_margin_raw = 0;
+    private int ng2_gold_temp_raw = 0;
+    private int ng2_gold_temp_margin_raw = 0;
+    private int ng2_gold_cap_max_raw = 0;
+    private int ng2_gold_cap_min_raw = 0;
+    private int ng2_gold_b3_raw = 0;
+    private int ng2_gold_b3_margin_raw = 0;
+    private int ng2_gold_b5_raw = 0;
+    private int ng2_gold_b5_margin_raw = 0;
     private bool ng2_rawdata_flag_raw = false;
 
     public ulong btAddress;
@@ -521,6 +533,22 @@ public class Taginfo : INotifyPropertyChanged
     public int ng2_b5_min   { get { return ng2_b5_min_raw; }    set { ng2_b5_min_raw    = value; OnPropertyChanged("ng2_b5_min"); } }
     public int ng2_b5_avg   { get { return ng2_b5_avg_raw; }    set { ng2_b5_avg_raw    = value; OnPropertyChanged("ng2_b5_avg"); } }
     public int ng2_b5_max   { get { return ng2_b5_max_raw; }    set { ng2_b5_max_raw    = value; OnPropertyChanged("ng2_b5_max"); } }
+
+    public int ng2_Gold_GPS { get { return ng2_gold_gps_raw; } set { ng2_gold_gps_raw = value; OnPropertyChanged("ng2_gold_gps"); } }
+    public int ng2_Gold_GPS_Margin { get { return ng2_gold_gps_margin_raw; } set { ng2_gold_gps_margin_raw = value; OnPropertyChanged("ng2_gold_gps_margin"); } }
+    public int ng2_Gold_Temp { get { return ng2_gold_temp_raw; } set { ng2_gold_temp_raw = value; OnPropertyChanged("ng2_gold_temp"); } }
+    public int ng2_Gold_Temp_Margin { get { return ng2_gold_temp_margin_raw; } set { ng2_gold_temp_margin_raw = value; OnPropertyChanged("ng2_gold_temp_margin"); } }
+
+    public int ng2_Gold_Cap_Max { get { return ng2_gold_cap_max_raw; } set { ng2_gold_cap_max_raw = value; OnPropertyChanged("ng2_gold_cap_max"); } }
+
+    public int ng2_Gold_Cap_Min { get { return ng2_gold_cap_min_raw; } set { ng2_gold_cap_min_raw = value; OnPropertyChanged("ng2_gold_cap_min"); } }
+
+    public int ng2_Gold_b3 { get { return ng2_gold_b3_raw; } set { ng2_gold_b3_raw = value; OnPropertyChanged("ng2_gold_b3"); } }
+    public int ng2_Gold_b3_Margin { get { return ng2_gold_b3_margin_raw; } set { ng2_gold_b3_margin_raw = value; OnPropertyChanged("ng2_gold_b3_margin"); } }
+    public int ng2_Gold_b5 { get { return ng2_gold_b5_raw; } set { ng2_gold_b5_raw = value; OnPropertyChanged("ng2_gold_b5"); } }
+    public int ng2_Gold_b5_Margin { get { return ng2_gold_b5_margin_raw; } set { ng2_gold_b5_margin_raw = value; OnPropertyChanged("ng2_gold_b5_margin"); } }
+    
+
     public bool ng2_rawdata_flag { get { return ng2_rawdata_flag_raw; }    set { ng2_rawdata_flag_raw    = value; OnPropertyChanged("ng2_rawdata_flag"); } }
     public uint TagFlag { get { return flag; } set { flag = value; OnPropertyChanged("TagFlag"); } }
     private string TagCaptorType { get; set; }
