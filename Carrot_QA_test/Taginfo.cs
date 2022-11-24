@@ -443,7 +443,7 @@ public class Taginfo : INotifyPropertyChanged
 
     private string flagString = "";
 
-    private uint flag = 0;
+    private uint flag = 0xFF;
     private string _passFlag = "NG";
 
     private int ng2_gpsSnr_raw = 0;

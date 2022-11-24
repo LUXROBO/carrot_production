@@ -526,9 +526,9 @@ namespace Carrot_QA_test
                     tagColl.Remove(tagTimeout);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                Console.WriteLine(ex);
             }
         }
         private void ListTimeUp(object source, ElapsedEventArgs e)
@@ -550,9 +550,16 @@ namespace Carrot_QA_test
                             LVI.SubItems.Add(tag.passFlag);
                             LVI.SubItems.Add(tag.dbString);
                             LVI.SubItems.Add(Convert.ToString(tag.TagFlagString));
-                            if( !tag.passFlag.Contains("OK") || !tag.dbString.Contains("OK") )
+
+                            LVI.UseItemStyleForSubItems = false;
+                            if(!tag.passFlag.Contains("OK"))
                             {
-                                LVI.BackColor = System.Drawing.Color.Red;
+                                LVI.SubItems[4].BackColor = System.Drawing.Color.Red;
+                            }
+
+                            if( !tag.dbString.Contains("OK") )
+                            {
+                                LVI.SubItems[5].BackColor = System.Drawing.Color.Red;
                             }
                             listView1.Items.Add(LVI);
                         }
@@ -732,21 +739,36 @@ namespace Carrot_QA_test
                         reader.ReadBytes(data);
                         datasection = String.Format("{0}", BitConverter.ToString(data));
                         
-                        taginfo.TagDataRaw.Clear();
-                        taginfo.TagDataRaw.Add(datasection);
-                        taginfo.TagRssi = args.RawSignalStrengthInDBm;
-
                         //Complete Local Name패킷은 아래 로직에서 처리 안함
                         if (section.DataType == 0x09)
                         {
                             continue;
                         }
 
-                        if (section.Data.Length != 19 && section.Data.Length != 22)
+                        try
+                        {
+                            UInt16 crcRaw = (UInt16)((byte)data[data.Length - 2]<<8 | (byte)data[data.Length - 1]);
+                            ushort check = CRC16.ComputeChecksum(data, data.Length - 2);
+                            if (crcRaw != check)
+                            {
+                                Console.WriteLine("crc fail");
+                                continue; 
+                            }
+                                
+                        }
+                        catch { continue; }
+
+                        taginfo.TagDataRaw.Clear();
+                        taginfo.TagDataRaw.Add(datasection);
+                        taginfo.TagRssi = args.RawSignalStrengthInDBm;
+
+                        
+                        if (section.Data.Length != 21 && section.Data.Length != 24)
                         {
                             Console.WriteLine($"DataType {section.DataType}");
                             Console.WriteLine($"DataLegnth {section.Data.Length}");
                             Console.WriteLine($"Datas {datasection}");
+                            Console.WriteLine("");
                         }
 
                         try
@@ -755,8 +777,11 @@ namespace Carrot_QA_test
                             {
                                 if(this.tagList.ContainsKey(taginfo.TagMac) == true)
                                 {
-                                    int Index = 6;
+                                    int Index = 5;
                                     string tempStr = taginfo.TagDataRaw[0].Replace("-", "");
+                                    
+                                    taginfo.TagFlag = (uint)Convert.ToInt32(tempStr.Substring(Index, 1), 16);
+                                    Index += 1;
 
                                     taginfo.ng2_gpsSnr = Convert.ToInt32(tempStr.Substring(Index, 2), 10);
                                     Index += 2;
@@ -834,11 +859,13 @@ namespace Carrot_QA_test
                                 taginfo.TagVersionNumber += Convert.ToUInt32(patchVersion) * FIRMWARE_PATCH_MASK;
                                 taginfo.TagVersion = 'v' + majorVersion + '.' + minorVersion + '.' + patchVersion;                  // Firmware Version
                                 taginfo.TagIccID = "898205" + taginfo.TagMenu.Substring(4, 13);                                     // ICC ID
-                                taginfo.TagFlag = (uint)Convert.ToInt32(taginfo.TagMenu.Substring(17, 1), 16);                      // QA Flag    
+                                //taginfo.TagFlag = (uint)Convert.ToInt32(taginfo.TagMenu.Substring(17, 1), 16);                      // QA Flag    
                                 taginfo.TagBleID = "4C520000-E25D-11EB-BA80-" + taginfo.TagMenu.Substring(18, 12);                  // BLE UUID
                                 //taginfo.TagIMEI = "3596271" + taginfo.TagMenu.Substring(30, 8);                                   // IMEI
                                 taginfo.TagIMEI = "8635930" + taginfo.TagMenu.Substring(30, 8);                                     // IMEI
                                 taginfo.TagFlagString = taginfo.TagVersion + " ";
+                                
+
                                 if (modeFlag == 0 && taginfo.TagName == "Q")
                                 {
                                     if ((taginfo.TagFlag & 0x01) == 0x01)
@@ -882,6 +909,7 @@ namespace Carrot_QA_test
                                     {
                                         taginfo.passFlag = "OK";
                                     }
+
                                     taginfo.CarrotPlugFlag = true;
                                 }
                                 else if (modeFlag == 1 && taginfo.TagName == "O")
