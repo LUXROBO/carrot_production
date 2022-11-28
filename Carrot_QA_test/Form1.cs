@@ -125,7 +125,7 @@ namespace Carrot_QA_test
             // 
             this.txtSearch.Font = new System.Drawing.Font("굴림", 12F);
             this.txtSearch.Location = new System.Drawing.Point(941, 6);
-            this.txtSearch.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.txtSearch.Margin = new System.Windows.Forms.Padding(2);
             this.txtSearch.Name = "txtSearch";
             this.txtSearch.Size = new System.Drawing.Size(205, 30);
             this.txtSearch.TabIndex = 0;
@@ -135,7 +135,7 @@ namespace Carrot_QA_test
             // 
             this.btnStartBle.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
             this.btnStartBle.Location = new System.Drawing.Point(787, 41);
-            this.btnStartBle.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnStartBle.Margin = new System.Windows.Forms.Padding(2);
             this.btnStartBle.Name = "btnStartBle";
             this.btnStartBle.Size = new System.Drawing.Size(88, 35);
             this.btnStartBle.TabIndex = 1;
@@ -147,7 +147,7 @@ namespace Carrot_QA_test
             // 
             this.btnClearBle.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
             this.btnClearBle.Location = new System.Drawing.Point(896, 41);
-            this.btnClearBle.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnClearBle.Margin = new System.Windows.Forms.Padding(2);
             this.btnClearBle.Name = "btnClearBle";
             this.btnClearBle.Size = new System.Drawing.Size(166, 35);
             this.btnClearBle.TabIndex = 2;
@@ -159,7 +159,7 @@ namespace Carrot_QA_test
             // 
             this.btnSave.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
             this.btnSave.Location = new System.Drawing.Point(1066, 41);
-            this.btnSave.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnSave.Margin = new System.Windows.Forms.Padding(2);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(83, 35);
             this.btnSave.TabIndex = 4;
@@ -183,7 +183,7 @@ namespace Carrot_QA_test
             this.listView1.GridLines = true;
             this.listView1.HideSelection = false;
             this.listView1.Location = new System.Drawing.Point(0, 0);
-            this.listView1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.listView1.Margin = new System.Windows.Forms.Padding(2);
             this.listView1.MultiSelect = false;
             this.listView1.Name = "listView1";
             this.listView1.Size = new System.Drawing.Size(1325, 891);
@@ -257,7 +257,7 @@ namespace Carrot_QA_test
             this.modeLabel.Name = "modeLabel";
             this.modeLabel.Size = new System.Drawing.Size(241, 20);
             this.modeLabel.TabIndex = 13;
-            this.modeLabel.Text = "Carrot Plug v3.3(BG770)";
+            this.modeLabel.Text = "Carrot Plug v3.6(BG770)";
             // 
             // BtnMode
             // 
@@ -318,7 +318,7 @@ namespace Carrot_QA_test
             // 
             this.Scan.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
             this.Scan.Location = new System.Drawing.Point(7, 41);
-            this.Scan.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Scan.Margin = new System.Windows.Forms.Padding(2);
             this.Scan.Name = "Scan";
             this.Scan.Size = new System.Drawing.Size(107, 35);
             this.Scan.TabIndex = 17;
@@ -387,7 +387,7 @@ namespace Carrot_QA_test
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1325, 975);
             this.Controls.Add(this.splitContainer1);
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
             this.Text = "Carrot QA Program";
             ((System.ComponentModel.ISupportInitialize)(this.listTimer)).EndInit();
@@ -751,10 +751,13 @@ namespace Carrot_QA_test
                             ushort check = CRC16.ComputeChecksum(data, data.Length - 2);
                             if (crcRaw != check)
                             {
-                                Console.WriteLine("crc fail");
                                 continue; 
                             }
-                                
+                            if(args.RawSignalStrengthInDBm < -80)
+                            {
+                                //Console.WriteLine($"Fail Rssi {args.RawSignalStrengthInDBm}");
+                                continue;
+                            }
                         }
                         catch { continue; }
 
@@ -773,7 +776,7 @@ namespace Carrot_QA_test
 
                         try
                         {
-                            if(args.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse)
+                            if (args.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse && modeFlag == 0 && taginfo.TagName == "Q")
                             {
                                 if(this.tagList.ContainsKey(taginfo.TagMac) == true)
                                 {
@@ -843,6 +846,57 @@ namespace Carrot_QA_test
 
                                     taginfo.ng2_ble_rssi = taginfo.TagRssi;
                                     taginfo.ng2_rawdata_flag = true;
+                                    taginfo.TagFlagString = taginfo.TagVersion + " ";
+
+
+                                    if (modeFlag == 0 && taginfo.TagName == "Q")
+                                    {
+                                        if ((taginfo.TagFlag & 0x01) == 0x01)
+                                            taginfo.TagFlagString += "GPS Fail";
+                                        else
+                                            taginfo.TagFlagString += "GPS OK";
+                                        if (taginfo.ng2_rawdata_flag)
+                                            taginfo.TagFlagString += $"({taginfo.ng2_gpsSnr}:{taginfo.ng2_Gold_GPS},{taginfo.ng2_Gold_GPS_Margin})";
+                                        taginfo.TagFlagString += ", ";
+
+                                        if ((taginfo.TagFlag & 0x02) == 0x02)
+                                            taginfo.TagFlagString += "TEMP Fail";
+                                        else
+                                            taginfo.TagFlagString += "TEMP OK";
+                                        if (taginfo.ng2_rawdata_flag)
+                                            taginfo.TagFlagString += $"({taginfo.ng2_temp}:{taginfo.ng2_Gold_Temp},{taginfo.ng2_Gold_Temp_Margin})";
+                                        taginfo.TagFlagString += ", ";
+
+
+
+                                        if ((taginfo.TagFlag & 0x04) == 0x04)
+                                            taginfo.TagFlagString += "CAP Fail";
+                                        else
+                                            taginfo.TagFlagString += "CAP OK";
+                                        if (taginfo.ng2_rawdata_flag)
+                                            taginfo.TagFlagString += $"({taginfo.ng2_cap}:{taginfo.ng2_Gold_Cap_Min},{taginfo.ng2_Gold_Cap_Max})";
+                                        taginfo.TagFlagString += ", ";
+
+
+                                        if ((taginfo.TagFlag & 0x08) == 0x08)
+                                            taginfo.TagFlagString += "LTE Fail";
+                                        else
+                                            taginfo.TagFlagString += "LTE OK";
+                                        if (taginfo.ng2_rawdata_flag)
+                                        {
+                                            taginfo.TagFlagString += $"({taginfo.ng2_b3_avg},{taginfo.ng2_b3_max}:{taginfo.ng2_Gold_b3},{taginfo.ng2_Gold_b3_Margin}:" +
+                                                $"{taginfo.ng2_b5_avg},{taginfo.ng2_b5_max}:{taginfo.ng2_Gold_b5},{taginfo.ng2_Gold_b5_Margin})";
+                                        }
+
+                                        if ((taginfo.TagFlag & 0xFF) == 0)
+                                        {
+                                            taginfo.passFlag = "OK";
+                                        }
+                                        else
+                                        {
+                                            taginfo.passFlag = "NG";
+                                        }
+                                    }
                                     //Console.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " SR :" + taginfo.TagName +"("+ taginfo.TagMac +"), Data : " + datasection);
                                 }
                             }
@@ -859,15 +913,19 @@ namespace Carrot_QA_test
                                 taginfo.TagVersionNumber += Convert.ToUInt32(patchVersion) * FIRMWARE_PATCH_MASK;
                                 taginfo.TagVersion = 'v' + majorVersion + '.' + minorVersion + '.' + patchVersion;                  // Firmware Version
                                 taginfo.TagIccID = "898205" + taginfo.TagMenu.Substring(4, 13);                                     // ICC ID
-                                //taginfo.TagFlag = (uint)Convert.ToInt32(taginfo.TagMenu.Substring(17, 1), 16);                      // QA Flag    
+                                
+                                if (modeFlag == 1 && taginfo.TagName == "O")
+                                    taginfo.TagFlag = (uint)Convert.ToInt32(taginfo.TagMenu.Substring(17, 1), 16);                      // QA Flag    
+
                                 taginfo.TagBleID = "4C520000-E25D-11EB-BA80-" + taginfo.TagMenu.Substring(18, 12);                  // BLE UUID
                                 //taginfo.TagIMEI = "3596271" + taginfo.TagMenu.Substring(30, 8);                                   // IMEI
                                 taginfo.TagIMEI = "8635930" + taginfo.TagMenu.Substring(30, 8);                                     // IMEI
-                                taginfo.TagFlagString = taginfo.TagVersion + " ";
+                                //taginfo.TagFlagString = taginfo.TagVersion + " ";
                                 
-
+                                
                                 if (modeFlag == 0 && taginfo.TagName == "Q")
                                 {
+                                    /*
                                     if ((taginfo.TagFlag & 0x01) == 0x01)
                                         taginfo.TagFlagString += "GPS Fail";
                                     else
@@ -883,8 +941,6 @@ namespace Carrot_QA_test
                                     if (taginfo.ng2_rawdata_flag)
                                         taginfo.TagFlagString += $"({taginfo.ng2_temp}:{taginfo.ng2_Gold_Temp},{taginfo.ng2_Gold_Temp_Margin})";
                                     taginfo.TagFlagString += ", ";
-
-
 
                                     if ((taginfo.TagFlag & 0x04) == 0x04)
                                         taginfo.TagFlagString += "CAP Fail";
@@ -909,7 +965,11 @@ namespace Carrot_QA_test
                                     {
                                         taginfo.passFlag = "OK";
                                     }
-
+                                    else
+                                    {
+                                        taginfo.passFlag = "NG";
+                                    }
+                                    */
                                     taginfo.CarrotPlugFlag = true;
                                 }
                                 else if (modeFlag == 1 && taginfo.TagName == "O")

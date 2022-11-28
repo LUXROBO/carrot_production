@@ -40,18 +40,17 @@ namespace Carrot_QA_test
 
         private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if(e.KeyChar == (char)Keys.Enter && _textBoxData.Length > 0)
+            if (e.KeyChar == (char)Keys.Enter && _textBoxData.Length > 1)
             {
                 string imeiStr = _textBoxData.ToString().Trim('\n');
                 _textBoxData.Clear();
                 textBox1.Text = imeiStr;
                 SearchImei(imeiStr);
             }
-            else
+            else if (e.KeyChar != (char)Keys.Enter)
             {
                 _textBoxData.Append(e.KeyChar);
             }
-
         }
 
         private void SearchImei(string imeiStr)
@@ -75,7 +74,10 @@ namespace Carrot_QA_test
             }
             if (imeiStr.Length - 15 < 0)
                 return;
-            string imei = imeiStr.Substring(imeiStr.Length-15,15);
+            
+                string imei = imeiStr.Substring(imeiStr.Length - 15, 15);
+            
+
             foreach (char ch in imei)
             {
                 if(ch < '0' || ch > '9')
@@ -109,15 +111,19 @@ namespace Carrot_QA_test
                 this.QA2_label.Text = "QA2 : " + icon + this.rdr["qa2"].ToString() + " → " + this.rdr["ng2_type"].ToString();
 
                 string ng3_type = this.rdr["ng3_type"].ToString();
-                int a = ng3_type.IndexOf('.') + 1;
-                int b = ng3_type.IndexOf('.', a) + 1;
-                int c = ng3_type.IndexOf(' ');
-                string localVersion = ng3_type.Substring(b, c - b);
                 icon = "Ⅹ ";
-                if (this.rdr["qa3"].ToString() == "OK" && localVersion == ServerVersion)
+                if (!string.IsNullOrWhiteSpace(ng3_type))
                 {
-                    this.progressBar1.Value += 40;
-                    icon = "● ";
+                    int a = ng3_type.IndexOf('.') + 1;
+                    int b = ng3_type.IndexOf('.', a) + 1;
+                    int c = ng3_type.IndexOf(' ');
+                    string localVersion = ng3_type.Substring(b, c - b);
+                    
+                    if (this.rdr["qa3"].ToString() == "OK" && localVersion == ServerVersion)
+                    {
+                        this.progressBar1.Value += 40;
+                        icon = "● ";
+                    }
                 }
                 this.QA3_label.Text = "QA3 : " + icon + this.rdr["qa3"].ToString() + " → " + this.rdr["ng3_type"].ToString();
             }
