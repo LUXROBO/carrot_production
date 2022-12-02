@@ -257,7 +257,7 @@ namespace Carrot_QA_test
             this.modeLabel.Name = "modeLabel";
             this.modeLabel.Size = new System.Drawing.Size(241, 20);
             this.modeLabel.TabIndex = 13;
-            this.modeLabel.Text = "Carrot Plug v3.6(BG770)";
+            this.modeLabel.Text = "Carrot Plug v3.7(BG770)";
             // 
             // BtnMode
             // 
@@ -445,9 +445,9 @@ namespace Carrot_QA_test
                     ​고정 IP : 112.216.238.122
                     
                     럭스로보 연구소
-                    고정 IP : 175.209.190.173
+                    고정 IP : 112.169.63.43
                 */
-                if (!(ip == "175.209.190.173" || ip == "112.216.238.122" || ip == "106.245.254.26" || ip == "112.216.234.42" || ip == "112.216.234.43" || ip == "112.216.234.44"))
+                if (!( ip== "112.169.63.43" || ip == "175.209.190.173" || ip == "112.216.238.122" || ip == "106.245.254.26" || ip == "112.216.234.42" || ip == "112.216.234.43" || ip == "112.216.234.44"))
                 {
                     this.dbTimer.Stop();
                     if (MessageBox.Show("IP 주소가 다릅니다. VPN과 인터넷 상태를 점검해주세요.","Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
@@ -846,11 +846,13 @@ namespace Carrot_QA_test
 
                                     taginfo.ng2_ble_rssi = taginfo.TagRssi;
                                     taginfo.ng2_rawdata_flag = true;
-                                    taginfo.TagFlagString = taginfo.TagVersion + " ";
+                                    
 
 
                                     if (modeFlag == 0 && taginfo.TagName == "Q")
                                     {
+                                        taginfo.TagFlagString = taginfo.TagVersion + " ";
+
                                         if ((taginfo.TagFlag & 0x01) == 0x01)
                                             taginfo.TagFlagString += "GPS Fail";
                                         else
@@ -920,7 +922,9 @@ namespace Carrot_QA_test
                                 taginfo.TagBleID = "4C520000-E25D-11EB-BA80-" + taginfo.TagMenu.Substring(18, 12);                  // BLE UUID
                                 //taginfo.TagIMEI = "3596271" + taginfo.TagMenu.Substring(30, 8);                                   // IMEI
                                 taginfo.TagIMEI = "8635930" + taginfo.TagMenu.Substring(30, 8);                                     // IMEI
-                                //taginfo.TagFlagString = taginfo.TagVersion + " ";
+
+                                if (modeFlag == 1 && taginfo.TagName == "O")
+                                    taginfo.TagFlagString = taginfo.TagVersion + " ";
                                 
                                 
                                 if (modeFlag == 0 && taginfo.TagName == "Q")
