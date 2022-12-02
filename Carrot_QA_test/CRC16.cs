@@ -8,6 +8,19 @@ namespace Carrot_QA_test
 {
     public static class CRC16
     {
+        public static ushort ComputeChecksumInComp(ushort comID, byte[] bytes, int size)
+        {
+            ushort crc = 0;
+            crc = checksum_crc16_block(crc, (byte)(0xff&(comID>>0)) );
+            crc = checksum_crc16_block(crc, (byte)(0xff&(comID>>8)) );
+
+            for (int i = 0; i < size; ++i)
+            {
+                crc = checksum_crc16_block(crc, bytes[i]);
+            }
+            return crc;
+        }
+
         public static ushort ComputeChecksum(byte[] bytes, int size)
         {
             ushort crc = 0;
