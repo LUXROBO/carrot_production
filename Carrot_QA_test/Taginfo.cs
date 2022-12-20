@@ -124,11 +124,10 @@ public class Mydb
         }        
         str_update += "\" where imei ='" + imei + "';";
         
-        Console.WriteLine($"{DateTime.Now} : {imei} {ng2_type}");
-        Console.WriteLine("");
+        Debug.WriteLine($"{DateTime.Now} : {imei} {ng2_type}");
 
 
-        return new MySqlCommand(str_update, conn).ExecuteNonQuery();
+        return 1;// new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
     public int UpdateQuery_qa3(string imei, string icc_id, string qa3, string ng3_type, string ble_id)
@@ -503,6 +502,9 @@ public class Taginfo : INotifyPropertyChanged
     public bool serverFlag = false;
     public UInt32 TagVersionNumber = 0;
     public DateTime updateTime;
+
+    public bool SendedImei = false;
+
 
     /** existence of data used to hide/show data on display */
     private bool dataExist = false;

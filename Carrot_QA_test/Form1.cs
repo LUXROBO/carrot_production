@@ -19,6 +19,9 @@ using System.Reflection;
 using static System.Collections.Specialized.BitVector32;
 using Windows.UI;
 using System.Drawing;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Security.Policy;
+using System.Threading.Tasks;
 
 namespace Carrot_QA_test
 {
@@ -29,6 +32,7 @@ namespace Carrot_QA_test
         static UInt32 FIRMWARE_PATCH_MASK = 0x00000001;
         /** BLE watcher */
         private BluetoothLEAdvertisementWatcher watcher = new BluetoothLEAdvertisementWatcher();
+
 
         /** scanning state */
         private bool watchStarted = false;
@@ -52,6 +56,10 @@ namespace Carrot_QA_test
         Timer dbTimer;
         Mydb mydb = new Mydb();
         string pVersion;
+        
+        BlePublisher bleSender = BlePublisher.Instance;
+
+        UInt32 sleepDevImei = 0;
 
         public int ServerVersion { get; private set; }
 
@@ -85,6 +93,8 @@ namespace Carrot_QA_test
         {
             InitializeComponent();
         }
+
+
 
         private void InitializeComponent()
         {
@@ -456,10 +466,10 @@ namespace Carrot_QA_test
                     }
                     this.dbTimer.Start();
                 }
+
                 Taginfo tagTimeout = null;
                 foreach (Taginfo tag in tagColl)
                 {
-
                     if (tag.passFlagUpdate)
                     {
                         string icc_id = tag.TagIccID;
@@ -471,39 +481,15 @@ namespace Carrot_QA_test
                             result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
 
                         if (result == 1)
-                            tag.dbString = "OK";
-                        else
-                            tag.dbString = "Fail";
-                        /*if (modeFlag == 1 || (modeFlag == 0 && tag.passFlag == "OK"))
                         {
-                            int let = mydb.regist_server(imei);
-                            if (let == 1)
-                            {
-                                tag.serverString = "OK";
-                            }
-                            else if (let == -1)
-                            {
-                                tag.serverString = "DB Fail";
-                            }
-                            else if (let == -2)
-                            {
-                                tag.serverString = "TS Fail";
-                            }
-                            else if (let == -3)
-                            {
-                                tag.serverString = "MS Fail";
-                            }
-                            else if (let == -4)
-                            {
-                                tag.serverString = "Time Out";
-                                this.dbTimer.Stop();
-                                if (MessageBox.Show("인터넷 연결 상태가 좋지 않습니다. 점검 해주세요.", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
-                                {
-                                    Application.Exit();
-                                }
-                                this.dbTimer.Start();
-                            }
-                        }*/
+                            tag.dbString = "OK";
+                        }
+                        else
+                        {
+                            tag.dbString = "Fail";
+                        }
+                            
+
                         tag.passFlagUpdate = false;
                     }
 
@@ -519,6 +505,31 @@ namespace Carrot_QA_test
                         continue;
                     }
                 }
+
+
+                var sendingAdv = from tag in tagColl
+                                    where tag.SendedImei == true
+                                    select tag.SendedImei;
+
+                Debug.WriteLine($"Count : {sendingAdv.Count()}");
+                if(sendingAdv.Count() == 0)
+                {
+                    //db 전송이 OK, 검사결과가 OK인 목록을 오름차순 으로 추출
+                    var tags = from tag in tagColl
+                               where tag.dbString == "OK" && tag.passFlag == "OK"
+                               orderby tag.updateTime ascending
+                               select tag;
+                    Debug.WriteLine($"Tags : {tags.Count()}");
+                    if (tags.Count() > 0)
+                    {
+                        Taginfo item = tags.First();
+                        item.SendedImei = true;
+                        sleepDevImei = Convert.ToUInt32(item.TagIMEI.Substring(7), 16);
+                        bleSender.SetImei(sleepDevImei);
+                        Debug.WriteLine($"Sleep {item.TagIMEI}");
+                    }
+                }
+
 
                 if (tagTimeout != null)
                 {
@@ -768,10 +779,10 @@ namespace Carrot_QA_test
                         
                         if (section.Data.Length != 21 && section.Data.Length != 24)
                         {
-                            Console.WriteLine($"DataType {section.DataType}");
-                            Console.WriteLine($"DataLegnth {section.Data.Length}");
-                            Console.WriteLine($"Datas {datasection}");
-                            Console.WriteLine("");
+                            Debug.WriteLine($"DataType {section.DataType}");
+                            Debug.WriteLine($"DataLegnth {section.Data.Length}");
+                            Debug.WriteLine($"Datas {datasection}");
+                            Debug.WriteLine("");
                         }
 
                         try
@@ -868,8 +879,6 @@ namespace Carrot_QA_test
                                         if (taginfo.ng2_rawdata_flag)
                                             taginfo.TagFlagString += $"({taginfo.ng2_temp}:{taginfo.ng2_Gold_Temp},{taginfo.ng2_Gold_Temp_Margin})";
                                         taginfo.TagFlagString += ", ";
-
-
 
                                         if ((taginfo.TagFlag & 0x04) == 0x04)
                                             taginfo.TagFlagString += "CAP Fail";
