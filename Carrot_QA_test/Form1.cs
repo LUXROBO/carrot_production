@@ -457,6 +457,7 @@ namespace Carrot_QA_test
                     럭스로보 연구소
                     고정 IP : 112.169.63.43
                 */
+                
                 if (!( ip== "112.169.63.43" || ip == "175.209.190.173" || ip == "112.216.238.122" || ip == "106.245.254.26" || ip == "112.216.234.42" || ip == "112.216.234.43" || ip == "112.216.234.44"))
                 {
                     this.dbTimer.Stop();
@@ -466,6 +467,7 @@ namespace Carrot_QA_test
                     }
                     this.dbTimer.Start();
                 }
+                
 
                 Taginfo tagTimeout = null;
                 foreach (Taginfo tag in tagColl)
@@ -751,11 +753,12 @@ namespace Carrot_QA_test
                         datasection = String.Format("{0}", BitConverter.ToString(data));
                         
                         //Complete Local Name패킷은 아래 로직에서 처리 안함
-                        if (section.DataType == 0x09)
+                        if (section.DataType == 0x09 || section.DataType == 0x01)
                         {
                             continue;
                         }
 
+                        /*
                         try
                         {
                             UInt16 crcRaw = (UInt16)((byte)data[data.Length - 2]<<8 | (byte)data[data.Length - 1]);
@@ -771,7 +774,7 @@ namespace Carrot_QA_test
                             }
                         }
                         catch { continue; }
-
+                        */
                         taginfo.TagDataRaw.Clear();
                         taginfo.TagDataRaw.Add(datasection);
                         taginfo.TagRssi = args.RawSignalStrengthInDBm;
@@ -930,7 +933,7 @@ namespace Carrot_QA_test
 
                                 taginfo.TagBleID = "4C520000-E25D-11EB-BA80-" + taginfo.TagMenu.Substring(18, 12);                  // BLE UUID
                                 //taginfo.TagIMEI = "3596271" + taginfo.TagMenu.Substring(30, 8);                                   // IMEI
-                                taginfo.TagIMEI = "8635930" + taginfo.TagMenu.Substring(30, 8);                                     // IMEI
+                                taginfo.TagIMEI = "3501959" + taginfo.TagMenu.Substring(30, 8);                                     // IMEI
 
                                 if (modeFlag == 1 && taginfo.TagName == "O")
                                     taginfo.TagFlagString = taginfo.TagVersion + " ";
@@ -1021,7 +1024,6 @@ namespace Carrot_QA_test
 
                                 }
                                 // Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " FD :" + taginfo.TagName + "(" + taginfo.TagMac + " / " + args.AdvertisementType.ToString() + ") L:" + section.Data.Length + " Data: " + datasection);
-
                             }
                             else
                             {
