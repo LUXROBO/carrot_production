@@ -79,7 +79,21 @@ namespace Carrot_QA_test
         }
         public static string GetExternalIPAddress()
         {
-            string externalip = new WebClient().DownloadString("http://ipinfo.io/ip").Trim();
+            string externalip = null;
+            
+            try
+            {
+                //externalip = new WebClient().DownloadString("http://ipinfo.io/ip").Trim();
+
+                String reqHtml = new WebClient().DownloadString("http://checkip.dyndns.org/");
+                reqHtml = reqHtml.Substring(reqHtml.IndexOf("Current IP Address:"));
+                reqHtml = reqHtml.Substring(0, reqHtml.IndexOf("</body>"));
+                externalip = reqHtml.Split(':')[1].Trim();
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
 
             if (String.IsNullOrWhiteSpace(externalip))
             {

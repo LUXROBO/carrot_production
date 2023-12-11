@@ -127,7 +127,7 @@ public class Mydb
         Debug.WriteLine($"{DateTime.Now} : {imei} {ng2_type}");
 
 
-        return 1;// new MySqlCommand(str_update, conn).ExecuteNonQuery();
+        return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
     public int UpdateQuery_qa3(string imei, string icc_id, string qa3, string ng3_type, string ble_id)
