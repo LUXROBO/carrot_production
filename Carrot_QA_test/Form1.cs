@@ -65,7 +65,19 @@ namespace Carrot_QA_test
         }
         public static string GetExternalIPAddress()
         {
-            string externalip = new WebClient().DownloadString("http://ipinfo.io/ip").Trim();
+            string externalip = null;
+
+            try
+            {
+                String reqHtml = new WebClient().DownloadString("http://checkip.dyndns.org/");
+                reqHtml = reqHtml.Substring(reqHtml.IndexOf("Current IP Address:"));
+                reqHtml = reqHtml.Substring(0, reqHtml.IndexOf("</body>"));
+                externalip = reqHtml.Split(':')[1].Trim();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
 
             if (String.IsNullOrWhiteSpace(externalip))
             {
@@ -445,9 +457,9 @@ namespace Carrot_QA_test
                     ​고정 IP : 112.216.238.122
                     
                     럭스로보 연구소
-                    고정 IP : 175.209.190.173
+                    고정 IP : 112.169.63.43
                 */
-                if (!(ip == "175.209.190.173" || ip == "112.216.238.122" || ip == "106.245.254.26" || ip == "112.216.234.42" || ip == "112.216.234.43" || ip == "112.216.234.44"))
+                if (!(ip == "112.169.63.43" || ip == "112.216.238.122" || ip == "106.245.254.26" || ip == "112.216.234.42" || ip == "112.216.234.43" || ip == "112.216.234.44"))
                 {
                     this.dbTimer.Stop();
                     if (MessageBox.Show("IP 주소가 다릅니다. VPN과 인터넷 상태를 점검해주세요.","Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
