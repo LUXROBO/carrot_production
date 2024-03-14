@@ -93,7 +93,7 @@ public class Mydb
     {
         if (icc_id == null)
             icc_id = "NULL";
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei =" + imei + ';';
+        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei =" + '"'+ imei +'"' + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
@@ -122,7 +122,7 @@ public class Mydb
             str_update += "\", qa2_lte_b5_avg =\"-"+ taginfo.ng2_b5_avg;
             str_update += "\", qa2_lte_b5_max =\"-"+ taginfo.ng2_b5_max;
         }        
-        str_update += "\" where imei =" + imei + ';';
+        str_update += "\" where imei =" + '"' + imei + '"' + ';';
 
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
@@ -133,7 +133,7 @@ public class Mydb
             icc_id = "NULL";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei =" + imei + ';';
+        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei =" + '"'+ imei +'"' + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
@@ -142,7 +142,7 @@ public class Mydb
         string tdtag = "NG";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
-        string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei =" + imei + ';';
+        string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei =" + '"' +imei + '"'+ ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
@@ -253,13 +253,12 @@ public class Mydb
 
     public Dictionary<string, Plug> GetProduct(string imei)
     {
-        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product where imei=" + imei+";", conn);
+        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product where imei=" + '"' + imei + '"' +";", conn);
         if(pluglist.ContainsKey(imei))
             pluglist.Remove(imei);
         rdr = cmd_select.ExecuteReader();
         while (rdr.Read())
         {
-
             //Console.WriteLine("{0}\t{1}\t{2}", rdr["sn"], rdr["imei"], rdr["icc_id"]);
             Plug data = new Plug();
             try
