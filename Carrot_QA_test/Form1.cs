@@ -255,7 +255,7 @@ namespace Carrot_QA_test
             // dbTimer
             // 
             this.dbTimer.Enabled = true;
-            this.dbTimer.Interval = 1000D;
+            this.dbTimer.Interval = 3000D;
             this.dbTimer.SynchronizingObject = this;
             this.dbTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.DbTimeUp);
             // 
@@ -459,6 +459,7 @@ namespace Carrot_QA_test
                     럭스로보 연구소
                     고정 IP : 112.169.63.43
                 */
+                
                 if (!(ip == "112.169.63.43" || ip == "112.216.238.122" || ip == "106.245.254.26" || ip == "112.216.234.42" || ip == "112.216.234.43" || ip == "112.216.234.44"))
                 {
                     this.dbTimer.Stop();
@@ -468,6 +469,7 @@ namespace Carrot_QA_test
                     }
                     this.dbTimer.Start();
                 }
+
                 Taginfo tagTimeout = null;
                 foreach (Taginfo tag in tagColl)
                 {
@@ -538,9 +540,9 @@ namespace Carrot_QA_test
                     tagColl.Remove(tagTimeout);
                 }
             }
-            catch
+            catch (Exception err)
             {
-
+                Debug.WriteLine("db timer " + err.ToString());
             }
         }
         private void ListTimeUp(object source, ElapsedEventArgs e)
@@ -790,6 +792,7 @@ namespace Carrot_QA_test
                         
                         try
                         {
+                            Debug.WriteLine(section.Data.Length);
                             if(args.AdvertisementType == BluetoothLEAdvertisementType.ScanResponse)
                             {
                                 if(this.tagList.ContainsKey(taginfo.TagMac) == true)
@@ -911,7 +914,7 @@ namespace Carrot_QA_test
                                     taginfo.CarrotPlugFlag = true;
 
                                 }
-                                // Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " FD :" + taginfo.TagName + "(" + taginfo.TagMac + " / " + args.AdvertisementType.ToString() + ") L:" + section.Data.Length + " Data: " + datasection);
+                                //Debug.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " FD :" + taginfo.TagName + "(" + taginfo.TagMac + " / " + args.AdvertisementType.ToString() + ") L:" + section.Data.Length + " Data: " + datasection);
 
                             }
                             else
@@ -921,7 +924,7 @@ namespace Carrot_QA_test
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine(e.Message);
+                            Debug.WriteLine("ble Exception " + e.Message);
                         }
                     }
                 }
