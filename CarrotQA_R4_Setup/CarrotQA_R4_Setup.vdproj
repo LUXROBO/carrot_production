@@ -256,19 +256,19 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_571AAF767495E180BDBE436DAC63689E"
+        "OwnerKey" = "8:_5A073A1AEC613FB99BBECC8143EC674E"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_C31EF5FF7BC688BB5A41A8086C28E2E2"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_B77A9C0FB1EA46FF9ADE6FB1AA183320"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_5A073A1AEC613FB99BBECC8143EC674E"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -287,6 +287,12 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_61DACC87C392C512C1D4282867C16CD6"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_56EAFE58C47F174ECF51E34234E702AC"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -311,12 +317,6 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_F81FC67A77258831D41C630358C94256"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_C31EF5FF7BC688BB5A41A8086C28E2E2"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -436,13 +436,13 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_56EAFE58C47F174ECF51E34234E702AC"
+        "OwnerKey" = "8:_4F52B63F31932FA607A46EBE661EF4FE"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_4F52B63F31932FA607A46EBE661EF4FE"
+        "OwnerKey" = "8:_571AAF767495E180BDBE436DAC63689E"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -463,6 +463,14 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+            }
         }
         "Release"
         {
@@ -479,6 +487,14 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+            }
         }
     }
     "Deployable"
@@ -856,11 +872,6 @@
             "AssemblyAsmDisplayName" = "8:System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_56EAFE58C47F174ECF51E34234E702AC"
-                    {
-                    "Name" = "8:System.Buffers.dll"
-                    "Attributes" = "3:512"
-                    }
                 }
             "SourcePath" = "8:System.Buffers.dll"
             "TargetName" = "8:"
@@ -1307,7 +1318,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Carrot_QA_test, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Carrot_QA_test, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_B77A9C0FB1EA46FF9ADE6FB1AA183320"
@@ -1627,15 +1638,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:CarrotQA_R4"
-        "ProductCode" = "8:{AC004D87-6312-4B7B-A921-7BB97103265E}"
-        "PackageCode" = "8:{12D337ED-8DDE-4935-ABBE-1C0C15B0DD48}"
+        "ProductCode" = "8:{8303D0E8-7E24-4DB8-B409-9A408E8EC220}"
+        "PackageCode" = "8:{E90DDE08-28B0-4F7B-AE85-F2530AE417E5}"
         "UpgradeCode" = "8:{030D677A-3180-49B8-8C85-41044DCEE79E}"
         "AspNetVersion" = "8:2.0.50727.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:2.0.0"
+        "ProductVersion" = "8:4.0.0"
         "Manufacturer" = "8:Luxrobo"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -1651,7 +1662,7 @@
         "UseSystemSearchPath" = "11:TRUE"
         "TargetPlatform" = "3:0"
         "PreBuildEvent" = "8:"
-        "PostBuildEvent" = "8:"
+        "PostBuildEvent" = "8:\r\nsetlocal enabledelayedexpansion\r\n\r\nrem Project Setup 파일\r\nset \"ProjSetupFile=$(ProjectDir)CarrotQA_R4_Setup.vdproj\"\r\n\r\nrem 버전 가져오기\r\nif exist \"%ProjSetupFile%\" (\r\n    for /f \"tokens=2 delims=:\" %%a in (\r\n        'findstr /c:\"ProductVersion\" \"%ProjSetupFile%\"'\r\n    ) do (\r\n        set ProductVer=%%a   \r\n        set ProductVer=!ProductVer:\"=! \r\n        goto Done\r\n    )\r\n)\r\n\r\n:Done\r\necho 추출된 버전: !ProductVer!\r\n\r\nrem 버전에 공백 제거\r\nset \"ProductVer=!ProductVer: =!\"\r\n\r\nrem 기존 MSI 파일 경로\r\nset \"OrigMSI=$(BuiltOuputPath)\"\r\n\r\nrem 변경할 MSI 파일 이름\r\nset \"NewMSI=$(ProjectDir)$(Configuration)\\CarrotQA_R4_Setup_!ProductVer!.msi\"\r\n\r\nrem 이름 변경 수행\r\nif exist \"!OrigMSI!\" (\r\n    echo [INFO] 파일 이름 변경 중...\r\n    copy \"!OrigMSI!\" \"CarrotQA_R4_Setup_v!ProductVer!.msi\"\r\n    echo [OK] 복사 완료: !NewMSI!\r\n) else (\r\n    echo [ERROR] 파일을 찾을 수 없습니다: !OrigMSI!\r\n)\r\n"
         "RunPostBuildEvent" = "3:0"
         }
         "Registry"
