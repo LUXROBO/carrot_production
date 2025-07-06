@@ -85,7 +85,8 @@ namespace Carrot_QA_test
                     return;
                 }
             }
-            MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, sn, icc_id, dtag, qa1, qa2, qa3, ng1_type, ng2_type, ng3_type FROM carrotPlugList.tb_product where imei=" + imei + ";", conn);
+            // MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, sn, icc_id, dtag, qa1, qa2, qa3, ng1_type, ng2_type, ng3_type FROM carrotPlugList.tb_product where imei=" + imei + ";", conn);
+            MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, sn, icc_id, dtag, qa1, qa2, qa3, ng1_type, ng2_type, ng3_type FROM tb_product where imei=" + imei + ";", conn);
             this.rdr = cmd_select.ExecuteReader();
             while (rdr.Read())
             {

@@ -67,6 +67,10 @@ namespace Carrot_QA_test
         private Label ble_label;
         private Label mode_label;
         private SplitContainer splitContainer1;
+        private Label db_label;       
+        private Label db_host;
+        private Label myIP;
+        private Label myIpLabel;
     }
 }
 

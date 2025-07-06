@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31313.79
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33424.131
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Carrot_QA_test", "Carrot_QA_test\Carrot_QA_test.csproj", "{0D4DF1FC-9C81-4031-8607-D33DB529F888}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "CarrotQA_BG770_Setup", "CarrotQA_BG770_Setup\CarrotQA_BG770_Setup.vdproj", "{83DCBCB0-E859-471D-AC80-EBAFF92A7B61}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,8 @@ Global
 		{0D4DF1FC-9C81-4031-8607-D33DB529F888}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0D4DF1FC-9C81-4031-8607-D33DB529F888}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0D4DF1FC-9C81-4031-8607-D33DB529F888}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83DCBCB0-E859-471D-AC80-EBAFF92A7B61}.Debug|Any CPU.ActiveCfg = Debug
+		{83DCBCB0-E859-471D-AC80-EBAFF92A7B61}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
