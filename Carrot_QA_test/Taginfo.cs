@@ -31,7 +31,7 @@ public class Plug {
 public class Mydb
 {
     private MySqlConnection conn;
-    private readonly string ConnUrl = "Server=release-carrot-cluster.cluster-cb10can9foe2.ap-northeast-2.rds.amazonaws.com;Database=carrotPlugList;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
+    private readonly string ConnUrl;
     public MySqlDataReader rdr;
 
     private Dictionary<string, Plug> pluglist = new Dictionary<string, Plug>();
@@ -43,7 +43,8 @@ public class Mydb
 
     // Main Server
     string serverUrl = "https://dtag.carrotins.com:8080/api/v1/dtag/registries";
-    string serverBearer = "Bearer EJH6NE0851819521SSSA7M";
+    string serverBearer = "Bearer VSIDAZ6011517193EJUCUG";
+    // string serverBearer = "Bearer EJH6NE0851819521SSSA7M"; -- 기존키
     string serverHost = "dtag.carrotins.com";
 
     //MainServer "https://dtag.carrotins.com:8080/api/v1/dtag/registries" / "Bearer EJH6NE0851819521SSSA7M" / "dtag.carrotins.com";
@@ -62,23 +63,28 @@ public class Mydb
     public Mydb()
     {
         //mainServerHeaderCollection[HttpRequestHeader.Host]          = "dtag.carrotins.com";
+        ConnUrl = "Server=115.68.195.106;Database=carrotpluglist;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
+
         conn = new MySqlConnection(ConnUrl);
         if (conn.State == ConnectionState.Closed)
         {
             conn.Open();
-            Console.WriteLine("connReader ON");
+            Trace.WriteLine("connReader ON");
             new MySqlCommand("set sql_safe_updates=0;", conn);
         }
     }
 
     public Mydb(string url)
     {
+        ConnUrl = url;
+        conn = new MySqlConnection(ConnUrl);
 
-        conn = new MySqlConnection(url);
+        Trace.WriteLine($"DB URL: {ConnUrl}");
+
         if (conn.State == ConnectionState.Closed)
         {
             conn.Open();
-            Console.WriteLine("connReader ON");
+            Trace.WriteLine("connReader ON");
             new MySqlCommand("set sql_safe_updates=0;", conn);
         }
     }
@@ -93,7 +99,11 @@ public class Mydb
     {
         if (icc_id == null)
             icc_id = "NULL";
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei =" + imei + ';';
+        // string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei ='" + imei + "';";
+        string str_update = "UPDATE tb_product SET icc_id =" + icc_id + " where imei ='" + imei + "';";
+
+        Trace.WriteLine($"ICCI_ID 업데이트 : {imei} {icc_id}");
+
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
@@ -104,7 +114,8 @@ public class Mydb
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
         string str_update;
-        str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id; 
+        // str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id; 
+        str_update = "UPDATE tb_product SET icc_id =" + icc_id; 
         str_update += ", qa2=\"" + qa2;
         str_update += "\", ng2_type=\"" + ng2_type;
         str_update += "\", ble_id =\"" + ble_id;
@@ -115,14 +126,16 @@ public class Mydb
             str_update += "\", qa2_temperature =\"" + taginfo.ng2_temp;
             str_update += "\", qa2_cap =\"" + taginfo.ng2_cap;
             str_update += "\", qa2_ble_rssi =\""+ taginfo.ng2_ble_rssi;
-            str_update += "\", qa2_lte_b3_min =\"-"+ taginfo.ng2_b3_min;
-            str_update += "\", qa2_lte_b3_avg =\"-"+ taginfo.ng2_b3_avg;
-            str_update += "\", qa2_lte_b3_max =\"-"+ taginfo.ng2_b3_max;
-            str_update += "\", qa2_lte_b5_min =\"-"+ taginfo.ng2_b5_min;
-            str_update += "\", qa2_lte_b5_avg =\"-"+ taginfo.ng2_b5_avg;
-            str_update += "\", qa2_lte_b5_max =\"-"+ taginfo.ng2_b5_max;
+            str_update += "\", qa2_lte_b3_min =\"-"+ Math.Abs(taginfo.ng2_b3_min);
+            str_update += "\", qa2_lte_b3_avg =\"-"+ Math.Abs(taginfo.ng2_b3_avg);
+            str_update += "\", qa2_lte_b3_max =\"-"+ Math.Abs(taginfo.ng2_b3_max);
+            str_update += "\", qa2_lte_b5_min =\"-"+ Math.Abs(taginfo.ng2_b5_min);
+            str_update += "\", qa2_lte_b5_avg =\"-"+ Math.Abs(taginfo.ng2_b5_avg);
+            str_update += "\", qa2_lte_b5_max =\"-"+ Math.Abs(taginfo.ng2_b5_max);
         }        
-        str_update += "\" where imei =" + imei + ';';
+        str_update += "\" where imei ='" + imei + "';";
+
+        Trace.WriteLine($"{date_str} : QA2 Update {imei} {ng2_type}");
 
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
@@ -133,8 +146,17 @@ public class Mydb
             icc_id = "NULL";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei =" + imei + ';';
-        return new MySqlCommand(str_update, conn).ExecuteNonQuery();
+        // string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
+        string str_update = "UPDATE tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
+
+        Trace.WriteLine($"{date_str} : QA3 Update {imei} {ng3_type}");
+        return  new MySqlCommand(str_update, conn).ExecuteNonQuery();
+    }
+
+    public static string BuildMySqlConnectionUrl(string server, int port, string database, string user, string password)
+    {
+        string serverPart = port > 0 ? $"{server};Port={port}" : server;
+        return $"Server={serverPart};Database={database};Uid={user};Pwd={password};";
     }
 
     private int UpdateQuery_dtag(string imei, string dtag)
@@ -142,7 +164,8 @@ public class Mydb
         string tdtag = "NG";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
-        string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei =" + imei + ';';
+        // string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
+        string str_update = "UPDATE tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
@@ -253,7 +276,8 @@ public class Mydb
 
     public Dictionary<string, Plug> GetProduct(string imei)
     {
-        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product where imei=" + imei+";", conn);
+        // MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product where imei=" + imei+";", conn);
+        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM tb_product where imei=" + imei+";", conn);
         if(pluglist.ContainsKey(imei))
             pluglist.Remove(imei);
         rdr = cmd_select.ExecuteReader();
@@ -340,7 +364,8 @@ public class Mydb
     public Dictionary<string, Plug> ReflashList()
     {
 
-        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product LIMIT 0,1000; ", conn);
+        // MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product LIMIT 0,1000; ", conn);
+        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM tb_product LIMIT 0,1000; ", conn);
         pluglist.Clear();
         rdr = cmd_select.ExecuteReader();
         while (rdr.Read())
@@ -443,7 +468,7 @@ public class Taginfo : INotifyPropertyChanged
 
     private string flagString = "";
 
-    private uint flag = 0;
+    private uint flag = 0xFF;
     private string _passFlag = "NG";
 
     private int ng2_gpsSnr_raw = 0;
@@ -456,6 +481,18 @@ public class Taginfo : INotifyPropertyChanged
     private int ng2_b5_avg_raw = 0;
     private int ng2_b5_max_raw = 0;
     private int ng2_ble_rssi_raw = 0;
+    
+    /*������ ������*/
+    private int ng2_gold_gps_raw = 0;
+    private int ng2_gold_gps_margin_raw = 0;
+    private int ng2_gold_temp_raw = 0;
+    private int ng2_gold_temp_margin_raw = 0;
+    private int ng2_gold_cap_max_raw = 0;
+    private int ng2_gold_cap_min_raw = 0;
+    private int ng2_gold_b3_raw = 0;
+    private int ng2_gold_b3_margin_raw = 0;
+    private int ng2_gold_b5_raw = 0;
+    private int ng2_gold_b5_margin_raw = 0;
     private bool ng2_rawdata_flag_raw = false;
 
     public ulong btAddress;
@@ -484,10 +521,12 @@ public class Taginfo : INotifyPropertyChanged
     public string TagVersion = "";
     public string dbString = "NG";
     public bool dbFlag = false;
-    public string serverString = "NG";
     public bool serverFlag = false;
     public UInt32 TagVersionNumber = 0;
     public DateTime updateTime;
+
+    public bool SendedImei = false;
+
 
     /** existence of data used to hide/show data on display */
     private bool dataExist = false;
@@ -522,6 +561,22 @@ public class Taginfo : INotifyPropertyChanged
     public int ng2_b5_min   { get { return ng2_b5_min_raw; }    set { ng2_b5_min_raw    = value; OnPropertyChanged("ng2_b5_min"); } }
     public int ng2_b5_avg   { get { return ng2_b5_avg_raw; }    set { ng2_b5_avg_raw    = value; OnPropertyChanged("ng2_b5_avg"); } }
     public int ng2_b5_max   { get { return ng2_b5_max_raw; }    set { ng2_b5_max_raw    = value; OnPropertyChanged("ng2_b5_max"); } }
+
+    public int ng2_Gold_GPS { get { return ng2_gold_gps_raw; } set { ng2_gold_gps_raw = value; OnPropertyChanged("ng2_gold_gps"); } }
+    public int ng2_Gold_GPS_Margin { get { return ng2_gold_gps_margin_raw; } set { ng2_gold_gps_margin_raw = value; OnPropertyChanged("ng2_gold_gps_margin"); } }
+    public int ng2_Gold_Temp { get { return ng2_gold_temp_raw; } set { ng2_gold_temp_raw = value; OnPropertyChanged("ng2_gold_temp"); } }
+    public int ng2_Gold_Temp_Margin { get { return ng2_gold_temp_margin_raw; } set { ng2_gold_temp_margin_raw = value; OnPropertyChanged("ng2_gold_temp_margin"); } }
+
+    public int ng2_Gold_Cap_Max { get { return ng2_gold_cap_max_raw; } set { ng2_gold_cap_max_raw = value; OnPropertyChanged("ng2_gold_cap_max"); } }
+
+    public int ng2_Gold_Cap_Min { get { return ng2_gold_cap_min_raw; } set { ng2_gold_cap_min_raw = value; OnPropertyChanged("ng2_gold_cap_min"); } }
+
+    public int ng2_Gold_b3 { get { return ng2_gold_b3_raw; } set { ng2_gold_b3_raw = value; OnPropertyChanged("ng2_gold_b3"); } }
+    public int ng2_Gold_b3_Margin { get { return ng2_gold_b3_margin_raw; } set { ng2_gold_b3_margin_raw = value; OnPropertyChanged("ng2_gold_b3_margin"); } }
+    public int ng2_Gold_b5 { get { return ng2_gold_b5_raw; } set { ng2_gold_b5_raw = value; OnPropertyChanged("ng2_gold_b5"); } }
+    public int ng2_Gold_b5_Margin { get { return ng2_gold_b5_margin_raw; } set { ng2_gold_b5_margin_raw = value; OnPropertyChanged("ng2_gold_b5_margin"); } }
+    
+
     public bool ng2_rawdata_flag { get { return ng2_rawdata_flag_raw; }    set { ng2_rawdata_flag_raw    = value; OnPropertyChanged("ng2_rawdata_flag"); } }
     public uint TagFlag { get { return flag; } set { flag = value; OnPropertyChanged("TagFlag"); } }
     private string TagCaptorType { get; set; }

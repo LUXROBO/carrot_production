@@ -44,18 +44,20 @@ namespace Carrot_QA_test
             // textBox1
             // 
             this.textBox1.Font = new System.Drawing.Font("굴림", 16F);
-            this.textBox1.Location = new System.Drawing.Point(242, 13);
+            this.textBox1.Location = new System.Drawing.Point(194, 11);
+            this.textBox1.Margin = new System.Windows.Forms.Padding(2);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(552, 44);
+            this.textBox1.Size = new System.Drawing.Size(442, 38);
             this.textBox1.TabIndex = 0;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("굴림", 20F);
-            this.label1.Location = new System.Drawing.Point(12, 14);
+            this.label1.Location = new System.Drawing.Point(10, 12);
+            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(228, 40);
+            this.label1.Size = new System.Drawing.Size(193, 34);
             this.label1.TabIndex = 1;
             this.label1.Text = "QR CODE :";
             // 
@@ -63,19 +65,21 @@ namespace Carrot_QA_test
             // 
             this.QA1_label.AutoSize = true;
             this.QA1_label.Font = new System.Drawing.Font("굴림", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.QA1_label.Location = new System.Drawing.Point(12, 265);
+            this.QA1_label.Location = new System.Drawing.Point(5, 311);
+            this.QA1_label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.QA1_label.Name = "QA1_label";
-            this.QA1_label.Size = new System.Drawing.Size(289, 40);
+            this.QA1_label.Size = new System.Drawing.Size(246, 34);
             this.QA1_label.TabIndex = 2;
             this.QA1_label.Text = "QA1 : No Data";
             // 
             // QA2_label
             // 
             this.QA2_label.AutoSize = true;
-            this.QA2_label.Font = new System.Drawing.Font("굴림", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.QA2_label.Location = new System.Drawing.Point(12, 325);
+            this.QA2_label.Font = new System.Drawing.Font("굴림", 25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.QA2_label.Location = new System.Drawing.Point(5, 402);
+            this.QA2_label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.QA2_label.Name = "QA2_label";
-            this.QA2_label.Size = new System.Drawing.Size(289, 40);
+            this.QA2_label.Size = new System.Drawing.Size(315, 42);
             this.QA2_label.TabIndex = 3;
             this.QA2_label.Text = "QA2 : No Data";
             // 
@@ -83,17 +87,19 @@ namespace Carrot_QA_test
             // 
             this.QA3_label.AutoSize = true;
             this.QA3_label.Font = new System.Drawing.Font("굴림", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.QA3_label.Location = new System.Drawing.Point(12, 384);
+            this.QA3_label.Location = new System.Drawing.Point(11, 493);
+            this.QA3_label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.QA3_label.Name = "QA3_label";
-            this.QA3_label.Size = new System.Drawing.Size(289, 40);
+            this.QA3_label.Size = new System.Drawing.Size(246, 34);
             this.QA3_label.TabIndex = 4;
             this.QA3_label.Text = "QA3 : No Data";
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(815, 18);
+            this.button1.Location = new System.Drawing.Point(652, 15);
+            this.button1.Margin = new System.Windows.Forms.Padding(2);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(148, 39);
+            this.button1.Size = new System.Drawing.Size(118, 32);
             this.button1.TabIndex = 5;
             this.button1.Text = "Close";
             this.button1.UseVisualStyleBackColor = true;
@@ -103,9 +109,10 @@ namespace Carrot_QA_test
             // 
             this.Sn_label.AutoSize = true;
             this.Sn_label.Font = new System.Drawing.Font("굴림", 20F);
-            this.Sn_label.Location = new System.Drawing.Point(12, 143);
+            this.Sn_label.Location = new System.Drawing.Point(10, 119);
+            this.Sn_label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.Sn_label.Name = "Sn_label";
-            this.Sn_label.Size = new System.Drawing.Size(304, 40);
+            this.Sn_label.Size = new System.Drawing.Size(258, 34);
             this.Sn_label.TabIndex = 6;
             this.Sn_label.Text = "Serial Number :";
             // 
@@ -113,9 +120,10 @@ namespace Carrot_QA_test
             // 
             this.did_label.AutoSize = true;
             this.did_label.Font = new System.Drawing.Font("굴림", 20F);
-            this.did_label.Location = new System.Drawing.Point(12, 84);
+            this.did_label.Location = new System.Drawing.Point(10, 70);
+            this.did_label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.did_label.Name = "did_label";
-            this.did_label.Size = new System.Drawing.Size(224, 40);
+            this.did_label.Size = new System.Drawing.Size(189, 34);
             this.did_label.TabIndex = 7;
             this.did_label.Text = "Devcie ID :";
             // 
@@ -123,24 +131,26 @@ namespace Carrot_QA_test
             // 
             this.prodata_labal.AutoSize = true;
             this.prodata_labal.Font = new System.Drawing.Font("굴림", 20F);
-            this.prodata_labal.Location = new System.Drawing.Point(12, 205);
+            this.prodata_labal.Location = new System.Drawing.Point(10, 171);
+            this.prodata_labal.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.prodata_labal.Name = "prodata_labal";
-            this.prodata_labal.Size = new System.Drawing.Size(289, 40);
+            this.prodata_labal.Size = new System.Drawing.Size(246, 34);
             this.prodata_labal.TabIndex = 8;
             this.prodata_labal.Text = "Product Date :";
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(19, 444);
+            this.progressBar1.Location = new System.Drawing.Point(16, 586);
+            this.progressBar1.Margin = new System.Windows.Forms.Padding(2);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(934, 71);
+            this.progressBar1.Size = new System.Drawing.Size(747, 59);
             this.progressBar1.TabIndex = 9;
             // 
             // Form2
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(975, 542);
+            this.ClientSize = new System.Drawing.Size(1238, 698);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.prodata_labal);
             this.Controls.Add(this.did_label);
@@ -151,6 +161,7 @@ namespace Carrot_QA_test
             this.Controls.Add(this.QA1_label);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textBox1);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form2";
             this.Text = "QA Code Scan";
             this.ResumeLayout(false);
