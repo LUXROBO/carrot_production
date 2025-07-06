@@ -9,26 +9,32 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Diagnostics;
 using MySql.Data.MySqlClient;
+using IniFileManager;
 
 namespace Carrot_QA_test
 {
     public partial class Form2 : Form
     {
         private MySqlConnection conn;
-        private readonly string ConnUrl = "Server=release-carrot-cluster.cluster-ro-cb10can9foe2.ap-northeast-2.rds.amazonaws.com;Database=carrotPlugList;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
+        private readonly string ConnUrl; //  = "Server=release-carrot-cluster.cluster-ro-cb10can9foe2.ap-northeast-2.rds.amazonaws.com;Database=carrotPlugList;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
         private MySqlDataReader rdr;
         string ServerVersion;
 
         private StringBuilder _textBoxData = null;
+        private readonly ApplicationSettings appSettings;
 
         public Form2(string version)
         {
+            this.appSettings = ApplicationSettings.Instance();
+
             InitializeComponent();
+
             this.textBox1.KeyPress += this.textBox1_KeyPress;
             _textBoxData = new StringBuilder();
 
             ServerVersion = version;
-            
+
+            this.ConnUrl = this.MydbConnURL();
             this.conn = new MySqlConnection(ConnUrl);
             if (this.conn.State == ConnectionState.Closed)
             {
@@ -36,6 +42,10 @@ namespace Carrot_QA_test
                 Console.WriteLine("connReader ON");
             }
 
+        }
+        private string MydbConnURL()
+        {
+            return Mydb.BuildMySqlConnectionUrl(appSettings.DatabaseServer, appSettings.DatabasePort, appSettings.DatabaseName, appSettings.DatabaseUser, appSettings.DatabasePassword);
         }
 
         private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
@@ -85,7 +95,8 @@ namespace Carrot_QA_test
                     return;
                 }
             }
-            MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, sn, icc_id, dtag, qa1, qa2, qa3, ng1_type, ng2_type, ng3_type FROM carrotPlugList.tb_product where imei=" + imei + ";", conn);
+            // MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, sn, icc_id, dtag, qa1, qa2, qa3, ng1_type, ng2_type, ng3_type FROM carrotPlugList.tb_product where imei=" + imei + ";", conn);
+            MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, sn, icc_id, dtag, qa1, qa2, qa3, ng1_type, ng2_type, ng3_type FROM tb_product where imei=" + imei + ";", conn);
             this.rdr = cmd_select.ExecuteReader();
             while (rdr.Read())
             {

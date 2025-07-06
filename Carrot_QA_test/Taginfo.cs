@@ -31,7 +31,7 @@ public class Plug {
 public class Mydb
 {
     private MySqlConnection conn;
-    private readonly string ConnUrl = "Server=release-carrot-cluster.cluster-cb10can9foe2.ap-northeast-2.rds.amazonaws.com;Database=carrotPlugList;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
+    private readonly string ConnUrl; //  = "Server=release-carrot-cluster.cluster-cb10can9foe2.ap-northeast-2.rds.amazonaws.com;Database=carrotPlugList;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
     public MySqlDataReader rdr;
 
     private Dictionary<string, Plug> pluglist = new Dictionary<string, Plug>();
@@ -61,6 +61,8 @@ public class Mydb
 
     public Mydb()
     {
+        ConnUrl = "Server=115.68.195.106;Database=carrotpluglist;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
+
         //mainServerHeaderCollection[HttpRequestHeader.Host]          = "dtag.carrotins.com";
         conn = new MySqlConnection(ConnUrl);
         if (conn.State == ConnectionState.Closed)
@@ -73,12 +75,14 @@ public class Mydb
 
     public Mydb(string url)
     {
-
+        ConnUrl = url;
         conn = new MySqlConnection(url);
+
+        Trace.WriteLine($"DB URL: {ConnUrl}");
         if (conn.State == ConnectionState.Closed)
         {
             conn.Open();
-            Console.WriteLine("connReader ON");
+            Trace.WriteLine("connReader ON");
             new MySqlCommand("set sql_safe_updates=0;", conn);
         }
     }
@@ -87,13 +91,18 @@ public class Mydb
     {
         conn.Close();
     }
-
+    public static string BuildMySqlConnectionUrl(string server, int port, string database, string user, string password)
+    {
+        string serverPart = port > 0 ? $"{server};Port={port}" : server;
+        return $"Server={serverPart};Database={database};Uid={user};Pwd={password};";
+    }
 
     public int UpdateQuery(string imei, string icc_id)
     {
         if (icc_id == null)
             icc_id = "NULL";
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei ='" + imei + "';";
+        // string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei ='" + imei + "';";
+        string str_update = "UPDATE tb_product SET icc_id =" + icc_id + " where imei ='" + imei + "';";
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
@@ -104,7 +113,8 @@ public class Mydb
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
         string str_update;
-        str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id; 
+        // str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id;
+        str_update = "UPDATE tb_product SET icc_id =" + icc_id;
         str_update += ", qa2=\"" + qa2;
         str_update += "\", ng2_type=\"" + ng2_type;
         str_update += "\", ble_id =\"" + ble_id;
@@ -136,7 +146,8 @@ public class Mydb
             icc_id = "NULL";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
-        string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
+        // string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
+        string str_update = "UPDATE tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
         return  new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
@@ -145,7 +156,8 @@ public class Mydb
         string tdtag = "NG";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
-        string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
+        // string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
+        string str_update = "UPDATE tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
@@ -256,7 +268,8 @@ public class Mydb
 
     public Dictionary<string, Plug> GetProduct(string imei)
     {
-        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product where imei=" + imei+";", conn);
+        // MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product where imei=" + imei+";", conn);
+        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM tb_product where imei=" + imei+";", conn);
         if(pluglist.ContainsKey(imei))
             pluglist.Remove(imei);
         rdr = cmd_select.ExecuteReader();
@@ -343,7 +356,8 @@ public class Mydb
     public Dictionary<string, Plug> ReflashList()
     {
 
-        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product LIMIT 0,1000; ", conn);
+        // MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product LIMIT 0,1000; ", conn);
+        MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM tb_product LIMIT 0,1000; ", conn);
         pluglist.Clear();
         rdr = cmd_select.ExecuteReader();
         while (rdr.Read())

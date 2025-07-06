@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security.Policy;
 using System.Threading.Tasks;
+using IniFileManager;
 
 namespace Carrot_QA_test
 {
@@ -55,11 +56,14 @@ namespace Carrot_QA_test
         Timer listTimer;
         Timer dbTimer;
         Mydb mydb = new Mydb();
-        string pVersion;
-        
+        // string pVersion;
+
         BlePublisher bleSender = BlePublisher.Instance;
 
         UInt32 sleepDevImei = 0;
+
+        private readonly ApplicationSettings appSettings;
+        private bool myIpChecked = false;
 
         public int ServerVersion { get; private set; }
 
@@ -104,13 +108,95 @@ namespace Carrot_QA_test
 
         public Form1()
         {
+            this.appSettings = ApplicationSettings.Instance();
+
+            string connURL = this.MydbConnURL();
+            this.mydb = new Mydb(connURL);
+
             InitializeComponent();
+
+            // Component 생성 이후, 업데이트
+            this.Text = $"Carrot QA - EMT v{VersionManager.Version}";
+            DbConnetUpdate(this.mydb != null ? true : false);
         }
 
 
+        private void DbConnetUpdate(bool connected)
+        {
+            System.Drawing.Color foreColor, backColor;
+            string dbServer = appSettings.DatabaseServer;
+            const int maxLength = 28 + 3;
+            string text;
+
+            if (connected)
+            {
+                foreColor = System.Drawing.Color.Green;
+                backColor = System.Drawing.Color.LightGreen;
+            }
+            else
+            {
+                foreColor = System.Drawing.Color.Red;
+                backColor = System.Drawing.Color.LightPink;
+            }
+
+            text = dbServer;
+            if (dbServer.Length > maxLength)
+            {
+                text = dbServer.Substring(0, maxLength - 3) + "...";
+            }
+
+            dbHost.Text = text;
+            dbHost.ForeColor = foreColor;
+            dbHost.BackColor = backColor;
+        }
+
+
+        private bool ExternalVPNIsValid(string ip)
+        {
+            string[] vpnIpList = { "112.169.63.43", "175.209.190.173", "112.216.238.122", "106.245.254.26", "112.216.234.42", "112.216.234.43", "112.216.234.44" };
+            bool valid;
+
+            if (!myIpChecked)
+            {
+                Trace.WriteLine($"나의 외부 IP 주소: {ip}");
+                myIpChecked = true;
+            }
+
+            if (appSettings.VPNEnable)
+            {
+                if (appSettings.VPNServer.Length > 0)
+                {
+                    valid = appSettings.VPNServer == ip;
+                }
+                else
+                {
+                    valid = vpnIpList.Contains(ip);
+                }
+            }
+            else
+            {
+                valid = true;   // always valid
+            }
+
+            return valid;
+        }
+
+        private void myIPSet(string myIp)
+        {
+            if (myIpAddr.Text != myIp)
+            {
+                this.myIpAddr.Text = myIp;
+            }
+        }
+
+        private string MydbConnURL()
+        {
+            return Mydb.BuildMySqlConnectionUrl(appSettings.DatabaseServer, appSettings.DatabasePort, appSettings.DatabaseName, appSettings.DatabaseUser, appSettings.DatabasePassword);
+        }
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.txtSearch = new System.Windows.Forms.TextBox();
             this.btnStartBle = new System.Windows.Forms.Button();
             this.btnClearBle = new System.Windows.Forms.Button();
@@ -136,6 +222,10 @@ namespace Carrot_QA_test
             this.ble_label = new System.Windows.Forms.Label();
             this.mode_label = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.myIpAddr = new System.Windows.Forms.Label();
+            this.myIpLabel = new System.Windows.Forms.Label();
+            this.dbHost = new System.Windows.Forms.Label();
+            this.dbLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.listTimer)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dbTimer)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -147,20 +237,20 @@ namespace Carrot_QA_test
             // txtSearch
             // 
             this.txtSearch.Font = new System.Drawing.Font("굴림", 12F);
-            this.txtSearch.Location = new System.Drawing.Point(2117, 12);
-            this.txtSearch.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.txtSearch.Location = new System.Drawing.Point(823, 5);
+            this.txtSearch.Margin = new System.Windows.Forms.Padding(2);
             this.txtSearch.Name = "txtSearch";
-            this.txtSearch.Size = new System.Drawing.Size(456, 53);
+            this.txtSearch.Size = new System.Drawing.Size(180, 26);
             this.txtSearch.TabIndex = 0;
             this.txtSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtSearch_KeyDown);
             // 
             // btnStartBle
             // 
             this.btnStartBle.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.btnStartBle.Location = new System.Drawing.Point(1771, 82);
-            this.btnStartBle.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnStartBle.Location = new System.Drawing.Point(689, 33);
+            this.btnStartBle.Margin = new System.Windows.Forms.Padding(2);
             this.btnStartBle.Name = "btnStartBle";
-            this.btnStartBle.Size = new System.Drawing.Size(198, 70);
+            this.btnStartBle.Size = new System.Drawing.Size(77, 28);
             this.btnStartBle.TabIndex = 1;
             this.btnStartBle.Text = "Start";
             this.btnStartBle.UseVisualStyleBackColor = true;
@@ -169,10 +259,10 @@ namespace Carrot_QA_test
             // btnClearBle
             // 
             this.btnClearBle.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.btnClearBle.Location = new System.Drawing.Point(2016, 82);
-            this.btnClearBle.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnClearBle.Location = new System.Drawing.Point(784, 33);
+            this.btnClearBle.Margin = new System.Windows.Forms.Padding(2);
             this.btnClearBle.Name = "btnClearBle";
-            this.btnClearBle.Size = new System.Drawing.Size(374, 70);
+            this.btnClearBle.Size = new System.Drawing.Size(145, 28);
             this.btnClearBle.TabIndex = 2;
             this.btnClearBle.Text = "Clear";
             this.btnClearBle.UseVisualStyleBackColor = true;
@@ -181,10 +271,10 @@ namespace Carrot_QA_test
             // btnSave
             // 
             this.btnSave.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.btnSave.Location = new System.Drawing.Point(2398, 82);
-            this.btnSave.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnSave.Location = new System.Drawing.Point(933, 33);
+            this.btnSave.Margin = new System.Windows.Forms.Padding(2);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(187, 70);
+            this.btnSave.Size = new System.Drawing.Size(73, 28);
             this.btnSave.TabIndex = 4;
             this.btnSave.Text = "Save";
             this.btnSave.UseVisualStyleBackColor = true;
@@ -206,10 +296,10 @@ namespace Carrot_QA_test
             this.listView1.GridLines = true;
             this.listView1.HideSelection = false;
             this.listView1.Location = new System.Drawing.Point(0, 0);
-            this.listView1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.listView1.Margin = new System.Windows.Forms.Padding(2);
             this.listView1.MultiSelect = false;
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(2981, 1782);
+            this.listView1.Size = new System.Drawing.Size(1159, 341);
             this.listView1.TabIndex = 5;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
@@ -266,10 +356,9 @@ namespace Carrot_QA_test
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("굴림", 12F);
-            this.label4.Location = new System.Drawing.Point(1762, 20);
-            this.label4.Margin = new System.Windows.Forms.Padding(7, 0, 7, 0);
+            this.label4.Location = new System.Drawing.Point(685, 8);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(328, 40);
+            this.label4.Size = new System.Drawing.Size(126, 16);
             this.label4.TabIndex = 12;
             this.label4.Text = "BLE Connect ID:";
             // 
@@ -277,20 +366,19 @@ namespace Carrot_QA_test
             // 
             this.modeLabel.AutoSize = true;
             this.modeLabel.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.modeLabel.Location = new System.Drawing.Point(7, 20);
-            this.modeLabel.Margin = new System.Windows.Forms.Padding(7, 0, 7, 0);
+            this.modeLabel.Location = new System.Drawing.Point(3, 8);
             this.modeLabel.Name = "modeLabel";
-            this.modeLabel.Size = new System.Drawing.Size(537, 40);
+            this.modeLabel.Size = new System.Drawing.Size(222, 16);
             this.modeLabel.TabIndex = 13;
             this.modeLabel.Text = "Carrot Plug v3.7.1(omega)";
             // 
             // BtnMode
             // 
             this.BtnMode.Font = new System.Drawing.Font("굴림", 12F);
-            this.BtnMode.Location = new System.Drawing.Point(927, 12);
-            this.BtnMode.Margin = new System.Windows.Forms.Padding(7, 6, 7, 6);
+            this.BtnMode.Location = new System.Drawing.Point(360, 5);
+            this.BtnMode.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.BtnMode.Name = "BtnMode";
-            this.BtnMode.Size = new System.Drawing.Size(324, 56);
+            this.BtnMode.Size = new System.Drawing.Size(126, 22);
             this.BtnMode.TabIndex = 14;
             this.BtnMode.Text = "Mode Change";
             this.BtnMode.UseVisualStyleBackColor = true;
@@ -300,10 +388,10 @@ namespace Carrot_QA_test
             // 
             this.PassCount.AutoSize = true;
             this.PassCount.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.PassCount.Location = new System.Drawing.Point(918, 96);
-            this.PassCount.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.PassCount.Location = new System.Drawing.Point(357, 38);
+            this.PassCount.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.PassCount.Name = "PassCount";
-            this.PassCount.Size = new System.Drawing.Size(43, 40);
+            this.PassCount.Size = new System.Drawing.Size(16, 16);
             this.PassCount.TabIndex = 11;
             this.PassCount.Text = "-";
             // 
@@ -311,10 +399,10 @@ namespace Carrot_QA_test
             // 
             this.Count.AutoSize = true;
             this.Count.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.Count.Location = new System.Drawing.Point(677, 96);
-            this.Count.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.Count.Location = new System.Drawing.Point(263, 38);
+            this.Count.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.Count.Name = "Count";
-            this.Count.Size = new System.Drawing.Size(43, 40);
+            this.Count.Size = new System.Drawing.Size(16, 16);
             this.Count.TabIndex = 10;
             this.Count.Text = "-";
             // 
@@ -322,10 +410,10 @@ namespace Carrot_QA_test
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("굴림", 12F);
-            this.label2.Location = new System.Drawing.Point(317, 96);
-            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label2.Location = new System.Drawing.Point(123, 38);
+            this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(335, 40);
+            this.label2.Size = new System.Drawing.Size(130, 16);
             this.label2.TabIndex = 8;
             this.label2.Text = "Number of Tag : ";
             // 
@@ -333,20 +421,20 @@ namespace Carrot_QA_test
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("굴림", 12F);
-            this.label3.Location = new System.Drawing.Point(763, 96);
-            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label3.Location = new System.Drawing.Point(297, 38);
+            this.label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(133, 40);
+            this.label3.Size = new System.Drawing.Size(54, 16);
             this.label3.TabIndex = 9;
             this.label3.Text = "Pass :";
             // 
             // Scan
             // 
             this.Scan.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.Scan.Location = new System.Drawing.Point(16, 82);
-            this.Scan.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Scan.Location = new System.Drawing.Point(6, 33);
+            this.Scan.Margin = new System.Windows.Forms.Padding(2);
             this.Scan.Name = "Scan";
-            this.Scan.Size = new System.Drawing.Size(241, 70);
+            this.Scan.Size = new System.Drawing.Size(94, 28);
             this.Scan.TabIndex = 17;
             this.Scan.Text = "QR Scan";
             this.Scan.UseVisualStyleBackColor = true;
@@ -356,10 +444,10 @@ namespace Carrot_QA_test
             // 
             this.ble_label.AutoSize = true;
             this.ble_label.Font = new System.Drawing.Font("굴림", 12F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.ble_label.Location = new System.Drawing.Point(2588, 28);
-            this.ble_label.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.ble_label.Location = new System.Drawing.Point(1006, 11);
+            this.ble_label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.ble_label.Name = "ble_label";
-            this.ble_label.Size = new System.Drawing.Size(139, 40);
+            this.ble_label.Size = new System.Drawing.Size(57, 16);
             this.ble_label.TabIndex = 18;
             this.ble_label.Text = "Ready";
             // 
@@ -367,10 +455,9 @@ namespace Carrot_QA_test
             // 
             this.mode_label.AutoSize = true;
             this.mode_label.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
-            this.mode_label.Location = new System.Drawing.Point(576, 20);
-            this.mode_label.Margin = new System.Windows.Forms.Padding(7, 0, 7, 0);
+            this.mode_label.Location = new System.Drawing.Point(224, 8);
             this.mode_label.Name = "mode_label";
-            this.mode_label.Size = new System.Drawing.Size(296, 40);
+            this.mode_label.Size = new System.Drawing.Size(124, 16);
             this.mode_label.TabIndex = 19;
             this.mode_label.Text = "QA Test Mode";
             // 
@@ -378,12 +465,16 @@ namespace Carrot_QA_test
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Margin = new System.Windows.Forms.Padding(7, 6, 7, 6);
+            this.splitContainer1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.myIpAddr);
+            this.splitContainer1.Panel1.Controls.Add(this.myIpLabel);
+            this.splitContainer1.Panel1.Controls.Add(this.dbHost);
+            this.splitContainer1.Panel1.Controls.Add(this.dbLabel);
             this.splitContainer1.Panel1.Controls.Add(this.modeLabel);
             this.splitContainer1.Panel1.Controls.Add(this.btnSave);
             this.splitContainer1.Panel1.Controls.Add(this.ble_label);
@@ -404,21 +495,66 @@ namespace Carrot_QA_test
             // 
             this.splitContainer1.Panel2.Controls.Add(this.listView1);
             this.splitContainer1.Panel2MinSize = 100;
-            this.splitContainer1.Size = new System.Drawing.Size(2981, 1950);
-            this.splitContainer1.SplitterDistance = 160;
+            this.splitContainer1.Size = new System.Drawing.Size(1159, 424);
+            this.splitContainer1.SplitterDistance = 80;
             this.splitContainer1.SplitterIncrement = 4;
-            this.splitContainer1.SplitterWidth = 8;
+            this.splitContainer1.SplitterWidth = 3;
             this.splitContainer1.TabIndex = 20;
+            // 
+            // myIpAddr
+            // 
+            this.myIpAddr.AutoSize = true;
+            this.myIpAddr.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
+            this.myIpAddr.Location = new System.Drawing.Point(1014, 62);
+            this.myIpAddr.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.myIpAddr.Name = "myIpAddr";
+            this.myIpAddr.Size = new System.Drawing.Size(16, 16);
+            this.myIpAddr.TabIndex = 23;
+            this.myIpAddr.Text = "-";
+            // 
+            // myIpLabel
+            // 
+            this.myIpLabel.AutoSize = true;
+            this.myIpLabel.Font = new System.Drawing.Font("굴림", 12F);
+            this.myIpLabel.Location = new System.Drawing.Point(956, 62);
+            this.myIpLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.myIpLabel.Name = "myIpLabel";
+            this.myIpLabel.Size = new System.Drawing.Size(56, 16);
+            this.myIpLabel.TabIndex = 22;
+            this.myIpLabel.Text = "My IP :";
+            // 
+            // dbHost
+            // 
+            this.dbHost.AutoSize = true;
+            this.dbHost.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
+            this.dbHost.Location = new System.Drawing.Point(780, 61);
+            this.dbHost.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.dbHost.Name = "dbHost";
+            this.dbHost.Size = new System.Drawing.Size(16, 16);
+            this.dbHost.TabIndex = 21;
+            this.dbHost.Text = "-";
+            // 
+            // dbLabel
+            // 
+            this.dbLabel.AutoSize = true;
+            this.dbLabel.Font = new System.Drawing.Font("굴림", 12F);
+            this.dbLabel.Location = new System.Drawing.Point(692, 61);
+            this.dbLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.dbLabel.Name = "dbLabel";
+            this.dbLabel.Size = new System.Drawing.Size(86, 16);
+            this.dbLabel.TabIndex = 20;
+            this.dbLabel.Text = "Database :";
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(18F, 30F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(2981, 1950);
+            this.ClientSize = new System.Drawing.Size(1159, 424);
             this.Controls.Add(this.splitContainer1);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
-            this.Text = "Carrot QA Program";
+            this.Text = "Carrot QA - EMT";
             ((System.ComponentModel.ISupportInitialize)(this.listTimer)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dbTimer)).EndInit();
             this.splitContainer1.Panel1.ResumeLayout(false);
@@ -429,7 +565,7 @@ namespace Carrot_QA_test
             this.ResumeLayout(false);
 
         }
-        int bleState = 0;
+        // int bleState = 0;
 
         private void DbTimeUp(object source, ElapsedEventArgs e)
         {
@@ -476,8 +612,11 @@ namespace Carrot_QA_test
                     럭스로보 연구소
                     고정 IP : 112.169.63.43
                 */
-                
-                if (!( ip== "112.169.63.43" || ip == "175.209.190.173" || ip == "112.216.238.122" || ip == "106.245.254.26" || ip == "112.216.234.42" || ip == "112.216.234.43" || ip == "112.216.234.44"))
+
+                myIPSet(ip);
+
+                // if (!( ip== "112.169.63.43" || ip == "175.209.190.173" || ip == "112.216.238.122" || ip == "106.245.254.26" || ip == "112.216.234.42" || ip == "112.216.234.43" || ip == "112.216.234.44"))
+                if (!ExternalVPNIsValid(ip))
                 {
                     this.dbTimer.Stop();
                     if (MessageBox.Show("IP 주소가 다릅니다. VPN과 인터넷 상태를 점검해주세요.","Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
@@ -724,7 +863,7 @@ namespace Carrot_QA_test
             dlg.Show();
         }
 
-        private async void Tag_Received(BluetoothLEAdvertisementWatcher received, BluetoothLEAdvertisementReceivedEventArgs args)
+        private void Tag_Received(BluetoothLEAdvertisementWatcher received, BluetoothLEAdvertisementReceivedEventArgs args)
         {
             string macTemp = args.BluetoothAddress.ToString("X");
 
@@ -1165,7 +1304,7 @@ namespace Carrot_QA_test
                         this.ble_label.Text = "Connecting";
                         DeviceUnpairingResult dupr = await device.DeviceInformation.Pairing.UnpairAsync();
                         Debug.WriteLine($"BLEWATCHER Pairing Complete");
-                        bleState = 1;
+                        // bleState = 1;
                         return;
                     }
                 }
