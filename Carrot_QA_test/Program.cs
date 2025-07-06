@@ -1,5 +1,7 @@
-﻿using System;
+﻿using IniFileManager;
+using System;
 using System.Diagnostics;
+using System.IO;
 using System.Windows.Forms;
 
 namespace Carrot_QA_test
@@ -29,6 +31,11 @@ namespace Carrot_QA_test
                 }
                 else
                 {
+                    // 구성파일로 부터 구성 정보 가져오기
+                    ApplicationSettings settings = AppConfigInit();
+
+                    // 로그 활설화 되어 있으면,  로그 파일 시작
+                    AppLogInit();
 
                     Application.EnableVisualStyles();
                     Application.SetCompatibleTextRenderingDefault(false);
@@ -40,6 +47,40 @@ namespace Carrot_QA_test
             {
                 MessageBox.Show(ex.Message, "Program - Error");
             }
+        }
+
+        private static ApplicationSettings AppConfigInit()
+        {
+            const string configFileName = "config.ini";
+            ApplicationSettings settings = ApplicationSettings.Instance(configFileName);
+
+            settings.DisplaySettings();
+
+            Console.WriteLine($"Version: {VersionManager.Version} {VersionManager.BuildDate}");
+
+            return settings;
+        }
+
+        private static void AppLogInit()
+        {
+            ApplicationSettings settings = ApplicationSettings.Instance();
+            if (!settings.EnableLogging)
+            {
+                return;
+            }
+
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string logFileName = $"trace_{timestamp}.log";
+            string logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, logFileName);
+
+            // 🔁 Trace 리스너 초기화
+            Trace.Listeners.Clear();
+            Trace.AutoFlush = true;
+
+            // 📄 로그 파일에 append 모드로 열기
+            StreamWriter writer = new StreamWriter(logFilePath, append: true);
+            TextWriterTraceListener listener = new TextWriterTraceListener(writer);
+            Trace.Listeners.Add(listener);
         }
     }
 }

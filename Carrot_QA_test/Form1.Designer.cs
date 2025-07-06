@@ -65,10 +65,14 @@ namespace Carrot_QA_test
         private Label label3;
         private Label label2;
         private CheckBox VersionCheck;
-        private Label ServerVersionText;
         private Button Scan;
         private ColumnHeader BLE;
         private Label ble_label;
+        private Label myIPAddr;
+        private Label myIpLabel;
+        private Label dbHost;
+        private Label dbLebel;
+        private Label ServerVersionText;
     }
 }
 
