@@ -32,16 +32,15 @@ namespace Carrot_QA_test
                 }
                 else
                 {
+                    // 구성파일(config.ini)로 부터 구성정보 가져오기
                     ApplicationSettings settings = AppConfigInit();
 
-                    if (settings.EnableLogging)
-                    {
-                        AppLogInit();
-                    }
+                    // 로그 시작 (로그 활성화 시)
+                    AppLogInit();
 
                     Application.EnableVisualStyles();
                     Application.SetCompatibleTextRenderingDefault(false);
-                    Application.Run(new Form1(settings));
+                    Application.Run(new Form1());
                 }
 
             }
@@ -54,7 +53,7 @@ namespace Carrot_QA_test
         private static ApplicationSettings AppConfigInit()
         {
             const string configFileName = "config.ini";
-            var settings = new ApplicationSettings(configFileName);
+            ApplicationSettings settings = ApplicationSettings.Instance(configFileName);
 
             settings.DisplaySettings();
 
@@ -65,6 +64,15 @@ namespace Carrot_QA_test
 
         private static void AppLogInit()
         {
+            const string configFileName = "config.ini";
+
+            ApplicationSettings settings = ApplicationSettings.Instance(configFileName);
+
+            if (!settings.EnableLogging)
+            {
+                return;
+            }
+
             string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             string logFileName = $"trace_{timestamp}.log";
             string logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, logFileName);

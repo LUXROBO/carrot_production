@@ -108,22 +108,16 @@ namespace Carrot_QA_test
 
         public Form1()
         {
+            this.appSettings = ApplicationSettings.Instance();
+
             InitializeComponent();
-
-            this.Text = $"Carrot QA Program v{VersionManager.Version}";
-        }
-
-        public Form1(ApplicationSettings settings)
-        {
-            appSettings = settings;
 
             string connURL = this.MydbConnURL();
             this.mydb = new Mydb(connURL);
 
-            InitializeComponent();
 
-            this.Text = $"Carrot QA Program v{VersionManager.Version}";
-            DbConnetUpdate(this.mydb != null ? true: false);        // DB Host 표시(+ 연결여부)
+            this.Text = $"Carrot QA - BG770 v{VersionManager.Version}";
+            DbConnetUpdate(this.mydb != null ? true : false);        // DB Host 표시(+ 연결여부)
         }
 
         private string MydbConnURL()
@@ -305,9 +299,9 @@ namespace Carrot_QA_test
             this.modeLabel.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
             this.modeLabel.Location = new System.Drawing.Point(3, 8);
             this.modeLabel.Name = "modeLabel";
-            this.modeLabel.Size = new System.Drawing.Size(202, 16);
+            this.modeLabel.Size = new System.Drawing.Size(170, 16);
             this.modeLabel.TabIndex = 13;
-            this.modeLabel.Text = "Carrot Plug v3.7(BG770)";
+            this.modeLabel.Text = "Carrot Plug - BG770";
             // 
             // BtnMode
             // 
@@ -489,7 +483,7 @@ namespace Carrot_QA_test
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
-            this.Text = "Carrot QA Program";
+            this.Text = "Carrot QA - BG770";
             ((System.ComponentModel.ISupportInitialize)(this.listTimer)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dbTimer)).EndInit();
             this.splitContainer1.Panel1.ResumeLayout(false);

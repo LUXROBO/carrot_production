@@ -460,12 +460,6 @@
         "Entry"
         {
         "MsmKey" = "8:_7534C63F24224F2FEE8FE62B0B8F610B"
-        "OwnerKey" = "8:_3D5B0AE6E9068173B3F7CE270182E907"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_7534C63F24224F2FEE8FE62B0B8F610B"
         "OwnerKey" = "8:_8660159E18D84E38A6EB6047518D7FB3"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -473,6 +467,12 @@
         {
         "MsmKey" = "8:_7534C63F24224F2FEE8FE62B0B8F610B"
         "OwnerKey" = "8:_784EF28D6043EC5AD359C7AD263228A5"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_7534C63F24224F2FEE8FE62B0B8F610B"
+        "OwnerKey" = "8:_3D5B0AE6E9068173B3F7CE270182E907"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -682,13 +682,13 @@
         "Entry"
         {
         "MsmKey" = "8:_A82B228D9C06911919A576AC39563E9B"
-        "OwnerKey" = "8:_7BB59A7B205B0AF9A8FA8A4BD078DCEF"
+        "OwnerKey" = "8:_8660159E18D84E38A6EB6047518D7FB3"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_A82B228D9C06911919A576AC39563E9B"
-        "OwnerKey" = "8:_8660159E18D84E38A6EB6047518D7FB3"
+        "OwnerKey" = "8:_7BB59A7B205B0AF9A8FA8A4BD078DCEF"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -796,13 +796,13 @@
         "Entry"
         {
         "MsmKey" = "8:_CCD95285274FD05544E9B1CB88298440"
-        "OwnerKey" = "8:_8660159E18D84E38A6EB6047518D7FB3"
+        "OwnerKey" = "8:_7BB59A7B205B0AF9A8FA8A4BD078DCEF"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_CCD95285274FD05544E9B1CB88298440"
-        "OwnerKey" = "8:_7BB59A7B205B0AF9A8FA8A4BD078DCEF"
+        "OwnerKey" = "8:_8660159E18D84E38A6EB6047518D7FB3"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -964,6 +964,24 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_CCD95285274FD05544E9B1CB88298440"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_A82B228D9C06911919A576AC39563E9B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_7534C63F24224F2FEE8FE62B0B8F610B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_8660159E18D84E38A6EB6047518D7FB3"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -1018,12 +1036,6 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_7534C63F24224F2FEE8FE62B0B8F610B"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_4AFAC0A9C829D3171DA10E26BFF99636"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -1037,18 +1049,6 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_8E8A52DB7E90449D011D177FB461A4FD"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_A82B228D9C06911919A576AC39563E9B"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_CCD95285274FD05544E9B1CB88298440"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -5913,15 +5913,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:CarrotQA_BG770"
-        "ProductCode" = "8:{85333E9C-BA75-4F04-A2F4-CDD3A0975976}"
-        "PackageCode" = "8:{772B270E-603F-4D32-A513-821C01CB2E14}"
+        "ProductCode" = "8:{C307231C-1096-4839-85FD-867C2BDF072A}"
+        "PackageCode" = "8:{60520926-678D-4AAD-B71B-F2360219F16B}"
         "UpgradeCode" = "8:{C8A22AF0-5C69-4E60-BD7A-7E3F2753A682}"
         "AspNetVersion" = "8:2.0.50727.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:2.0.0"
+        "ProductVersion" = "8:4.0.0"
         "Manufacturer" = "8:Luxrobo"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -5937,7 +5937,7 @@
         "UseSystemSearchPath" = "11:TRUE"
         "TargetPlatform" = "3:0"
         "PreBuildEvent" = "8:"
-        "PostBuildEvent" = "8:"
+        "PostBuildEvent" = "8:setlocal enabledelayedexpansion\r\n\r\nrem Project Setup 파일\r\nset \"ProjSetupFile=$(ProjectDir)CarrotQA_BG770_Setup.vdproj\"\r\n\r\nrem 버전 가져오기\r\nif exist \"%ProjSetupFile%\" (\r\n    for /f \"tokens=2 delims=:\" %%a in (\r\n        'findstr /c:\"ProductVersion\" \"%ProjSetupFile%\"'\r\n    ) do (\r\n        set ProductVer=%%a   \r\n        set ProductVer=!ProductVer:\"=! \r\n        goto Done\r\n    )\r\n)\r\n\r\n:Done\r\necho 추출된 버전: !ProductVer!\r\n\r\nrem 버전에 공백 제거\r\nset \"ProductVer=!ProductVer: =!\"\r\n\r\nrem 기존 MSI 파일 경로\r\nset \"OrigMSI=$(BuiltOuputPath)\"\r\n\r\nrem 변경할 MSI 파일 이름\r\nset \"NewMSI=$(ProjectDir)$(Configuration)\\CarrotQA_BG770_Setup_!ProductVer!.msi\"\r\n\r\nrem 이름 변경 수행\r\nif exist \"!OrigMSI!\" (\r\n    echo [INFO] 파일 이름 변경 중...\r\n    copy \"!OrigMSI!\" \"CarrotQA_BG770_Setup_v!ProductVer!.msi\"\r\n    echo [OK] 복사 완료: !NewMSI!\r\n) else (\r\n    echo [ERROR] 파일을 찾을 수 없습니다: !OrigMSI!\r\n)"
         "RunPostBuildEvent" = "3:0"
         }
         "Registry"

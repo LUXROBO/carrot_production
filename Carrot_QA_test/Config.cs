@@ -505,6 +505,8 @@ namespace IniFileManager
     public class ApplicationSettings
     {
         private readonly IniFile _ini;
+        private static ApplicationSettings _instance = null;
+        private static readonly object _lockObject = new object();
 
         // Default 값은 private static readonly로 선언
         private static readonly string DefaultDatabaseServer = "115.68.195.106";
@@ -516,11 +518,32 @@ namespace IniFileManager
         private static readonly string DefaultVPNServer = "";
         private static readonly bool DefaultEnableLogging = false;
 
-        public ApplicationSettings(string configFile = "config.ini")
+        private ApplicationSettings(string configFile)
         {
             _ini = new IniFile(configFile);
             LoadDefaultSettings();
         }
+
+        /// <summary>
+        /// ApplicationSettings 인스턴스 가져오기 (파일명 지정)
+        /// </summary>
+        /// <param name="configFile">설정 파일 경로</param>
+        /// <returns>ApplicationSettings 인스턴스</returns>
+        public static ApplicationSettings Instance(string configFile = "config.ini")
+        {
+            if (_instance == null)
+            {
+                lock (_lockObject)
+                {
+                    if (_instance == null)
+                    {
+                        _instance = new ApplicationSettings(configFile);
+                    }
+                }
+            }
+            return _instance;
+        }
+
 
         // 데이터베이스 설정
         public string DatabaseServer
@@ -590,6 +613,7 @@ namespace IniFileManager
                 this.DatabasePassword = DefaultDatabasePassword;
                 this.VPNEnable = DefaultVPNEnable;
                 this.VPNServer = DefaultVPNServer;
+                this.EnableLogging = DefaultEnableLogging;
 
                 // 기본값으로 초기화
                 SaveSettings();
