@@ -368,9 +368,9 @@ namespace Carrot_QA_test
             this.modeLabel.Font = new System.Drawing.Font("굴림", 12F, System.Drawing.FontStyle.Bold);
             this.modeLabel.Location = new System.Drawing.Point(3, 8);
             this.modeLabel.Name = "modeLabel";
-            this.modeLabel.Size = new System.Drawing.Size(222, 16);
+            this.modeLabel.Size = new System.Drawing.Size(155, 16);
             this.modeLabel.TabIndex = 13;
-            this.modeLabel.Text = "Carrot Plug v3.7.1(omega)";
+            this.modeLabel.Text = "Carrot Plug - EMT";
             // 
             // BtnMode
             // 
