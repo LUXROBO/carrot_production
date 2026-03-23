@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using System.Net;
 using System.IO;
 using System.Diagnostics;
+using IniFileManager;
 
 public class Plug {
     public string qa1;
@@ -36,19 +37,12 @@ public class Mydb
 
     private Dictionary<string, Plug> pluglist = new Dictionary<string, Plug>();
 
-    // Test Server
-    //string serverUrl = "https://t-dtag.carrotins.com:8080/api/v1/dtag/registries";
-    //string serverBearer = "Bearer KXKQNQ64380880304TLRQQ";
-    //string serverHost = "t-dtag.carrotins.com";
+    // V1: 설정 기반 API 정보 (하드코딩 제거)
+    private readonly ApplicationSettings settings;
+    private string serverUrl;
+    private string serverBearer;
+    private string serverHost;
 
-    // Main Server
-    string serverUrl = "https://dtag.carrotins.com:8080/api/v1/dtag/registries";
-    string serverBearer = "Bearer VSIDAZ6011517193EJUCUG";
-    // string serverBearer = "Bearer EJH6NE0851819521SSSA7M"; -- 기존키
-    string serverHost = "dtag.carrotins.com";
-
-    //MainServer "https://dtag.carrotins.com:8080/api/v1/dtag/registries" / "Bearer EJH6NE0851819521SSSA7M" / "dtag.carrotins.com";
-    //TestServer "https://t-dtag.carrotins.com:8080/api/v1/dtag/registries" / "Bearer KXKQNQ64380880304TLRQQ" / "t-dtag.carrotins.com";
     JObject regPayload = new JObject()
         {
             { "deviceId", "LUX1_359627100041471"},
@@ -62,8 +56,27 @@ public class Mydb
 
     public Mydb()
     {
-        //mainServerHeaderCollection[HttpRequestHeader.Host]          = "dtag.carrotins.com";
-        ConnUrl = "Server=115.68.195.106;Database=carrotpluglist;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
+        settings = ApplicationSettings.Instance();
+
+        // V1: 설정에서 API 정보 로드
+        serverUrl = settings.ActiveServerUrl;
+        serverBearer = settings.ActiveServerBearer;
+        serverHost = settings.ActiveServerHost;
+
+        // V1: DB 비활성화 시 연결 스킵
+        if (!settings.EnableDB)
+        {
+            Trace.WriteLine("DB disabled by configuration");
+            return;
+        }
+
+        ConnUrl = BuildMySqlConnectionUrl(
+            settings.DatabaseServer,
+            settings.DatabasePort,
+            settings.DatabaseName,
+            settings.DatabaseUser,
+            settings.DatabasePassword
+        );
 
         conn = new MySqlConnection(ConnUrl);
         if (conn.State == ConnectionState.Closed)
@@ -76,6 +89,21 @@ public class Mydb
 
     public Mydb(string url)
     {
+        settings = ApplicationSettings.Instance();
+
+        // V1: 설정에서 API 정보 로드
+        serverUrl = settings.ActiveServerUrl;
+        serverBearer = settings.ActiveServerBearer;
+        serverHost = settings.ActiveServerHost;
+
+        // V1: DB 비활성화 시 연결 스킵
+        if (!settings.EnableDB)
+        {
+            Trace.WriteLine("DB disabled by configuration");
+            ConnUrl = url;
+            return;
+        }
+
         ConnUrl = url;
         conn = new MySqlConnection(ConnUrl);
 
@@ -89,17 +117,29 @@ public class Mydb
         }
     }
 
+    /// <summary>
+    /// DB 연결 상태 확인
+    /// </summary>
+    public bool IsConnected => settings.EnableDB && conn != null && conn.State == ConnectionState.Open;
+
     ~Mydb()
     {
-        conn.Close();
+        if (conn != null)
+            conn.Close();
     }
 
 
     public int UpdateQuery(string imei, string icc_id)
     {
+        // V1: DB 비활성화 시 스킵
+        if (!IsConnected)
+        {
+            Trace.WriteLine($"DB not available - UpdateQuery skipped for {imei}");
+            return 0;
+        }
+
         if (icc_id == null)
             icc_id = "NULL";
-        // string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei ='" + imei + "';";
         string str_update = "UPDATE tb_product SET icc_id =" + icc_id + " where imei ='" + imei + "';";
 
         Trace.WriteLine($"ICCI_ID 업데이트 : {imei} {icc_id}");
@@ -109,13 +149,19 @@ public class Mydb
 
     public int UpdateQuery_qa2(string imei, string icc_id, string qa2, string ng2_type, string ble_id, Taginfo taginfo)
     {
+        // V1: DB 비활성화 시 스킵
+        if (!IsConnected)
+        {
+            Trace.WriteLine($"DB not available - qa2 update skipped for {imei}");
+            return 0;
+        }
+
         if (icc_id == null)
             icc_id = "NULL";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
         string str_update;
-        // str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id; 
-        str_update = "UPDATE tb_product SET icc_id =" + icc_id; 
+        str_update = "UPDATE tb_product SET icc_id =" + icc_id;
         str_update += ", qa2=\"" + qa2;
         str_update += "\", ng2_type=\"" + ng2_type;
         str_update += "\", ble_id =\"" + ble_id;
@@ -132,7 +178,7 @@ public class Mydb
             str_update += "\", qa2_lte_b5_min =\"-"+ Math.Abs(taginfo.ng2_b5_min);
             str_update += "\", qa2_lte_b5_avg =\"-"+ Math.Abs(taginfo.ng2_b5_avg);
             str_update += "\", qa2_lte_b5_max =\"-"+ Math.Abs(taginfo.ng2_b5_max);
-        }        
+        }
         str_update += "\" where imei ='" + imei + "';";
 
         Trace.WriteLine($"{date_str} : QA2 Update {imei} {ng2_type}");
@@ -142,11 +188,17 @@ public class Mydb
 
     public int UpdateQuery_qa3(string imei, string icc_id, string qa3, string ng3_type, string ble_id)
     {
+        // V1: DB 비활성화 시 스킵
+        if (!IsConnected)
+        {
+            Trace.WriteLine($"DB not available - qa3 update skipped for {imei}");
+            return 0;
+        }
+
         if (icc_id == null)
             icc_id = "NULL";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
-        // string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
         string str_update = "UPDATE tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
 
         Trace.WriteLine($"{date_str} : QA3 Update {imei} {ng3_type}");
@@ -161,10 +213,16 @@ public class Mydb
 
     private int UpdateQuery_dtag(string imei, string dtag)
     {
+        // V1: DB 비활성화 시 스킵
+        if (!IsConnected)
+        {
+            Trace.WriteLine($"DB not available - dtag update skipped for {imei}");
+            return 0;
+        }
+
         string tdtag = "NG";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
-        // string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
         string str_update = "UPDATE tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei ='" + imei + "';";
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
@@ -211,6 +269,13 @@ public class Mydb
 
     public int regist_server(string imei)
     {
+        // V1: API 비활성화 시 스킵
+        if (!settings.EnableAPI)
+        {
+            Trace.WriteLine($"API disabled - skipping registration for {imei}");
+            return 0;
+        }
+
         int ret, return_ret;
         string dtag_string;
         GetProduct(imei);
@@ -262,7 +327,7 @@ public class Mydb
             {
                 return_ret = -4;
             }
-            else 
+            else
             {
                 return_ret = -3;
             }
@@ -276,7 +341,13 @@ public class Mydb
 
     public Dictionary<string, Plug> GetProduct(string imei)
     {
-        // MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product where imei=" + imei+";", conn);
+        // V1: DB 비활성화 시 빈 목록 반환
+        if (!IsConnected)
+        {
+            Trace.WriteLine($"DB not available - GetProduct skipped for {imei}");
+            return pluglist;
+        }
+
         MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM tb_product where imei=" + imei+";", conn);
         if(pluglist.ContainsKey(imei))
             pluglist.Remove(imei);
@@ -363,8 +434,13 @@ public class Mydb
     }
     public Dictionary<string, Plug> ReflashList()
     {
+        // V1: DB 비활성화 시 빈 목록 반환
+        if (!IsConnected)
+        {
+            Trace.WriteLine("DB not available - ReflashList skipped");
+            return pluglist;
+        }
 
-        // MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product LIMIT 0,1000; ", conn);
         MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM tb_product LIMIT 0,1000; ", conn);
         pluglist.Clear();
         rdr = cmd_select.ExecuteReader();

@@ -58,8 +58,15 @@ namespace Carrot_QA_test
         Timer dbTimer;
 
         Mydb mydb;
-        
+        LocalCache localCache;
+        private readonly SimulationEngine simulationEngine = new SimulationEngine();
+
         BlePublisher bleSender = BlePublisher.Instance;
+
+        // V1: 자동 내보내기용 타이머 및 카운터
+        Timer autoExportTimer;
+        private int deviceCountSinceLastExport = 0;
+        private readonly HashSet<string> simulationSeenImei = new HashSet<string>();
 
         UInt32 sleepDevImei = 0;
         private bool myIpChecked = false;
@@ -112,12 +119,89 @@ namespace Carrot_QA_test
 
             InitializeComponent();
 
-            string connURL = this.MydbConnURL();
-            this.mydb = new Mydb(connURL);
+            // V1: 동작 모드에 따른 초기화
+            if (appSettings.IsOnlineMode && appSettings.EnableDB)
+            {
+                string connURL = this.MydbConnURL();
+                this.mydb = new Mydb(connURL);
+            }
 
+            // V1: 로컬 캐시 초기화 (standalone, carrotAPI 모드 또는 Simulation 모드)
+            if (appSettings.IsStandaloneMode || appSettings.IsCarrotMode || appSettings.SimulationMode)
+            {
+                if (appSettings.EnableLocalCache)
+                {
+                    this.localCache = new LocalCache();
+                }
+            }
 
-            this.Text = $"Carrot QA - BG770 v{VersionManager.Version}";
-            DbConnetUpdate(this.mydb != null ? true : false);        // DB Host 표시(+ 연결여부)
+            // V1: 타이틀에 모드 표시
+            string modeText = appSettings.OperationMode.ToString();
+            string titleModeText = appSettings.SimulationMode ? $"{modeText} - Simulation" : modeText;
+            this.Text = $"Carrot QA - BG770 [{titleModeText}] v{VersionManager.Version}";
+
+            DbConnetUpdate(this.mydb != null && this.mydb.IsConnected);
+
+            // V1: 자동 내보내기 초기화
+            InitializeAutoExport();
+
+            // V1: Form 종료 이벤트 등록
+            this.FormClosing += Form1_FormClosing;
+        }
+
+        /// <summary>
+        /// V1: 자동 CSV 내보내기 초기화
+        /// </summary>
+        private void InitializeAutoExport()
+        {
+            if (!appSettings.AutoExportCSV || !appSettings.IsStandaloneMode)
+                return;
+
+            // 선택적: 시간 기반 자동 내보내기 (Interval 트리거)
+            if (appSettings.AutoExportInterval > 0)
+            {
+                autoExportTimer = new Timer();
+                autoExportTimer.Interval = appSettings.AutoExportInterval * 60 * 1000; // 분 → 밀리초
+                autoExportTimer.Elapsed += (s, e) => PerformAutoExport(AutoExportType.Interval);
+                autoExportTimer.Start();
+            }
+        }
+
+        /// <summary>
+        /// V1: 자동 CSV 내보내기 실행
+        /// </summary>
+        private void PerformAutoExport(AutoExportType trigger)
+        {
+            if (localCache == null) return;
+
+            try
+            {
+                string filepath = localCache.ExportToCSV();
+                Trace.WriteLine($"AutoExport [{trigger}]: {filepath}");
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"AutoExport failed [{trigger}]: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// V1: Form 종료 시 자동 내보내기 (AppClose 트리거)
+        /// </summary>
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // 기본 제공: 앱 종료 시 자동 내보내기
+            if (appSettings.AutoExportCSV && appSettings.IsStandaloneMode)
+            {
+                PerformAutoExport(AutoExportType.AppClose);
+            }
+
+            // 타이머 정리
+            if (autoExportTimer != null)
+            {
+                autoExportTimer.Stop();
+                autoExportTimer.Dispose();
+            }
         }
 
         private string MydbConnURL()
@@ -133,6 +217,7 @@ namespace Carrot_QA_test
             this.btnClearBle = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
             this.listView1 = new System.Windows.Forms.ListView();
+            this.No = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.IMEI = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CCID = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.BLE = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -214,6 +299,7 @@ namespace Carrot_QA_test
             // listView1
             // 
             this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.No,
             this.IMEI,
             this.CCID,
             this.BLE,
@@ -235,6 +321,11 @@ namespace Carrot_QA_test
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
             this.listView1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listView1_MouseDoubleClick);
+            // 
+            // No
+            // 
+            this.No.Text = "NO";
+            this.No.Width = 55;
             // 
             // IMEI
             // 
@@ -472,7 +563,7 @@ namespace Carrot_QA_test
             this.db_label.Name = "db_label";
             this.db_label.Size = new System.Drawing.Size(81, 16);
             this.db_label.TabIndex = 20;
-            this.db_label.Text = "Database:";
+            this.db_label.Text = "Operation:";
             // 
             // Form1
             // 
@@ -529,28 +620,38 @@ namespace Carrot_QA_test
         private void DbConnetUpdate(bool connected)
         {
             System.Drawing.Color foreColor, backColor;
-            string dbHost = appSettings.DatabaseServer;
+            string displayText;
             const int maxLength = 28 + 3;
-            string text;
+            bool showMyIp = !appSettings.IsStandaloneMode;
 
-            if (connected)
+            myIpLabel.Visible = showMyIp;
+            myIP.Visible = showMyIp;
+
+            // V1: Standalone 모드 표시
+            if (appSettings.IsStandaloneMode)
+            {
+                foreColor = System.Drawing.Color.Blue;
+                backColor = System.Drawing.Color.LightBlue;
+                displayText = "Standalone";
+            }
+            else if (connected)
             {
                 foreColor = System.Drawing.Color.Green;
                 backColor = System.Drawing.Color.LightGreen;
+                displayText = appSettings.DatabaseServer;
+                if (displayText.Length > maxLength)
+                {
+                    displayText = displayText.Substring(0, maxLength - 3) + "...";
+                }
             }
             else
             {
                 foreColor = System.Drawing.Color.Red;
                 backColor = System.Drawing.Color.LightPink;
+                displayText = "DISCONNECTED";
             }
 
-            text = dbHost;
-            if (dbHost.Length > maxLength)
-            {
-                text = dbHost.Substring(0, maxLength - 3) + "...";
-            }
-
-            db_host.Text = text;
+            db_host.Text = displayText;
             db_host.ForeColor = foreColor;
             db_host.BackColor = backColor;
         }
@@ -570,6 +671,43 @@ namespace Carrot_QA_test
         {
             try
             {
+                if (appSettings.SimulationMode)
+                {
+                    if (this.watchStarted)
+                    {
+                        simulationEngine.Tick(tagColl, tagList);
+                        _passCount = tagColl.Count(tag => tag.passFlag == "OK");
+
+                        // Simulation 모드에서도 신규 디바이스 수 기반 자동 내보내기 처리
+                        if (appSettings.EnableLocalCache && localCache != null)
+                        {
+                            foreach (Taginfo tag in tagColl)
+                            {
+                                if (string.IsNullOrWhiteSpace(tag.TagIMEI))
+                                {
+                                    continue;
+                                }
+
+                                if (simulationSeenImei.Add(tag.TagIMEI))
+                                {
+                                    localCache.SaveTag(tag);
+
+                                    if (appSettings.AutoExportCSV && appSettings.AutoExportDeviceCount > 0)
+                                    {
+                                        deviceCountSinceLastExport++;
+                                        if (deviceCountSinceLastExport >= appSettings.AutoExportDeviceCount)
+                                        {
+                                            PerformAutoExport(AutoExportType.DeviceCount);
+                                            deviceCountSinceLastExport = 0;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return;
+                }
+
                /* if (ServerVersion == 0 )
                 {
                     string url = "https://s3.ap-northeast-2.amazonaws.com/iot.luxrobo.com/Version_factory.txt";
@@ -595,35 +733,37 @@ namespace Carrot_QA_test
                         this.ServerVersionText.Text = "Firmware Version : v"+ majorVersion + "."+ minorVersion + "." + patchVersion;
                     }
                 }*/
-                string ip = GetExternalIPAddress();
-                /*
-                 * 생산현장 
-                    고정 IP : 112.216.234.42
-                    고정 IP : 112.216.234.43
-                    고정 IP : 112.216.234.44  총 3개
-
-                    GPS검사실 
-                    고정 IP : 106.245.254.26
-
-                    개통검사실
-                    ​고정 IP : 112.216.238.122
-                    
-                    럭스로보 연구소
-                    고정 IP : 112.169.63.43
-                */
-
-
-                myIPSet(ip);
-
-                // if (!( ip== "112.169.63.43" || ip == "175.209.190.173" || ip == "112.216.238.122" || ip == "106.245.254.26" || ip == "112.216.234.42" || ip == "112.216.234.43" || ip == "112.216.234.44"))
-                if (!ExternalVPNIsValid(ip)) 
+                if (!appSettings.IsStandaloneMode)
                 {
-                    this.dbTimer.Stop();
-                    if (MessageBox.Show("IP 주소가 다릅니다. VPN과 인터넷 상태를 점검해주세요.","Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                    string ip = GetExternalIPAddress();
+                    /*
+                     * 생산현장 
+                        고정 IP : 112.216.234.42
+                        고정 IP : 112.216.234.43
+                        고정 IP : 112.216.234.44  총 3개
+
+                        GPS검사실 
+                        고정 IP : 106.245.254.26
+
+                        개통검사실
+                        ​고정 IP : 112.216.238.122
+                        
+                        럭스로보 연구소
+                        고정 IP : 112.169.63.43
+                    */
+
+                    myIPSet(ip);
+
+                    // V1: VPN 검증 우회 옵션 추가
+                    if (!appSettings.BypassVPNCheck && !ExternalVPNIsValid(ip))
                     {
-                        Application.Exit();
+                        this.dbTimer.Stop();
+                        if (MessageBox.Show("IP 주소가 다릅니다. VPN과 인터넷 상태를 점검해주세요.","Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                        {
+                            Application.Exit();
+                        }
+                        this.dbTimer.Start();
                     }
-                    this.dbTimer.Start();
                 }
 
                 Taginfo tagTimeout = null;
@@ -634,24 +774,46 @@ namespace Carrot_QA_test
                         string icc_id = tag.TagIccID;
                         string imei = tag.TagIMEI;
                         int result;
-                        if (modeFlag == 0)
-                            result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID, tag);
-                        else
-                            result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
 
-                        if (result == 1)
+                        // V1: DB 활성화 여부에 따른 분기
+                        if (appSettings.EnableDB && mydb != null && mydb.IsConnected)
                         {
-                            tag.dbString = "OK";
+                            if (modeFlag == 0)
+                                result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID, tag);
+                            else
+                                result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
+
+                            tag.dbString = (result == 1) ? "OK" : "Fail";
                         }
                         else
                         {
-                            tag.dbString = "Fail";
+                            // V1: Standalone 모드 - DB 없이 처리
+                            tag.dbString = "Local";
+                            result = 1;
+
+                            // V1: 로컬 캐시 저장
+                            if (appSettings.EnableLocalCache && localCache != null)
+                            {
+                                localCache.SaveTag(tag);
+
+                                // V1: 디바이스 수 기반 자동 내보내기 (DeviceCount 트리거)
+                                if (appSettings.AutoExportDeviceCount > 0)
+                                {
+                                    deviceCountSinceLastExport++;
+                                    if (deviceCountSinceLastExport >= appSettings.AutoExportDeviceCount)
+                                    {
+                                        PerformAutoExport(AutoExportType.DeviceCount);
+                                        deviceCountSinceLastExport = 0;
+                                    }
+                                }
+                            }
                         }
-                            
 
                         tag.passFlagUpdate = false;
                     }
 
+                    // 5초 이상 -120 이하의 RSSI값을 가진 태그는 삭제
+                    // 20초 이상 업데이트가 되지 않은 태그는 삭제
                     TimeSpan timeDiff = DateTime.Now - tag.updateTime;
                     if((tag.TagRssi < -120) && (timeDiff.Seconds > 5))
                     {
@@ -711,9 +873,11 @@ namespace Carrot_QA_test
                     listView1.Items.Clear();
                     try
                     {
+                        int rowNo = 1;
                         foreach (Taginfo tag in tagColl)
                         {
-                            ListViewItem LVI = new ListViewItem(tag.TagIMEI);
+                            ListViewItem LVI = new ListViewItem(rowNo.ToString());
+                            LVI.SubItems.Add(tag.TagIMEI);
                             LVI.SubItems.Add(tag.TagIccID);
                             LVI.SubItems.Add(tag.TagBleID.Substring(tag.TagBleID.Length - 12, 12));
                             LVI.SubItems.Add(Convert.ToString(tag.TagRssi));
@@ -724,14 +888,16 @@ namespace Carrot_QA_test
                             LVI.UseItemStyleForSubItems = false;
                             if(!tag.passFlag.Contains("OK"))
                             {
-                                LVI.SubItems[4].BackColor = System.Drawing.Color.Red;
-                            }
-
-                            if( !tag.dbString.Contains("OK") )
-                            {
                                 LVI.SubItems[5].BackColor = System.Drawing.Color.Red;
                             }
+
+                            // V1: Simulation 모드와 Local 모드에서도 정상 색상 표시
+                            if (!tag.dbString.Contains("OK") && tag.dbString != "SIM" && tag.dbString != "Local")
+                            {
+                                LVI.SubItems[6].BackColor = System.Drawing.Color.Red;
+                            }
                             listView1.Items.Add(LVI);
+                            rowNo++;
                         }
                     }
                     catch
@@ -750,32 +916,46 @@ namespace Carrot_QA_test
         }
         private void BtnStartBle_Click(object sender, EventArgs e)
         {
-            //start scanning
-            if (this.watchStarted == false)
+            if (appSettings.SimulationMode)
             {
-
-                //if (this.modeFlag == 0)
-                //    this.watcher.AdvertisementFilter.Advertisement.LocalName = "Q";
-                //else
-                //    this.watcher.AdvertisementFilter.Advertisement.LocalName = "O";
-                this.watcher.Received += Tag_Received;
-                this.watcher.ScanningMode = BluetoothLEScanningMode.Active;
-                this.watcher.Start();
-                this.watchStarted = true;
-
-                //update pictogram
-                this.btnStartBle.Text = "Stop";
-                
+                this.watchStarted = !this.watchStarted;
+                this.btnStartBle.Text = this.watchStarted ? "Stop" : "Start";
+                Application.DoEvents();
+                return;
             }
-            //stop scanning
-            else if (this.watchStarted == true)
-            {
-                this.watcher.Stop();
-                this.watcher.Received -= Tag_Received;
-                this.watchStarted = false;
 
-                //update pictogram
-                this.btnStartBle.Text = "Start";
+            try
+            {
+                //start scanning
+                if (this.watchStarted == false)
+                {
+                    //if (this.modeFlag == 0)
+                    //    this.watcher.AdvertisementFilter.Advertisement.LocalName = "Q";
+                    //else
+                    //    this.watcher.AdvertisementFilter.Advertisement.LocalName = "O";
+                    this.watcher.Received += Tag_Received;
+                    this.watcher.ScanningMode = BluetoothLEScanningMode.Active;
+                    this.watcher.Start();
+                    this.watchStarted = true;
+
+                    //update pictogram
+                    this.btnStartBle.Text = "Stop";
+                }
+                //stop scanning
+                else if (this.watchStarted == true)
+                {
+                    this.watcher.Stop();
+                    this.watcher.Received -= Tag_Received;
+                    this.watchStarted = false;
+
+                    //update pictogram
+                    this.btnStartBle.Text = "Start";
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"BLE Start/Stop failed: {ex.Message}");
+                MessageBox.Show($"BLE 동작 실패: {ex.Message}", "BLE Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -800,11 +980,17 @@ namespace Carrot_QA_test
             Count.Text = "0";
             PassCount.Text = "0";
             _passCount = 0;
+            simulationEngine.Reset();
+            simulationSeenImei.Clear();
 
+            // V1: Simulation 모드와 실제 BLE 모드 분기 처리
             if (this.watchStarted == true)
             {
-                this.watcher.Stop();
-                this.watcher.Received -= Tag_Received;
+                if (!appSettings.SimulationMode)
+                {
+                    this.watcher.Stop();
+                    this.watcher.Received -= Tag_Received;
+                }
                 this.watchStarted = false;
 
                 //update pictogram
@@ -816,6 +1002,12 @@ namespace Carrot_QA_test
 
         private void BtnClearBle_Click(object sender, EventArgs e)
         {
+            // V1: 기본 제공 - 세션 종료 시 자동 내보내기 (SessionEnd 트리거)
+            if (appSettings.AutoExportCSV && appSettings.IsStandaloneMode)
+            {
+                PerformAutoExport(AutoExportType.SessionEnd);
+            }
+
             this.listView1.BeginUpdate();
             this.listView1.Items.Clear();
             this.listView1.EndUpdate();
@@ -824,6 +1016,9 @@ namespace Carrot_QA_test
             Count.Text = "0";
             PassCount.Text = "0";
             _passCount = 0;
+            deviceCountSinceLastExport = 0;
+            simulationEngine.Reset();
+            simulationSeenImei.Clear();
         }
 
         private void BtnSave_Click(object sender, EventArgs e)
@@ -1088,7 +1283,7 @@ namespace Carrot_QA_test
                                     taginfo.TagFlag = (uint)Convert.ToInt32(taginfo.TagMenu.Substring(17, 1), 16);                      // QA Flag    
 
                                 taginfo.TagBleID = "4C520000-E25D-11EB-BA80-" + taginfo.TagMenu.Substring(18, 12);                  // BLE UUID
-                                //taginfo.TagIMEI = "3596271" + taginfo.TagMenu.Substring(30, 8);                                   // IMEI
+                                //taginfo.TagIMEI = "3596271" + taginfo.TagMenu.Substring(30, 8);     // -- LUX1                              // IMEI
                                 taginfo.TagIMEI = "8635930" + taginfo.TagMenu.Substring(30, 8);                                     // IMEI
 
                                 if (modeFlag == 1 && taginfo.TagName == "O")
@@ -1196,7 +1391,7 @@ namespace Carrot_QA_test
 
                 if (taginfo.CarrotPlugFlag)
                 {
-                    //add new tag
+                    // MAC 주소가 없으면 추가
                     if (this.tagList.ContainsKey(taginfo.TagMac) == false)
                     {
                         this.tagList.Add(taginfo.TagMac, taginfo);
@@ -1248,7 +1443,10 @@ namespace Carrot_QA_test
             if (listView1.SelectedItems.Count == 1)
             {
                 ListViewItem lvitem = listView1.SelectedItems[0];
-                txtSearch.Text = lvitem.SubItems[0].Text;
+                if (lvitem.SubItems.Count > 1)
+                {
+                    txtSearch.Text = lvitem.SubItems[1].Text;
+                }
             }
         }
 

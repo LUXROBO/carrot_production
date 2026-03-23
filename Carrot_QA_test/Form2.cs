@@ -33,15 +33,24 @@ namespace Carrot_QA_test
             _textBoxData = new StringBuilder();
 
             ServerVersion = version;
-            
-            ConnUrl = this.MydbConnURL();
-            this.conn = new MySqlConnection(ConnUrl);
-            if (this.conn.State == ConnectionState.Closed)
-            {
-                this.conn.Open();
-                Console.WriteLine("connReader ON");
-            }
 
+            // V1: DB 활성화 여부에 따른 분기
+            if (appSettings.EnableDB && !appSettings.IsStandaloneMode)
+            {
+                ConnUrl = this.MydbConnURL();
+                this.conn = new MySqlConnection(ConnUrl);
+                if (this.conn.State == ConnectionState.Closed)
+                {
+                    this.conn.Open();
+                    Console.WriteLine("connReader ON");
+                }
+            }
+            else
+            {
+                // V1: DB 비활성화 시 알림
+                MessageBox.Show("DB 연결이 비활성화되어 있습니다.\nStandalone 모드에서는 제품 조회 기능을 사용할 수 없습니다.",
+                               "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         private string MydbConnURL()
@@ -66,6 +75,14 @@ namespace Carrot_QA_test
 
         private void SearchImei(string imeiStr)
         {
+            // V1: DB 연결 확인
+            if (!appSettings.EnableDB || conn == null || conn.State != ConnectionState.Open)
+            {
+                MessageBox.Show("DB 연결을 사용할 수 없습니다.\nStandalone 모드에서는 제품 조회 기능을 사용할 수 없습니다.", "오류",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             this.did_label.Text = "Devcie ID : ";
             this.prodata_labal.Text = "Product Date : ";
             this.Sn_label.Text = "Serial Number : ";

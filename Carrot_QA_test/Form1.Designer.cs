@@ -50,6 +50,7 @@ namespace Carrot_QA_test
         #endregion
 
         private ColumnHeader IMEI;
+        private ColumnHeader No;
         private ColumnHeader CCID;
         private ColumnHeader RSSI;
         private ColumnHeader Pass;
