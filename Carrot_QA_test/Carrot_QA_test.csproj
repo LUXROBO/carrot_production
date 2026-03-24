@@ -107,6 +107,8 @@
     <Compile Include="BlePublisher.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="CRC16.cs" />
+    <Compile Include="LocalCache.cs" />
+    <Compile Include="Simulation.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

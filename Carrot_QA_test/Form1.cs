@@ -65,6 +65,11 @@ namespace Carrot_QA_test
         private readonly ApplicationSettings appSettings;
         private bool myIpChecked = false;
 
+        // V1: Simulation 및 LocalCache
+        private SimulationEngine simulationEngine;
+        private LocalCache localCache;
+        private Timer simulationTimer;
+
         public int ServerVersion { get; private set; }
 
         public static string GetInternalIPAddress()
@@ -110,46 +115,185 @@ namespace Carrot_QA_test
         {
             this.appSettings = ApplicationSettings.Instance();
 
-            string connURL = this.MydbConnURL();
-            this.mydb = new Mydb(connURL);
+            // V1: 모드별 DB 초기화
+            if (appSettings.IsOnlineMode && appSettings.EnableDB)
+            {
+                string connURL = this.MydbConnURL();
+                this.mydb = new Mydb(connURL);
+            }
+            else
+            {
+                // Standalone 모드: DB 연결 없이 초기화
+                this.mydb = new Mydb();
+            }
 
             InitializeComponent();
 
-            // Component 생성 이후, 업데이트
-            this.Text = $"Carrot QA - EMT v{VersionManager.Version}";
-            DbConnetUpdate(this.mydb != null ? true : false);
+            // V1: 모드별 타이틀 표시
+            string modeText = GetModeDisplayText();
+            this.Text = $"Carrot QA - EMT [{modeText}] v{VersionManager.Version}";
+
+            // V1: DB 연결 상태 업데이트
+            DbConnetUpdate(mydb.IsConnected);
+
+            // Standalone 모드에서는 My IP 표시 숨김
+            bool showMyIp = !appSettings.IsStandaloneMode;
+            this.myIpLabel.Visible = showMyIp;
+            this.myIpAddr.Visible = showMyIp;
+
+            // V1: LocalCache 초기화
+            if (appSettings.EnableLocalCache)
+            {
+                localCache = new LocalCache();
+            }
+
+            // V1: Simulation 모드 초기화
+            if (appSettings.EnableSimulation)
+            {
+                simulationEngine = new SimulationEngine();
+                simulationTimer = new Timer(1000); // 1초 간격
+                simulationTimer.Elapsed += SimulationTimer_Elapsed;
+                simulationTimer.AutoReset = true;
+            }
         }
 
+        /// <summary>
+        /// 현재 운영 모드 표시 텍스트 반환
+        /// </summary>
+        private string GetModeDisplayText()
+        {
+            switch (appSettings.OperationMode)
+            {
+                case OperationMode.standalone:
+                    return "Standalone";
+                case OperationMode.luckyboxSolution:
+                    return "LuckyBox";
+                case OperationMode.carrotAPI:
+                    return "CarrotAPI";
+                default:
+                    return "Unknown";
+            }
+        }
+
+        /// <summary>
+        /// V1: Simulation 타이머 이벤트
+        /// </summary>
+        private void SimulationTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            if (simulationEngine == null) return;
+
+            try
+            {
+                this.Invoke((MethodInvoker)delegate
+                {
+                    simulationEngine.Tick(tagColl, tagList);
+                    RefreshListView();
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"SimulationTimer error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// V1: ListView 갱신
+        /// </summary>
+        private void RefreshListView()
+        {
+            try
+            {
+                listView1.BeginUpdate();
+                listView1.Items.Clear();
+                foreach (Taginfo tag in tagColl)
+                {
+                    ListViewItem LVI = new ListViewItem(tag.TagIMEI);
+                    LVI.SubItems.Add(tag.TagIccID);
+                    LVI.SubItems.Add(tag.TagBleID.Substring(tag.TagBleID.Length - 12, 12));
+                    LVI.SubItems.Add(Convert.ToString(tag.TagRssi));
+                    LVI.SubItems.Add(tag.passFlag);
+                    LVI.SubItems.Add(tag.dbString);
+                    LVI.SubItems.Add(Convert.ToString(tag.TagFlagString));
+
+                    LVI.UseItemStyleForSubItems = false;
+                    if (!tag.passFlag.Contains("OK"))
+                    {
+                        LVI.SubItems[4].BackColor = System.Drawing.Color.Red;
+                    }
+                    if (tag.dbString != "OK" && tag.dbString != "SIM" && tag.dbString != "Local")
+                    {
+                        LVI.SubItems[5].BackColor = System.Drawing.Color.Red;
+                    }
+                    listView1.Items.Add(LVI);
+                }
+            }
+            finally
+            {
+                listView1.EndUpdate();
+                Count.Text = tagColl.Count.ToString();
+            }
+        }
+
+        /// <summary>
+        /// V1: Simulation 시작
+        /// </summary>
+        private void StartSimulation()
+        {
+            if (simulationEngine != null && simulationTimer != null)
+            {
+                simulationEngine.Reset();
+                simulationTimer.Start();
+                Debug.WriteLine("Simulation started");
+            }
+        }
+
+        /// <summary>
+        /// V1: Simulation 중지
+        /// </summary>
+        private void StopSimulation()
+        {
+            if (simulationTimer != null)
+            {
+                simulationTimer.Stop();
+                Debug.WriteLine("Simulation stopped");
+            }
+        }
 
         private void DbConnetUpdate(bool connected)
         {
             System.Drawing.Color foreColor, backColor;
-            string dbServer = appSettings.DatabaseServer;
             const int maxLength = 28 + 3;
             string text;
 
-            if (connected)
+            // V1: Standalone 모드 표시
+            if (appSettings.IsStandaloneMode)
+            {
+                foreColor = System.Drawing.Color.Blue;
+                backColor = System.Drawing.Color.LightCyan;
+                text = "Standalone";
+            }
+            else if (connected)
             {
                 foreColor = System.Drawing.Color.Green;
                 backColor = System.Drawing.Color.LightGreen;
+                string dbServer = appSettings.DatabaseServer;
+                text = dbServer;
+                if (dbServer.Length > maxLength)
+                {
+                    text = dbServer.Substring(0, maxLength - 3) + "...";
+                }
             }
             else
             {
                 foreColor = System.Drawing.Color.Red;
                 backColor = System.Drawing.Color.LightPink;
-            }
-
-            text = dbServer;
-            if (dbServer.Length > maxLength)
-            {
-                text = dbServer.Substring(0, maxLength - 3) + "...";
+                text = "Disconnected";
             }
 
             dbHost.Text = text;
             dbHost.ForeColor = foreColor;
             dbHost.BackColor = backColor;
         }
-
 
         private bool ExternalVPNIsValid(string ip)
         {
@@ -543,13 +687,13 @@ namespace Carrot_QA_test
             this.dbLabel.Name = "dbLabel";
             this.dbLabel.Size = new System.Drawing.Size(86, 16);
             this.dbLabel.TabIndex = 20;
-            this.dbLabel.Text = "Database :";
+            this.dbLabel.Text = "Operation:";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1159, 424);
+            this.ClientSize = new System.Drawing.Size(1280, 640);
             this.Controls.Add(this.splitContainer1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(2);
@@ -571,84 +715,86 @@ namespace Carrot_QA_test
         {
             try
             {
-               /* if (ServerVersion == 0 )
+                // V1: VPN 검증 - BypassVPNCheck 또는 Standalone 모드시 스킵
+                if (!appSettings.BypassVPNCheck && appSettings.IsOnlineMode)
                 {
-                    string url = "https://s3.ap-northeast-2.amazonaws.com/iot.luxrobo.com/Version_factory.txt";
-                    string responseText = string.Empty;
+                    string ip = GetExternalIPAddress();
+                    myIPSet(ip);
 
-                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                    request.Method = "GET";
-                    request.Timeout = 30 * 1000; // 30초
-
-                    using (HttpWebResponse resp = (HttpWebResponse)request.GetResponse())
+                    if (!ExternalVPNIsValid(ip))
                     {
-                        HttpStatusCode status = resp.StatusCode;
-                        Stream respStream = resp.GetResponseStream();
-                        using (StreamReader sr = new StreamReader(respStream))
+                        this.dbTimer.Stop();
+                        if (MessageBox.Show("IP 주소가 다릅니다. VPN과 인터넷 상태를 점검해주세요.","Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
                         {
-                            responseText = sr.ReadToEnd();
+                            Application.Exit();
                         }
-
-                        ServerVersion = int.Parse(responseText.Split('\n')[0]);
-                        string majorVersion = ((uint)Convert.ToInt32(ServerVersion / FIRMWARE_MAJOR_MASK)).ToString();
-                        string minorVersion = ((uint)Convert.ToInt32((ServerVersion % FIRMWARE_MAJOR_MASK) / FIRMWARE_MINOR_MASK)).ToString();
-                        string patchVersion = ((uint)Convert.ToInt32((ServerVersion % FIRMWARE_MINOR_MASK) / FIRMWARE_PATCH_MASK)).ToString();
-                        this.ServerVersionText.Text = "Firmware Version : v"+ majorVersion + "."+ minorVersion + "." + patchVersion;
+                        this.dbTimer.Start();
                     }
-                }*/
-                string ip = GetExternalIPAddress();
-                /*
-                 * 생산현장 
-                    고정 IP : 112.216.234.42
-                    고정 IP : 112.216.234.43
-                    고정 IP : 112.216.234.44  총 3개
-
-                    GPS검사실 
-                    고정 IP : 106.245.254.26
-
-                    개통검사실
-                    ​고정 IP : 112.216.238.122
-                    
-                    럭스로보 연구소
-                    고정 IP : 112.169.63.43
-                */
-
-                myIPSet(ip);
-
-                // if (!( ip== "112.169.63.43" || ip == "175.209.190.173" || ip == "112.216.238.122" || ip == "106.245.254.26" || ip == "112.216.234.42" || ip == "112.216.234.43" || ip == "112.216.234.44"))
-                if (!ExternalVPNIsValid(ip))
-                {
-                    this.dbTimer.Stop();
-                    if (MessageBox.Show("IP 주소가 다릅니다. VPN과 인터넷 상태를 점검해주세요.","Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
-                    {
-                        Application.Exit();
-                    }
-                    this.dbTimer.Start();
                 }
-                
+                else if (appSettings.IsStandaloneMode)
+                {
+                    // Standalone 모드: VPN 검사 및 My IP 표시 스킵
+                }
+                else
+                {
+                    // VPN 우회 모드: IP만 표시
+                    string ip = GetExternalIPAddress();
+                    myIPSet(ip);
+                }
 
                 Taginfo tagTimeout = null;
                 foreach (Taginfo tag in tagColl)
                 {
+                    // Standalone 모드에서는 Reg 값을 Pass와 항상 동기화
+                    if (appSettings.IsStandaloneMode)
+                    {
+                        tag.dbString = tag.passFlag == "OK" ? "Local" : "NG";
+                    }
+
                     if (tag.passFlagUpdate)
                     {
-                        string icc_id = tag.TagIccID;
-                        string imei = tag.TagIMEI;
-                        int result;
-                        if (modeFlag == 0)
-                            result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID, tag);
-                        else
-                            result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
+                        // V1: DB 업데이트 조건부 실행
+                        if (appSettings.EnableDB && mydb.IsConnected)
+                        {
+                            string icc_id = tag.TagIccID;
+                            string imei = tag.TagIMEI;
+                            int result;
+                            if (modeFlag == 0)
+                                result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID, tag);
+                            else
+                                result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
 
-                        if (result == 1)
-                        {
-                            tag.dbString = "OK";
+                            if (result == 1)
+                            {
+                                tag.dbString = "OK";
+                            }
+                            else
+                            {
+                                tag.dbString = "Fail";
+                            }
                         }
                         else
                         {
-                            tag.dbString = "Fail";
+                            // Standalone 모드: Pass 결과를 Reg에 반영
+                            if (appSettings.IsStandaloneMode)
+                            {
+                                tag.dbString = tag.passFlag == "OK" ? "Local" : "NG";
+                            }
+                            else
+                            {
+                                // DB 비활성화(VPN 우회 등) 모드
+                                tag.dbString = "OK";
+                            }
+
+                            // V1: LocalCache에 저장
+                            if (localCache != null && appSettings.EnableLocalCache)
+                            {
+                                if (modeFlag == 0)
+                                    localCache.SaveQA2Result(tag.TagIMEI, tag.TagIccID, tag.passFlag, tag.TagFlagString, tag.TagBleID);
+                                else
+                                    localCache.SaveQA3Result(tag.TagIMEI, tag.TagIccID, tag.passFlag, tag.TagFlagString, tag.TagBleID);
+                            }
                         }
-                            
 
                         tag.passFlagUpdate = false;
                     }
@@ -728,7 +874,7 @@ namespace Carrot_QA_test
                                 LVI.SubItems[4].BackColor = System.Drawing.Color.Red;
                             }
 
-                            if( !tag.dbString.Contains("OK") )
+                            if (tag.dbString != "OK" && tag.dbString != "SIM" && tag.dbString != "Local")
                             {
                                 LVI.SubItems[5].BackColor = System.Drawing.Color.Red;
                             }
@@ -829,31 +975,55 @@ namespace Carrot_QA_test
 
         private void BtnSave_Click(object sender, EventArgs e)
         {
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "csv file|*.csv";
-            saveFileDialog.Title = "Save an csv File";
-            saveFileDialog.ShowDialog();
-            if (saveFileDialog.FileName != "")
+            string defaultFileName = $"EMT_Carrot_QA_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
-                System.IO.FileStream fs =
-                    (System.IO.FileStream)saveFileDialog.OpenFile();
-                StreamWriter sw = new StreamWriter(fs,Encoding.UTF8);
+                saveFileDialog.Filter = "CSV file|*.csv|CSV file|*.csv|All files|*.*";
+                saveFileDialog.DefaultExt = "csv";
+                saveFileDialog.AddExtension = true;
+                saveFileDialog.FileName = defaultFileName;
+                saveFileDialog.Title = "Save QA result";
 
-                String WriteLineBuffer = "";
-
-                foreach (Taginfo tag in tagList.Values)
+                if (saveFileDialog.ShowDialog() != DialogResult.OK || string.IsNullOrWhiteSpace(saveFileDialog.FileName))
                 {
-                    if (tag.CarrotPlugFlag)
+                    return;
+                }
+
+                using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName, false, Encoding.UTF8))
+                {
+                    // Header (현재 화면의 컬럼 순서 그대로 저장)
+                    List<string> headers = new List<string>();
+                    foreach (ColumnHeader col in listView1.Columns)
                     {
-                        String WriteLine = tag.TagName + '\t' + tag.TagMenu;
-                        WriteLineBuffer += WriteLine;
-                        sw.WriteLine(WriteLine);
+                        headers.Add(EscapeCsv(col.Text));
+                    }
+                    sw.WriteLine(string.Join(",", headers));
+
+                    // Rows (현재 화면에 표시된 데이터 그대로 저장)
+                    foreach (ListViewItem item in listView1.Items)
+                    {
+                        List<string> fields = new List<string>();
+                        for (int i = 0; i < listView1.Columns.Count; i++)
+                        {
+                            string value = i == 0 ? item.Text : (i < item.SubItems.Count ? item.SubItems[i].Text : string.Empty);
+                            fields.Add(EscapeCsv(value));
+                        }
+                        sw.WriteLine(string.Join(",", fields));
                     }
                 }
-                sw.Close();
-                sw.Dispose();
+            }
+        }
+
+        private static string EscapeCsv(string value)
+        {
+            if (value == null)
+            {
+                return "\"\"";
             }
 
+            string escaped = value.Replace("\"", "\"\"");
+            return $"\"{escaped}\"";
         }
 
 

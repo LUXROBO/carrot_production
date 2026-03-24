@@ -6,6 +6,45 @@ using System.Linq;
 
 namespace IniFileManager
 {
+    #region Enums
+
+    /// <summary>
+    /// 애플리케이션 동작 모드 정의
+    /// </summary>
+    public enum OperationMode
+    {
+        /// <summary>
+        /// 독립 실행 모드 - DB/API 연동 없이 로컬에서만 동작 (기본값)
+        /// </summary>
+        standalone,
+
+        /// <summary>
+        /// 럭키박스 솔루션 연동 모드 - 기존 DB/API 연동
+        /// </summary>
+        luckyboxSolution,
+
+        /// <summary>
+        /// 캐롯 API 연동 모드 - V2 API 준비
+        /// </summary>
+        carrotAPI
+    }
+
+    /// <summary>
+    /// 자동 CSV 내보내기 트리거 타입 정의
+    /// </summary>
+    [Flags]
+    public enum AutoExportType
+    {
+        None = 0,
+        SessionEnd = 1,
+        AppClose = 2,
+        Interval = 4,
+        DeviceCount = 8,
+        Manual = 16
+    }
+
+    #endregion
+
     /// <summary>
     /// INI 파일을 읽고 쓰기 위한 관리 클래스
     /// </summary>
@@ -508,15 +547,49 @@ namespace IniFileManager
         private static ApplicationSettings _instance = null;
         private static readonly object _lockObject = new object();
 
-        // Default 값은 private static readonly로 선언
+        #region Default Values
+
+        // [Application] 섹션 기본값
+        private static readonly bool DefaultEnableLogging = false;
+        private static readonly OperationMode DefaultOperationMode = OperationMode.standalone;
+        private static readonly bool DefaultSimulationMode = false;
+
+        // [DB] 섹션 기본값
         private static readonly string DefaultDatabaseServer = "115.68.195.106";
         private static readonly int DefaultDatabasePort = 3306;
         private static readonly string DefaultDatabaseName = "carrotpluglist";
         private static readonly string DefaultDatabaseUser = "luxrobo";
         private static readonly string DefaultDatabasePassword = "fjrtmfhqh123$";
+        private static readonly bool DefaultEnableDB = true;
+        private static readonly int DefaultConnectionTimeout = 30;
+
+        // [API] 섹션 기본값
+        private static readonly bool DefaultEnableAPI = true;
+        private static readonly string DefaultServerType = "main";
+        private static readonly string DefaultMainServerUrl = "https://dtag.carrotins.com:8080/api/v1/dtag/registries";
+        private static readonly string DefaultMainServerHost = "dtag.carrotins.com";
+        private static readonly string DefaultMainServerBearer = "Bearer VSIDAZ6011517193EJUCUG";
+        private static readonly string DefaultTestServerUrl = "https://t-dtag.carrotins.com:8080/api/v1/dtag/registries";
+        private static readonly string DefaultTestServerHost = "t-dtag.carrotins.com";
+        private static readonly string DefaultTestServerBearer = "Bearer KXKQNQ64380880304TLRQQ";
+
+        // [Network] 섹션 기본값
         private static readonly bool DefaultVPNEnable = true;
         private static readonly string DefaultVPNServer = "";
-        private static readonly bool DefaultEnableLogging = false;
+        private static readonly bool DefaultBypassVPNCheck = false;
+
+        // [LocalStorage] 섹션 기본값
+        private static readonly bool DefaultEnableLocalCache = false;
+        private static readonly string DefaultCacheDirectory = "./cache";
+        private static readonly bool DefaultAutoExportCSV = false;
+        private static readonly int DefaultAutoExportInterval = 10;
+        private static readonly int DefaultAutoExportDeviceCount = 50;
+
+        // [Simulation] 섹션 기본값
+        private static readonly bool DefaultEnableSimulation = false;
+        private static readonly int DefaultSimulationInterval = 1000;
+
+        #endregion
 
         private ApplicationSettings(string configFile)
         {
@@ -594,25 +667,213 @@ namespace IniFileManager
             set => _ini.WriteBool("Application", "EnableLogging", value);
         }
 
-        /* // 애플리케이션 설정
-        public string LogLevel
+        public bool SimulationMode
         {
-            get => _ini.ReadValue("Application", "LogLevel", "Info");
-            set => _ini.WriteValue("Application", "LogLevel", value);
-        }*/
+            get => _ini.ReadBool("Application", "SimulationMode", DefaultSimulationMode);
+            set => _ini.WriteBool("Application", "SimulationMode", value);
+        }
+
+        // V1 신규: 동작 모드 설정
+        public OperationMode OperationMode
+        {
+            get
+            {
+                string modeStr = _ini.ReadValue("Application", "OperationMode", DefaultOperationMode.ToString());
+                return Enum.TryParse<OperationMode>(modeStr, true, out var mode) ? mode : DefaultOperationMode;
+            }
+            set => _ini.WriteValue("Application", "OperationMode", value.ToString());
+        }
+
+        // [DB] 섹션 - V1 신규
+        public bool EnableDB
+        {
+            get => _ini.ReadBool("DB", "EnableDB", DefaultEnableDB);
+            set => _ini.WriteBool("DB", "EnableDB", value);
+        }
+
+        public int ConnectionTimeout
+        {
+            get => _ini.ReadInt("DB", "ConnectionTimeout", DefaultConnectionTimeout);
+            set => _ini.WriteInt("DB", "ConnectionTimeout", value);
+        }
+
+        // [API] 섹션 - V1 신규
+        public bool EnableAPI
+        {
+            get => _ini.ReadBool("API", "EnableAPI", DefaultEnableAPI);
+            set => _ini.WriteBool("API", "EnableAPI", value);
+        }
+
+        public string ServerType
+        {
+            get => _ini.ReadValue("API", "ServerType", DefaultServerType);
+            set => _ini.WriteValue("API", "ServerType", value);
+        }
+
+        public string MainServerUrl
+        {
+            get => _ini.ReadValue("API", "MainServerUrl", DefaultMainServerUrl);
+            set => _ini.WriteValue("API", "MainServerUrl", value);
+        }
+
+        public string MainServerHost
+        {
+            get => _ini.ReadValue("API", "MainServerHost", DefaultMainServerHost);
+            set => _ini.WriteValue("API", "MainServerHost", value);
+        }
+
+        public string MainServerBearer
+        {
+            get => _ini.ReadValue("API", "MainServerBearer", DefaultMainServerBearer);
+            set => _ini.WriteValue("API", "MainServerBearer", value);
+        }
+
+        public string TestServerUrl
+        {
+            get => _ini.ReadValue("API", "TestServerUrl", DefaultTestServerUrl);
+            set => _ini.WriteValue("API", "TestServerUrl", value);
+        }
+
+        public string TestServerHost
+        {
+            get => _ini.ReadValue("API", "TestServerHost", DefaultTestServerHost);
+            set => _ini.WriteValue("API", "TestServerHost", value);
+        }
+
+        public string TestServerBearer
+        {
+            get => _ini.ReadValue("API", "TestServerBearer", DefaultTestServerBearer);
+            set => _ini.WriteValue("API", "TestServerBearer", value);
+        }
+
+        // [Network] 섹션 - V1 신규
+        public bool BypassVPNCheck
+        {
+            get => _ini.ReadBool("Network", "BypassVPNCheck", DefaultBypassVPNCheck);
+            set => _ini.WriteBool("Network", "BypassVPNCheck", value);
+        }
+
+        // [LocalStorage] 섹션 - V1 신규
+        public bool EnableLocalCache
+        {
+            get => _ini.ReadBool("LocalStorage", "EnableLocalCache", DefaultEnableLocalCache);
+            set => _ini.WriteBool("LocalStorage", "EnableLocalCache", value);
+        }
+
+        public string CacheDirectory
+        {
+            get => _ini.ReadValue("LocalStorage", "CacheDirectory", DefaultCacheDirectory);
+            set => _ini.WriteValue("LocalStorage", "CacheDirectory", value);
+        }
+
+        public bool AutoExportCSV
+        {
+            get => _ini.ReadBool("LocalStorage", "AutoExportCSV", DefaultAutoExportCSV);
+            set => _ini.WriteBool("LocalStorage", "AutoExportCSV", value);
+        }
+
+        public int AutoExportInterval
+        {
+            get => _ini.ReadInt("LocalStorage", "AutoExportInterval", DefaultAutoExportInterval);
+            set => _ini.WriteInt("LocalStorage", "AutoExportInterval", value);
+        }
+
+        public int AutoExportDeviceCount
+        {
+            get => _ini.ReadInt("LocalStorage", "AutoExportDeviceCount", DefaultAutoExportDeviceCount);
+            set => _ini.WriteInt("LocalStorage", "AutoExportDeviceCount", value);
+        }
+
+        // [Simulation] 섹션 - V1 신규
+        public bool EnableSimulation
+        {
+            get => _ini.ReadBool("Simulation", "EnableSimulation", DefaultEnableSimulation);
+            set => _ini.WriteBool("Simulation", "EnableSimulation", value);
+        }
+
+        public int SimulationInterval
+        {
+            get => _ini.ReadInt("Simulation", "SimulationInterval", DefaultSimulationInterval);
+            set => _ini.WriteInt("Simulation", "SimulationInterval", value);
+        }
+
+        #region Helper Properties
+
+        /// <summary>
+        /// 현재 설정된 서버 타입에 따른 활성 서버 URL
+        /// </summary>
+        public string ActiveServerUrl => ServerType == "main" ? MainServerUrl : TestServerUrl;
+
+        /// <summary>
+        /// 현재 설정된 서버 타입에 따른 활성 서버 호스트
+        /// </summary>
+        public string ActiveServerHost => ServerType == "main" ? MainServerHost : TestServerHost;
+
+        /// <summary>
+        /// 현재 설정된 서버 타입에 따른 활성 서버 Bearer 토큰
+        /// </summary>
+        public string ActiveServerBearer => ServerType == "main" ? MainServerBearer : TestServerBearer;
+
+        /// <summary>
+        /// 온라인 모드 여부 (luckyboxSolution 또는 carrotAPI)
+        /// </summary>
+        public bool IsOnlineMode => OperationMode == OperationMode.luckyboxSolution || OperationMode == OperationMode.carrotAPI;
+
+        /// <summary>
+        /// Standalone 모드 여부
+        /// </summary>
+        public bool IsStandaloneMode => OperationMode == OperationMode.standalone;
+
+        /// <summary>
+        /// CarrotAPI 모드 여부
+        /// </summary>
+        public bool IsCarrotMode => OperationMode == OperationMode.carrotAPI;
+
+        #endregion
 
         private void LoadDefaultSettings()
         {
             if (!_ini.FileExists)
             {
+                // [Application] 섹션
+                this.EnableLogging = DefaultEnableLogging;
+                this.OperationMode = DefaultOperationMode;
+                this.SimulationMode = DefaultSimulationMode;
+
+                // [DB] 섹션
                 this.DatabaseServer = DefaultDatabaseServer;
                 this.DatabasePort = DefaultDatabasePort;
                 this.DatabaseName = DefaultDatabaseName;
                 this.DatabaseUser = DefaultDatabaseUser;
                 this.DatabasePassword = DefaultDatabasePassword;
+                this.EnableDB = DefaultEnableDB;
+                this.ConnectionTimeout = DefaultConnectionTimeout;
+
+                // [API] 섹션
+                this.EnableAPI = DefaultEnableAPI;
+                this.ServerType = DefaultServerType;
+                this.MainServerUrl = DefaultMainServerUrl;
+                this.MainServerHost = DefaultMainServerHost;
+                this.MainServerBearer = DefaultMainServerBearer;
+                this.TestServerUrl = DefaultTestServerUrl;
+                this.TestServerHost = DefaultTestServerHost;
+                this.TestServerBearer = DefaultTestServerBearer;
+
+                // [Network] 섹션
                 this.VPNEnable = DefaultVPNEnable;
                 this.VPNServer = DefaultVPNServer;
-                this.EnableLogging = DefaultEnableLogging;
+                this.BypassVPNCheck = DefaultBypassVPNCheck;
+
+                // [LocalStorage] 섹션
+                this.EnableLocalCache = DefaultEnableLocalCache;
+                this.CacheDirectory = DefaultCacheDirectory;
+                this.AutoExportCSV = DefaultAutoExportCSV;
+                this.AutoExportInterval = DefaultAutoExportInterval;
+                this.AutoExportDeviceCount = DefaultAutoExportDeviceCount;
+
+                // [Simulation] 섹션
+                this.EnableSimulation = DefaultEnableSimulation;
+                this.SimulationInterval = DefaultSimulationInterval;
 
                 // 기본값으로 초기화
                 SaveSettings();
@@ -637,11 +898,18 @@ namespace IniFileManager
         public void DisplaySettings()
         {
             Console.WriteLine("=== 현재 설정 ===");
+            Console.WriteLine($"동작 모드: {OperationMode}");
             Console.WriteLine($"데이터베이스 서버: {DatabaseServer}:{DatabasePort}");
             Console.WriteLine($"데이터베이스명: {DatabaseName}");
             Console.WriteLine($"사용자: {DatabaseUser}");
+            Console.WriteLine($"DB 활성화: {EnableDB}");
+            Console.WriteLine($"API 활성화: {EnableAPI}");
+            Console.WriteLine($"서버 타입: {ServerType}");
             Console.WriteLine($"VPNEnable: {VPNEnable}");
             Console.WriteLine($"VPNServer: {VPNServer}");
+            Console.WriteLine($"VPN 검증 우회: {BypassVPNCheck}");
+            Console.WriteLine($"로컬 캐시: {EnableLocalCache}");
+            Console.WriteLine($"자동 CSV 내보내기: {AutoExportCSV}");
             Console.WriteLine($"로깅: {EnableLogging}");
         }
     }
