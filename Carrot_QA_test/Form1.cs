@@ -347,7 +347,11 @@ namespace Carrot_QA_test
             this.listView1.Margin = new System.Windows.Forms.Padding(2);
             this.listView1.MultiSelect = false;
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(964, 689);
+            this.listView1.Size = new System.Drawing.Size(1264, 703);
+            this.listView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top
+            | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.listView1.TabIndex = 5;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
@@ -576,7 +580,7 @@ namespace Carrot_QA_test
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(983, 761);
+            this.ClientSize = new System.Drawing.Size(1280, 800);
             this.Controls.Add(this.myIPAddr);
             this.Controls.Add(this.myIpLabel);
             this.Controls.Add(this.dbHost);
