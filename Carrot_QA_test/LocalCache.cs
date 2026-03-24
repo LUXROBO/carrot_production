@@ -267,7 +267,7 @@ namespace Carrot_QA_test
         /// </summary>
         public string ExportToCSV()
         {
-            string filename = $"QA_Result_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            string filename = $"LUX2_QA_Result_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
             string filepath = Path.Combine(exportsDir, filename);
 
             var sb = new StringBuilder();

@@ -1026,7 +1026,7 @@ namespace Carrot_QA_test
             SaveFileDialog saveFileDialog = new SaveFileDialog();
             saveFileDialog.Filter = "CSV 파일|*.csv";
             saveFileDialog.Title = "CSV 파일 저장";
-            saveFileDialog.FileName = $"QA_Result_{DateTime.Now:yyyyMMdd_HHmmss}";
+            saveFileDialog.FileName = $"LUX2_QA_Result_{DateTime.Now:yyyyMMdd_HHmmss}";
 
             if (saveFileDialog.ShowDialog() == DialogResult.OK && !string.IsNullOrEmpty(saveFileDialog.FileName))
             {
