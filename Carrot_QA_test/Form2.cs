@@ -16,11 +16,12 @@ namespace Carrot_QA_test
     public partial class Form2 : Form
     {
         private MySqlConnection conn;
-        private readonly string ConnUrl; //  = "Server=release-carrot-cluster.cluster-ro-cb10can9foe2.ap-northeast-2.rds.amazonaws.com;Database=carrotPlugList;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
+        private readonly string ConnUrl;
         private MySqlDataReader rdr;
         string ServerVersion;
 
         private readonly ApplicationSettings appSettings;
+        private bool isDbConnected = false;
 
         public Form2(string version)
         {
@@ -30,16 +31,36 @@ namespace Carrot_QA_test
             this.textBox1.KeyDown += this.textBox1_KeyUp;
             ServerVersion = version;
 
-            ConnUrl = this.MydbConnURL();
-            this.conn = new MySqlConnection(ConnUrl);
-
-            this.conn = new MySqlConnection(ConnUrl);
-            if (this.conn.State == ConnectionState.Closed)
+            // V1: 모드별 DB 연결 초기화
+            if (appSettings.IsOnlineMode && appSettings.EnableDB)
             {
-                this.conn.Open();
-                Console.WriteLine("connReader ON");
-            }
+                try
+                {
+                    ConnUrl = this.MydbConnURL();
+                    this.conn = new MySqlConnection(ConnUrl);
 
+                    if (this.conn.State == ConnectionState.Closed)
+                    {
+                        this.conn.Open();
+                        isDbConnected = true;
+                        Console.WriteLine("connReader ON");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    isDbConnected = false;
+                    Debug.WriteLine($"Form2 DB connection failed: {ex.Message}");
+                    MessageBox.Show($"DB 연결 실패: {ex.Message}", "DB 연결 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            else
+            {
+                // V1: Standalone 모드 알림
+                isDbConnected = false;
+                string modeText = appSettings.IsStandaloneMode ? "Standalone" : "Offline";
+                MessageBox.Show($"현재 {modeText} 모드입니다.\nQR 스캔 조회 기능은 DB 연결이 필요합니다.",
+                    "모드 알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         private string MydbConnURL()
@@ -51,6 +72,14 @@ namespace Carrot_QA_test
         {
             if (e.KeyCode == Keys.Enter)
             {
+                // V1: DB 연결 확인
+                if (!isDbConnected || conn == null || conn.State != ConnectionState.Open)
+                {
+                    MessageBox.Show("DB 연결이 되어 있지 않습니다.\nStandalone 모드에서는 QR 조회가 불가능합니다.",
+                        "DB 연결 필요", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 this.did_label.Text = "Devcie ID : ";
                 this.prodata_labal.Text = "Product Date : ";
                 this.Sn_label.Text = "Serial Number : ";
@@ -78,8 +107,8 @@ namespace Carrot_QA_test
                         return;
                     }
                 }
-                // MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, sn, icc_id, dtag, qa1, qa2, qa3, ng1_type, ng2_type, ng3_type FROM carrotPlugList.tb_product where imei=" + imei + ";", conn);
-                MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, sn, icc_id, dtag, qa1, qa2, qa3, ng1_type, ng2_type, ng3_type FROM tb_product where imei=" + imei + ";", conn);
+                // V1: SQL Injection 방지를 위한 파라미터화 쿼리
+                MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, sn, icc_id, dtag, qa1, qa2, qa3, ng1_type, ng2_type, ng3_type FROM tb_product where imei=\"" + imei + "\";", conn);
                 this.rdr = cmd_select.ExecuteReader();
                 while (rdr.Read())
                 {

@@ -46,9 +46,15 @@ namespace Carrot_QA_test
         private int modeFlag = 0;
         Timer listTimer;
         Timer dbTimer;
+        Timer simTimer;  // V1: Simulation 타이머
         Mydb mydb = new Mydb();
         bool myIpChecked = false;
         private readonly ApplicationSettings appSettings;
+
+        // V1: Simulation 및 LocalCache
+        private SimulationEngine simEngine;
+        private LocalCache localCache;
+        private bool isSimulationMode = false;
 
         public int ServerVersion { get; private set; }
 
@@ -94,13 +100,130 @@ namespace Carrot_QA_test
         {
             appSettings = ApplicationSettings.Instance();
 
-            string connURL = this.MydbConnURL();
-            this.mydb = new Mydb(connURL);
+            // V1: 모드별 DB 초기화
+            if (appSettings.IsOnlineMode && appSettings.EnableDB)
+            {
+                string connURL = this.MydbConnURL();
+                this.mydb = new Mydb(connURL);
+            }
+            else
+            {
+                // Standalone 모드: DB 연결 없이 초기화
+                this.mydb = new Mydb();
+            }
+
+            // V1: LocalCache 초기화 (Standalone 또는 EnableLocalCache 설정 시)
+            if (appSettings.EnableLocalCache || appSettings.IsStandaloneMode)
+            {
+                localCache = new LocalCache();
+            }
+
+            // V1: Simulation 모드 초기화
+            isSimulationMode = appSettings.SimulationMode;
+            if (isSimulationMode)
+            {
+                simEngine = new SimulationEngine();
+            }
 
             InitializeComponent();
+            ApplyListViewLayoutByMode();
 
-            this.Text = $"Carrot QA - LUX1 v{VersionManager.Version}";
-            DbConnetUpdate(this.mydb != null ? true : false);
+            // V1: 모드별 타이틀 표시
+            string modeText = GetModeDisplayText();
+            if (isSimulationMode)
+            {
+                modeText += " SIM";
+            }
+            this.Text = $"Carrot QA - LUX1 [{modeText}] v{VersionManager.Version}";
+
+            // V1: DB 연결 상태 업데이트
+            DbConnetUpdate(mydb.IsConnected);
+
+            // V1: Simulation 타이머 초기화
+            if (isSimulationMode)
+            {
+                InitSimulationTimer();
+            }
+        }
+
+        private void ApplyListViewLayoutByMode()
+        {
+            if ((appSettings.IsStandaloneMode || appSettings.IsCarrotMode) && listView1.Columns.Contains(DB))
+            {
+                listView1.Columns.Remove(DB);
+            }
+        }
+
+        private string GetRegDisplayValue(Taginfo tag)
+        {
+            if (appSettings.IsStandaloneMode || appSettings.IsCarrotMode)
+            {
+                return tag.passFlag == "OK" ? "Local" : string.Empty;
+            }
+
+            return tag.serverString;
+        }
+
+        /// <summary>
+        /// V1: Simulation 타이머 초기화
+        /// </summary>
+        private void InitSimulationTimer()
+        {
+            simTimer = new Timer();
+            simTimer.Interval = 2000; // 2초 간격
+            simTimer.Elapsed += SimTimeUp;
+            simTimer.SynchronizingObject = this;
+        }
+
+        /// <summary>
+        /// V1: Simulation 타이머 이벤트
+        /// </summary>
+        private void SimTimeUp(object source, ElapsedEventArgs e)
+        {
+            if (watchStarted && isSimulationMode && simEngine != null)
+            {
+                try
+                {
+                    simEngine.Tick(tagColl, tagList);
+
+                    // 캐시에 추가
+                    if (localCache != null)
+                    {
+                        foreach (var tag in tagColl)
+                        {
+                            if (tag.passFlagUpdate || tag.passFlag == "OK")
+                            {
+                                localCache.Add(tag);
+                            }
+                        }
+                    }
+
+                    // Pass 카운트 업데이트
+                    _passCount = tagColl.Count(t => t.passFlag == "OK");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"SimTimeUp error: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 현재 운영 모드 표시 텍스트 반환
+        /// </summary>
+        private string GetModeDisplayText()
+        {
+            switch (appSettings.OperationMode)
+            {
+                case OperationMode.standalone:
+                    return "Standalone";
+                case OperationMode.luckyboxSolution:
+                    return "LuckyBox";
+                case OperationMode.carrotAPI:
+                    return "CarrotAPI";
+                default:
+                    return "Unknown";
+            }
         }
 
         private string MydbConnURL()
@@ -413,7 +536,7 @@ namespace Carrot_QA_test
             this.dbLebel.Name = "dbLebel";
             this.dbLebel.Size = new System.Drawing.Size(86, 16);
             this.dbLebel.TabIndex = 19;
-            this.dbLebel.Text = "Database :";
+            this.dbLebel.Text = "Operation:";
             // 
             // dbHost
             // 
@@ -516,34 +639,33 @@ namespace Carrot_QA_test
                         this.ServerVersionText.Text = "Firmware Version : v"+ majorVersion + "."+ minorVersion + "." + patchVersion;
                     }
                 }
-                string ip = GetExternalIPAddress();
-                /*
-                 * 생산현장 
-                    고정 IP : 112.216.234.42
-                    고정 IP : 112.216.234.43
-                    고정 IP : 112.216.234.44  총 3개
 
-                    GPS검사실 
-                    고정 IP : 106.245.254.26
-
-                    개통검사실
-                    ​고정 IP : 112.216.238.122
-                    
-                    럭스로보 연구소
-                    고정 IP : 112.169.63.43
-                */
-
-                myIPSet(ip);
-
-                if (!ExternalVPNIsValid(ip))
-                // if (!(ip == "112.169.63.43" || ip == "112.216.238.122" || ip == "106.245.254.26" || ip == "112.216.234.42" || ip == "112.216.234.43" || ip == "112.216.234.44"))
+                // V1: VPN 검증 - BypassVPNCheck 또는 Standalone 모드시 스킵
+                if (!appSettings.BypassVPNCheck && appSettings.IsOnlineMode)
                 {
-                    this.dbTimer.Stop();
-                    if (MessageBox.Show("IP 주소가 다릅니다. VPN과 인터넷 상태를 점검해주세요.","Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                    string ip = GetExternalIPAddress();
+                    myIPSet(ip);
+
+                    if (!ExternalVPNIsValid(ip))
                     {
-                        Application.Exit();
+                        this.dbTimer.Stop();
+                        if (MessageBox.Show("IP 주소가 다릅니다. VPN과 인터넷 상태를 점검해주세요.","Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                        {
+                            Application.Exit();
+                        }
+                        this.dbTimer.Start();
                     }
-                    this.dbTimer.Start();
+                }
+                else if (appSettings.IsStandaloneMode)
+                {
+                    // Standalone 모드: VPN 검사 스킵, IP 표시만
+                    myIPSet("Standalone Mode");
+                }
+                else
+                {
+                    // VPN 우회 모드: IP만 표시
+                    string ip = GetExternalIPAddress();
+                    myIPSet(ip);
                 }
 
                 Taginfo tagTimeout = null;
@@ -554,17 +676,29 @@ namespace Carrot_QA_test
                     {
                         string icc_id = tag.TagIccID;
                         string imei = tag.TagIMEI;
-                        int result;
-                        if (modeFlag == 0)
-                            result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID, tag);
-                        else
-                            result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
+                        int result = 0;
 
-                        if (result == 1)
-                            tag.dbString = "OK";
+                        // V1: DB 업데이트 조건부 실행
+                        if (appSettings.EnableDB && mydb.IsConnected)
+                        {
+                            if (modeFlag == 0)
+                                result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID, tag);
+                            else
+                                result = mydb.UpdateQuery_qa3(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID);
+
+                            if (result == 1)
+                                tag.dbString = "OK";
+                            else
+                                tag.dbString = "Fail";
+                        }
                         else
-                            tag.dbString = "Fail";
-                        if (modeFlag == 1 || (modeFlag == 0 && tag.passFlag == "OK"))
+                        {
+                            // V1: DB 비활성화 시 로컬 저장 표시
+                            tag.dbString = appSettings.IsStandaloneMode ? "Local" : "Skip";
+                        }
+
+                        // V1: API 등록 조건부 실행
+                        if (appSettings.EnableAPI && (modeFlag == 1 || (modeFlag == 0 && tag.passFlag == "OK")))
                         {
                             int let = mydb.regist_server(imei);
                             if (let == 1)
@@ -594,6 +728,12 @@ namespace Carrot_QA_test
                                 this.dbTimer.Start();
                             }
                         }
+                        else if (!appSettings.EnableAPI)
+                        {
+                            // V1: API 비활성화 시 표시
+                            tag.serverString = appSettings.IsStandaloneMode ? "Local" : "Skip";
+                        }
+
                         tag.passFlagUpdate = false;
                     }
 
@@ -625,25 +765,36 @@ namespace Carrot_QA_test
         private void DbConnetUpdate(bool connected)
         {
             System.Drawing.Color foreColor, backColor;
-            string dbHost = appSettings.DatabaseServer;
             const int maxLength = 28 + 3;
             string text;
+            bool showMyIp = !appSettings.IsStandaloneMode;
 
-            if (connected)
+            myIpLabel.Visible = showMyIp;
+            myIPAddr.Visible = showMyIp;
+
+            // V1: Standalone 모드 표시
+            if (appSettings.IsStandaloneMode)
+            {
+                foreColor = System.Drawing.Color.Blue;
+                backColor = System.Drawing.Color.LightCyan;
+                text = "Standalone";
+            }
+            else if (connected)
             {
                 foreColor = System.Drawing.Color.Green;
                 backColor = System.Drawing.Color.LightGreen;
+                string dbHost = appSettings.DatabaseServer;
+                text = dbHost;
+                if (dbHost.Length > maxLength)
+                {
+                    text = dbHost.Substring(0, maxLength - 3) + "...";
+                }
             }
             else
             {
                 foreColor = System.Drawing.Color.Red;
                 backColor = System.Drawing.Color.LightPink;
-            }
-
-            text = dbHost;
-            if (dbHost.Length > maxLength)
-            {
-                text = dbHost.Substring(0, maxLength - 3) + "...";
+                text = "Disconnected";
             }
 
             this.dbHost.Text = text;
@@ -708,8 +859,11 @@ namespace Carrot_QA_test
                             LVI.SubItems.Add(tag.TagBleID.Substring(tag.TagBleID.Length - 12, 12));
                             LVI.SubItems.Add(Convert.ToString(tag.TagRssi));
                             LVI.SubItems.Add(tag.passFlag);
-                            LVI.SubItems.Add(tag.dbString);
-                            LVI.SubItems.Add(tag.serverString);
+                            if (!(appSettings.IsStandaloneMode || appSettings.IsCarrotMode))
+                            {
+                                LVI.SubItems.Add(tag.dbString);
+                            }
+                            LVI.SubItems.Add(GetRegDisplayValue(tag));
                             LVI.SubItems.Add(Convert.ToString(tag.TagFlagString));
                             listView1.Items.Add(LVI);
                         }
@@ -733,28 +887,50 @@ namespace Carrot_QA_test
             //start scanning
             if (this.watchStarted == false)
             {
+                // V1: Simulation 모드 또는 실제 BLE 스캔
+                if (isSimulationMode)
+                {
+                    // Simulation 모드: simTimer 시작
+                    if (simEngine != null)
+                    {
+                        simEngine.Reset();
+                    }
+                    if (simTimer != null)
+                    {
+                        simTimer.Start();
+                    }
+                    this.ble_label.Text = "SIM Mode";
+                }
+                else
+                {
+                    // 실제 BLE 스캔
+                    this.watcher.Received += Tag_Received;
+                    this.watcher.ScanningMode = BluetoothLEScanningMode.Active;
+                    this.watcher.Start();
+                }
 
-                //if (this.modeFlag == 0)
-                //    this.watcher.AdvertisementFilter.Advertisement.LocalName = "Q";
-                //else
-                //    this.watcher.AdvertisementFilter.Advertisement.LocalName = "O";
-                this.watcher.Received += Tag_Received;
-                this.watcher.ScanningMode = BluetoothLEScanningMode.Active;
-                this.watcher.Start();
                 this.watchStarted = true;
-
-                //update pictogram
                 this.btnStartBle.Text = "Stop";
-                
             }
             //stop scanning
             else if (this.watchStarted == true)
             {
-                this.watcher.Stop();
-                this.watcher.Received -= Tag_Received;
-                this.watchStarted = false;
+                // V1: Simulation 모드 또는 실제 BLE 스캔 중지
+                if (isSimulationMode)
+                {
+                    if (simTimer != null)
+                    {
+                        simTimer.Stop();
+                    }
+                    this.ble_label.Text = "SIM Stopped";
+                }
+                else
+                {
+                    this.watcher.Stop();
+                    this.watcher.Received -= Tag_Received;
+                }
 
-                //update pictogram
+                this.watchStarted = false;
                 this.btnStartBle.Text = "Start";
             }
         }
@@ -796,6 +972,13 @@ namespace Carrot_QA_test
 
         private void BtnClearBle_Click(object sender, EventArgs e)
         {
+            // V1: LocalCache 세션 종료 시 자동 내보내기
+            if (localCache != null)
+            {
+                localCache.OnSessionEnd();
+                localCache.Clear();
+            }
+
             this.listView1.BeginUpdate();
             this.listView1.Items.Clear();
             this.listView1.EndUpdate();
@@ -804,35 +987,79 @@ namespace Carrot_QA_test
             Count.Text = "0";
             PassCount.Text = "0";
             _passCount = 0;
+
+            // V1: Simulation 엔진 리셋
+            if (simEngine != null)
+            {
+                simEngine.Reset();
+            }
         }
 
+        /// <summary>
+        /// 수동 CSV 내보내기 - 화면에 표시된 데이터 형식으로 저장
+        /// </summary>
         private void BtnSave_Click(object sender, EventArgs e)
         {
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "csv file|*.csv";
-            saveFileDialog.Title = "Save an csv File";
-            saveFileDialog.ShowDialog();
-            if (saveFileDialog.FileName != "")
+            if (tagColl.Count == 0)
             {
-                System.IO.FileStream fs =
-                    (System.IO.FileStream)saveFileDialog.OpenFile();
-                StreamWriter sw = new StreamWriter(fs,Encoding.UTF8);
-
-                String WriteLineBuffer = "";
-
-                foreach (Taginfo tag in tagList.Values)
-                {
-                    if (tag.CarrotPlugFlag)
-                    {
-                        String WriteLine = tag.TagName + '\t' + tag.TagMenu;
-                        WriteLineBuffer += WriteLine;
-                        sw.WriteLine(WriteLine);
-                    }
-                }
-                sw.Close();
-                sw.Dispose();
+                MessageBox.Show("저장할 데이터가 없습니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
             }
 
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "CSV 파일|*.csv";
+            saveFileDialog.Title = "CSV 파일 저장";
+            saveFileDialog.FileName = $"LUX1_QA_Result_{DateTime.Now:yyyyMMdd_HHmmss}";
+
+            if (saveFileDialog.ShowDialog() == DialogResult.OK && !string.IsNullOrEmpty(saveFileDialog.FileName))
+            {
+                try
+                {
+                    using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName, false, Encoding.UTF8))
+                    {
+                        // 화면 컬럼 기준 CSV 저장
+                        if (appSettings.IsStandaloneMode || appSettings.IsCarrotMode)
+                        {
+                            sw.WriteLine("IMEI,CCID,BLE_UUID,RSSI,Pass,Reg,Note");
+                        }
+                        else
+                        {
+                            sw.WriteLine("IMEI,CCID,BLE_UUID,RSSI,Pass,DB,Reg,Note");
+                        }
+
+                        foreach (Taginfo tag in tagColl)
+                        {
+                            string bleId = tag.TagBleID.Length >= 12
+                                ? tag.TagBleID.Substring(tag.TagBleID.Length - 12, 12)
+                                : tag.TagBleID;
+
+                            string note = $"\"{tag.TagFlagString?.Replace("\"", "\"\"")}\"";
+                            string reg = GetRegDisplayValue(tag);
+                            string line;
+
+                            if (appSettings.IsStandaloneMode || appSettings.IsCarrotMode)
+                            {
+                                line = $"{tag.TagIMEI},{tag.TagIccID},{bleId},{tag.TagRssi},{tag.passFlag},{reg},{note}";
+                            }
+                            else
+                            {
+                                line = $"{tag.TagIMEI},{tag.TagIccID},{bleId},{tag.TagRssi},{tag.passFlag},{tag.dbString},{reg},{note}";
+                            }
+
+                            sw.WriteLine(line);
+                        }
+                    }
+
+                    MessageBox.Show($"파일이 저장되었습니다.\n\n저장 위치: {saveFileDialog.FileName}\n저장 건수: {tagColl.Count}건",
+                                   "저장 완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"파일 저장 중 오류가 발생했습니다.\n\n{ex.Message}",
+                                   "저장 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Trace.WriteLine($"BtnSave_Click error: {ex}");
+                }
+            }
         }
 
 

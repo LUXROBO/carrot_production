@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using System.Net;
 using System.IO;
 using System.Diagnostics;
+using IniFileManager;
 
 public class Plug {
     public string qa1;
@@ -31,23 +32,17 @@ public class Plug {
 public class Mydb
 {
     private MySqlConnection conn;
-    private readonly string ConnUrl; //  "Server=release-carrot-cluster.cluster-cb10can9foe2.ap-northeast-2.rds.amazonaws.com;Database=carrotPlugList;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
+    private readonly string ConnUrl;
     public MySqlDataReader rdr;
 
     private Dictionary<string, Plug> pluglist = new Dictionary<string, Plug>();
 
-    // Test Server
-    //string serverUrl = "https://t-dtag.carrotins.com:8080/api/v1/dtag/registries";
-    //string serverBearer = "Bearer KXKQNQ64380880304TLRQQ";
-    //string serverHost = "t-dtag.carrotins.com";
+    // V1: 설정 기반 API 정보
+    private readonly ApplicationSettings settings;
+    private string serverUrl;
+    private string serverBearer;
+    private string serverHost;
 
-    // Main Server
-    string serverUrl = "https://dtag.carrotins.com:8080/api/v1/dtag/registries";
-    string serverBearer = "Bearer EJH6NE0851819521SSSA7M";
-    string serverHost = "dtag.carrotins.com";
-
-    //MainServer "https://dtag.carrotins.com:8080/api/v1/dtag/registries" / "Bearer EJH6NE0851819521SSSA7M" / "dtag.carrotins.com";
-    //TestServer "https://t-dtag.carrotins.com:8080/api/v1/dtag/registries" / "Bearer KXKQNQ64380880304TLRQQ" / "t-dtag.carrotins.com";
     JObject regPayload = new JObject()
         {
             { "deviceId", "LUX1_359627100041471"},
@@ -59,34 +54,67 @@ public class Mydb
             { "prddt", "2021-01-19" }
         };
 
+    /// <summary>
+    /// V1: DB 연결 상태 확인
+    /// </summary>
+    public bool IsConnected => settings.EnableDB && conn != null && conn.State == ConnectionState.Open;
+
     public Mydb()
     {
-        //mainServerHeaderCollection[HttpRequestHeader.Host]          = "dtag.carrotins.com";
+        settings = ApplicationSettings.Instance();
 
-        // �⺻ Database - LuckyBoxSoluation
-        ConnUrl = "Server=115.68.195.106;Database=carrotpluglist;Uid=luxrobo;Pwd=fjrtmfhqh123$;";
+        // V1: 설정에서 API 정보 로드
+        serverUrl = settings.ActiveServerUrl;
+        serverBearer = settings.ActiveServerBearer;
+        serverHost = settings.ActiveServerHost;
 
-        conn = new MySqlConnection(ConnUrl);
-        if (conn.State == ConnectionState.Closed)
+        // V1: DB 활성화 여부에 따른 연결
+        if (settings.EnableDB)
         {
-            conn.Open();
-            Console.WriteLine("connReader ON");
-            new MySqlCommand("set sql_safe_updates=0;", conn);
+            ConnUrl = BuildMySqlConnectionUrl(
+                settings.DatabaseServer,
+                settings.DatabasePort,
+                settings.DatabaseName,
+                settings.DatabaseUser,
+                settings.DatabasePassword);
+
+            conn = new MySqlConnection(ConnUrl);
+            if (conn.State == ConnectionState.Closed)
+            {
+                conn.Open();
+                Console.WriteLine("connReader ON");
+                new MySqlCommand("set sql_safe_updates=0;", conn);
+            }
         }
     }
 
     public Mydb(string url)
     {
-        ConnUrl = url;
-        conn = new MySqlConnection(ConnUrl);
+        settings = ApplicationSettings.Instance();
 
-        Trace.WriteLine($"DB URL: {ConnUrl}");
+        // V1: 설정에서 API 정보 로드
+        serverUrl = settings.ActiveServerUrl;
+        serverBearer = settings.ActiveServerBearer;
+        serverHost = settings.ActiveServerHost;
 
-        if (conn.State == ConnectionState.Closed)
+        // V1: DB 활성화 여부에 따른 연결
+        if (settings.EnableDB)
         {
-            conn.Open();
-            Trace.WriteLine("connReader ON");
-            new MySqlCommand("set sql_safe_updates=0;", conn);
+            ConnUrl = url;
+            conn = new MySqlConnection(ConnUrl);
+
+            Trace.WriteLine($"DB URL: {ConnUrl}");
+
+            if (conn.State == ConnectionState.Closed)
+            {
+                conn.Open();
+                Trace.WriteLine("connReader ON");
+                new MySqlCommand("set sql_safe_updates=0;", conn);
+            }
+        }
+        else
+        {
+            Trace.WriteLine("DB disabled by settings");
         }
     }
 
@@ -104,22 +132,34 @@ public class Mydb
 
     public int UpdateQuery(string imei, string icc_id)
     {
+        // V1: DB 비활성화 시 스킵
+        if (!IsConnected)
+        {
+            Trace.WriteLine($"DB disabled - UpdateQuery skipped for {imei}");
+            return 0;
+        }
+
         if (icc_id == null)
             icc_id = "NULL";
-        // string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + " where imei =" + '"'+ imei +'"' + ';';
         string str_update = "UPDATE tb_product SET icc_id =" + icc_id + " where imei =" + '"'+ imei +'"' + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
     public int UpdateQuery_qa2(string imei, string icc_id, string qa2, string ng2_type, string ble_id, Taginfo taginfo)
     {
+        // V1: DB 비활성화 시 스킵
+        if (!IsConnected)
+        {
+            Trace.WriteLine($"DB disabled - UpdateQuery_qa2 skipped for {imei}");
+            return 0;
+        }
+
         if (icc_id == null)
             icc_id = "NULL";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
         string str_update;
-        // str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id; 
-        str_update = "UPDATE tb_product SET icc_id =" + icc_id; 
+        str_update = "UPDATE tb_product SET icc_id =" + icc_id;
         str_update += ", qa2=\"" + qa2;
         str_update += "\", ng2_type=\"" + ng2_type;
         str_update += "\", ble_id =\"" + ble_id;
@@ -136,7 +176,7 @@ public class Mydb
             str_update += "\", qa2_lte_b5_min =\"-"+ taginfo.ng2_b5_min;
             str_update += "\", qa2_lte_b5_avg =\"-"+ taginfo.ng2_b5_avg;
             str_update += "\", qa2_lte_b5_max =\"-"+ taginfo.ng2_b5_max;
-        }        
+        }
         str_update += "\" where imei =" + '"' + imei + '"' + ';';
 
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
@@ -144,21 +184,33 @@ public class Mydb
 
     public int UpdateQuery_qa3(string imei, string icc_id, string qa3, string ng3_type, string ble_id)
     {
+        // V1: DB 비활성화 시 스킵
+        if (!IsConnected)
+        {
+            Trace.WriteLine($"DB disabled - UpdateQuery_qa3 skipped for {imei}");
+            return 0;
+        }
+
         if (icc_id == null)
             icc_id = "NULL";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
-        // string str_update = "UPDATE carrotPlugList.tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei =" + '"'+ imei +'"' + ';';
         string str_update = "UPDATE tb_product SET icc_id =" + icc_id + ", qa3=\"" + qa3 + "\", ng3_type=\"" + ng3_type + "\", ble_id =\"" + ble_id + "\", qa3_update_date =\""+ date_str + "\" where imei =" + '"'+ imei +'"' + ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
 
     private int UpdateQuery_dtag(string imei, string dtag)
     {
+        // V1: DB 비활성화 시 스킵
+        if (!IsConnected)
+        {
+            Trace.WriteLine($"DB disabled - UpdateQuery_dtag skipped for {imei}");
+            return 0;
+        }
+
         string tdtag = "NG";
         DateTime update_date = DateTime.Now;
         string date_str = update_date.ToString("yyyy-MM-dd HH:mm:ss");
-        // string str_update = "UPDATE carrotPlugList.tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei =" + '"' +imei + '"'+ ';';
         string str_update = "UPDATE tb_product SET dtag =\"" + dtag + "\", tdtag= \"" + tdtag + "\", dtag_update_date =\""+ date_str + "\" where imei =" + '"' +imei + '"'+ ';';
         return new MySqlCommand(str_update, conn).ExecuteNonQuery();
     }
@@ -205,6 +257,20 @@ public class Mydb
 
     public int regist_server(string imei)
     {
+        // V1: API 비활성화 시 스킵
+        if (!settings.EnableAPI)
+        {
+            Trace.WriteLine($"API disabled - registration skipped for {imei}");
+            return 0;
+        }
+
+        // V1: DB 비활성화 시 API만 호출할 수 없음
+        if (!IsConnected)
+        {
+            Trace.WriteLine($"DB not connected - registration skipped for {imei}");
+            return 0;
+        }
+
         int ret, return_ret;
         string dtag_string;
         GetProduct(imei);
@@ -256,7 +322,7 @@ public class Mydb
             {
                 return_ret = -4;
             }
-            else 
+            else
             {
                 return_ret = -3;
             }
@@ -270,7 +336,13 @@ public class Mydb
 
     public Dictionary<string, Plug> GetProduct(string imei)
     {
-        // MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product where imei=" + '"' + imei + '"' +";", conn);
+        // V1: DB 비활성화 시 빈 목록 반환
+        if (!IsConnected)
+        {
+            Trace.WriteLine($"DB disabled - GetProduct skipped for {imei}");
+            return pluglist;
+        }
+
         MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM tb_product where imei=" + '"' + imei + '"' +";", conn);
         if(pluglist.ContainsKey(imei))
             pluglist.Remove(imei);
@@ -356,8 +428,13 @@ public class Mydb
     }
     public Dictionary<string, Plug> ReflashList()
     {
+        // V1: DB 비활성화 시 빈 목록 반환
+        if (!IsConnected)
+        {
+            Trace.WriteLine("DB disabled - ReflashList skipped");
+            return pluglist;
+        }
 
-        // MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM carrotPlugList.tb_product LIMIT 0,1000; ", conn);
         MySqlCommand cmd_select = new MySqlCommand("SELECT device_id, prod_date, lot_no, sn, imei, icc_id, ble_id, dtag, tdtag FROM tb_product LIMIT 0,1000; ", conn);
         pluglist.Clear();
         rdr = cmd_select.ExecuteReader();
