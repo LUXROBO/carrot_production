@@ -1024,30 +1024,46 @@ namespace Carrot_QA_test
         private void BtnSave_Click(object sender, EventArgs e)
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "csv file|*.csv";
-            saveFileDialog.Title = "Save an csv File";
-            saveFileDialog.ShowDialog();
-            if (saveFileDialog.FileName != "")
+            saveFileDialog.Filter = "CSV 파일|*.csv";
+            saveFileDialog.Title = "CSV 파일 저장";
+            saveFileDialog.FileName = $"QA_Result_{DateTime.Now:yyyyMMdd_HHmmss}";
+
+            if (saveFileDialog.ShowDialog() == DialogResult.OK && !string.IsNullOrEmpty(saveFileDialog.FileName))
             {
-                System.IO.FileStream fs =
-                    (System.IO.FileStream)saveFileDialog.OpenFile();
-                StreamWriter sw = new StreamWriter(fs,Encoding.UTF8);
-
-                String WriteLineBuffer = "";
-
-                foreach (Taginfo tag in tagList.Values)
+                try
                 {
-                    if (tag.CarrotPlugFlag)
+                    using (StreamWriter sw = new StreamWriter(saveFileDialog.FileName, false, Encoding.UTF8))
                     {
-                        String WriteLine = tag.TagName + '\t' + tag.TagMenu;
-                        WriteLineBuffer += WriteLine;
-                        sw.WriteLine(WriteLine);
-                    }
-                }
-                sw.Close();
-                sw.Dispose();
-            }
+                        // CSV 헤더 (ListView 컬럼과 동일)
+                        sw.WriteLine("NO,IMEI,CCID,BLE_UUID,RSSI,Pass,Reg,Note");
 
+                        // 화면에 표시된 tagColl 데이터 저장
+                        int rowNo = 1;
+                        foreach (Taginfo tag in tagColl)
+                        {
+                            string bleId = tag.TagBleID.Length >= 12
+                                ? tag.TagBleID.Substring(tag.TagBleID.Length - 12, 12)
+                                : tag.TagBleID;
+
+                            // Note 필드에 쉼표가 포함될 수 있으므로 따옴표로 감싸기
+                            string note = $"\"{tag.TagFlagString?.Replace("\"", "\"\"")}\"";
+
+                            string line = $"{rowNo},{tag.TagIMEI},{tag.TagIccID},{bleId},{tag.TagRssi},{tag.passFlag},{tag.dbString},{note}";
+                            sw.WriteLine(line);
+                            rowNo++;
+                        }
+                    }
+
+                    MessageBox.Show($"파일이 저장되었습니다.\n\n저장 위치: {saveFileDialog.FileName}\n저장 건수: {tagColl.Count}건",
+                                   "저장 완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"파일 저장 중 오류가 발생했습니다.\n\n{ex.Message}",
+                                   "저장 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Trace.WriteLine($"BtnSave_Click error: {ex}");
+                }
+            }
         }
 
 

@@ -58,7 +58,8 @@ namespace IniFileManager
         /// <summary>
         /// 일정 디바이스 수 도달 시 (설정 필요)
         /// </summary>
-        DeviceCount = 8
+        DeviceCount = 8,
+        Manual = 16
     }
 
     #endregion
