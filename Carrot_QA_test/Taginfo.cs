@@ -120,7 +120,10 @@ public class Mydb
 
     ~Mydb()
     {
-        conn.Close();
+        if (conn != null)
+        {
+            conn.Close();
+        }
     }
 
     public static string BuildMySqlConnectionUrl(string server, int port, string database, string user, string password)

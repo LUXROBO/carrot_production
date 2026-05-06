@@ -579,7 +579,7 @@ namespace IniFileManager
         private static readonly string DefaultDatabaseName = "carrotpluglist";
         private static readonly string DefaultDatabaseUser = "luxrobo";
         private static readonly string DefaultDatabasePassword = "fjrtmfhqh123$";
-        private static readonly bool DefaultEnableDB = true;
+        private static readonly bool DefaultEnableDB = false;
         private static readonly int DefaultConnectionTimeout = 30;
 
         // [API] 섹션 기본값
