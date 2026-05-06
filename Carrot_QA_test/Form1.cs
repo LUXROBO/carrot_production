@@ -683,7 +683,7 @@ namespace Carrot_QA_test
                         int result = 0;
 
                         // V1: DB 업데이트 조건부 실행
-                        if (appSettings.EnableDB && mydb.IsConnected)
+                        if (appSettings.EnableDB && mydb != null&& mydb.IsConnected)
                         {
                             if (modeFlag == 0)
                                 result = mydb.UpdateQuery_qa2(imei, icc_id, tag.passFlag, tag.TagFlagString, tag.TagBleID, tag);
