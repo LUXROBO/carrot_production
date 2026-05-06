@@ -555,16 +555,16 @@ namespace IniFileManager
         private static readonly bool DefaultSimulationMode = false;
 
         // [DB] 섹션 기본값
+        private static readonly bool DefaultEnableDB = (DefaultOperationMode == OperationMode.standalone) ? false : true;
         private static readonly string DefaultDatabaseServer = "115.68.195.106";
         private static readonly int DefaultDatabasePort = 3306;
         private static readonly string DefaultDatabaseName = "carrotpluglist";
         private static readonly string DefaultDatabaseUser = "luxrobo";
         private static readonly string DefaultDatabasePassword = "fjrtmfhqh123$";
-        private static readonly bool DefaultEnableDB = true;
         private static readonly int DefaultConnectionTimeout = 30;
 
         // [API] 섹션 기본값
-        private static readonly bool DefaultEnableAPI = true;
+        private static readonly bool DefaultEnableAPI = (DefaultOperationMode == OperationMode.standalone) ? false : true;
         private static readonly string DefaultServerType = "main";
         private static readonly string DefaultMainServerUrl = "https://dtag.carrotins.com:8080/api/v1/dtag/registries";
         private static readonly string DefaultMainServerHost = "dtag.carrotins.com";
@@ -574,7 +574,7 @@ namespace IniFileManager
         private static readonly string DefaultTestServerBearer = "Bearer KXKQNQ64380880304TLRQQ";
 
         // [Network] 섹션 기본값
-        private static readonly bool DefaultVPNEnable = true;
+        private static readonly bool DefaultVPNEnable = (DefaultOperationMode == OperationMode.standalone) ? false : true;
         private static readonly string DefaultVPNServer = "";
         private static readonly bool DefaultBypassVPNCheck = false;
 
