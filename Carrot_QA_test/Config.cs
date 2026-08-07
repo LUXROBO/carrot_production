@@ -566,6 +566,9 @@ namespace IniFileManager
         private static ApplicationSettings _instance = null;
         private static readonly object _lockObject = new object();
 
+        
+
+
         #region Default Values
 
         // [Application] 섹션 기본값

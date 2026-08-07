@@ -15,6 +15,20 @@ namespace Carrot_QA_test
 
         static void Main()
         {
+            // 처리되지 않은 예외 로깅 (소스 파일:라인 포함)
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+            {
+                var ex = e.ExceptionObject as Exception;
+                File.AppendAllText("crash.log",
+                    $"[{DateTime.Now}] [UnhandledException]\n{ex}\n\n");
+            };
+
+            Application.ThreadException += (sender, e) =>
+            {
+                File.AppendAllText("crash.log",
+                    $"[{DateTime.Now}] [ThreadException]\n{e.Exception}\n\n");
+            };
+
             try
             {
                 int processCnt = 0;
